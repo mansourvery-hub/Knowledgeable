@@ -158,7 +158,11 @@ pub async fn stream_tutor_turn(
         let turn_id = Uuid::new_v4();
 
         loop {
-            let model_name = std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string());
+            let model_name = if std::env::var("GEMINI_API_KEY").is_ok() {
+                std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-2.5-flash".to_string())
+            } else {
+                std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string())
+            };
             let req = LlmChatRequest {
                 model: model_name,
                 messages: messages.clone(),
@@ -314,6 +318,13 @@ pub async fn stream_tutor_turn(
 
 /// Factory for Phase 1: always returns Fake. Later, will switch on env `LLM_PROVIDER`.
 pub fn default_llm() -> std::sync::Arc<dyn LlmClient> {
+    if let Ok(key) = std::env::var("GEMINI_API_KEY") {
+        if !key.trim().is_empty() {
+            let model = std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-2.5-flash".to_string());
+            tracing::info!(model = %model, "initializing real Gemini OpenAI-Compatible LLM client");
+            return std::sync::Arc::new(llm::GeminiOpenAiClient::new(key));
+        }
+    }
     if let Ok(key) = std::env::var("OPENAI_API_KEY") {
         if !key.trim().is_empty() {
             let model = std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string());
@@ -321,6 +332,6 @@ pub fn default_llm() -> std::sync::Arc<dyn LlmClient> {
             return std::sync::Arc::new(llm::OpenAiClient::new(key));
         }
     }
-    tracing::info!("initializing fake LLM client (no OPENAI_API_KEY set)");
+    tracing::info!("initializing fake LLM client (no API keys set)");
     std::sync::Arc::new(FakeLlmClient::new("fake-tutor-1"))
 }
