@@ -10,6 +10,9 @@ pub mod openai;
 pub mod gemini;
 pub mod types;
 
+#[cfg(test)]
+mod tests;
+
 pub use error::{LlmError, LlmErrorKind};
 pub use fake::FakeLlmClient;
 pub use openai::OpenAiClient;

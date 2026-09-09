@@ -77,10 +77,12 @@ impl LlmClient for GeminiOpenAiClient {
             payload["tools"] = json!(tools_val);
         }
 
-        // Gemini expects key as a query param or in bearer auth.
-        // Appending ?key=api_key is 100% robust and bypasses any header-stripping issues.
-        let url = format!("{}/chat/completions?key={}", self.base_url, self.api_key);
+        // Gemini's OpenAI-compatible endpoint accepts standard Bearer Auth BUT you must use Bearer Auth.
+        // Google returned: "Missing or invalid Authorization header" when we did NOT provide Bearer Auth.
+        // So passing ?key= in the URL is NOT sufficient for their OpenAI-compatible endpoint. We MUST provide Bearer auth!
+        let url = format!("{}/chat/completions", self.base_url);
         let res = self.client.post(&url)
+            .bearer_auth(&self.api_key)
             .json(&payload)
             .send()
             .await
