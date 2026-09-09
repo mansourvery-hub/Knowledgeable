@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/sse_parser.dart';
+import '../../core/api/sse_stream_stub.dart'
+    if (dart.library.html) '../../core/api/sse_stream_web.dart'
+    if (dart.library.io) '../../core/api/sse_stream_native.dart' as sse_impl;
 import '../models/conversation.dart';
 import '../models/message.dart';
 
@@ -46,17 +48,15 @@ class ConversationRepository {
     required String content,
   }) async* {
     final dio = _client.dio;
-    final response = await dio.post<ResponseBody>(
-      '/v1/conversations/$conversationId/messages',
-      data: jsonEncode({'content': content}),
-      options: Options(
-        headers: {'Accept': 'text/event-stream', 'Content-Type': 'application/json'},
-        responseType: ResponseType.stream,
-      ),
-    );
+    final url = '${dio.options.baseUrl}/v1/conversations/$conversationId/messages';
+    final body = jsonEncode({'content': content});
+    final headers = {
+      'Accept': 'text/event-stream',
+      'Content-Type': 'application/json',
+    };
 
-    final stream = response.data!.stream;
-    final lines = byteStreamToLines(stream);
+    final rawStream = sse_impl.sseStream(url, body, headers);
+    final lines = rawStream.transform(const LineSplitter());
     yield* parseSseStream(lines);
   }
 }
