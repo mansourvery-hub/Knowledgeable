@@ -1,10 +1,10 @@
 use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
 use serde::Serialize;
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: Option<PgPool>,
+    pub pool: Option<SqlitePool>,
     pub version: String,
 }
 

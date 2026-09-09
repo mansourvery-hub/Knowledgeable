@@ -1,4 +1,4 @@
-use domain::confidence::WORLD_CONFIDENCE_MIN;
+use crate::confidence::WORLD_CONFIDENCE_MIN;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ValidationError {

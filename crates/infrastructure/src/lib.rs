@@ -3,4 +3,4 @@ pub mod db;
 pub mod telemetry;
 
 pub use config::AppConfig;
-pub use sqlx::PgPool;
+pub use sqlx::SqlitePool;

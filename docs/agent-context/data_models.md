@@ -7,8 +7,8 @@ These identifiers and field names are canonical. Do not invent synonymous persis
 </data_model_rule>
 
 Rules:
-- IDs are opaque UUIDs.
-- Backend timestamps are PostgreSQL `timestamptz` and serialized as ISO-8601 UTC strings.
+- IDs are opaque UUIDs (stored as `TEXT` in SQLite, `TEXT` UUID string in API; `Uuid` in Rust domain).
+- Backend timestamps are SQLite `TEXT` ISO8601 (`strftime('%Y-%m-%dT%H:%M:%fZ','now')`) and serialized as ISO-8601 UTC strings via `chrono::DateTime<Utc>`.
 - Probabilities are inclusive `[0, 1]`.
 - Confidence values must never be represented as percentages in stored/API models.
 - `world_confidence` and `learner_confidence` are separate concepts and must never be conflated.
@@ -520,9 +520,9 @@ The exact serialized `ConceptRef` representation must be documented in the imple
 
 Server validates the proposed value and evidence before applying it.
 
-## 18. Database Tables
+## 18. Database Tables (SQLite canonical)
 
-Authoritative table set for v1:
+Authoritative table set for v1 (all `STRICT`, `TEXT` UUID PKs, `TEXT` ISO8601, `REAL` confidences, `TEXT` JSON with `json_valid`):
 
 ```text
 learners
@@ -538,14 +538,17 @@ review_items
 graph_mutations
 ```
 
-Use UUID primary keys where applicable. Enforce uniqueness/indexes for concept identity and relation duplication.
+SQLite specifics (see `migrations/20260909125009_initial_schema.sql`):
+- `TEXT PRIMARY KEY` for UUIDs (no `pgcrypto`), `TEXT` for timestamps (`strftime('%Y-%m-%dT%H:%M:%fZ','now')`), `REAL` for confidences, `TEXT CHECK (json_valid(payload))` for mutations.
+- `PRAGMA foreign_keys=ON`, `PRAGMA journal_mode=WAL`, `busy_timeout=5000` enforced per connection in `infrastructure/src/db.rs`.
+- `STRICT` tables, `CHECK` for enums, `UNIQUE` for graph identity.
 
-Recommended constraints/indexes:
+Recommended constraints/indexes (same as Postgres, expressed in SQLite):
 
 ```text
-concept_nodes(canonical_name)
+concept_nodes(canonical_name) UNIQUE
 concept_relations(from_concept_id, to_concept_id, relation_type) UNIQUE
-learner_concept_states(learner_id, concept_id) UNIQUE
+learner_concept_states(learner_id, concept_id) PRIMARY KEY
 review_items(learner_id, concept_id, status)
 conversation_messages(conversation_id, created_at)
 concept_candidates(status, created_at)

@@ -9,9 +9,16 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!(bind_addr = %config.bind_addr(), "starting api server");
 
     // Attempt DB connection; degrade gracefully if unavailable (health will report degraded)
+    // SQLite file is auto-created; run migrations automatically for fresh checkout.
     let pool = match db::create_pool(&config.database_url).await {
         Ok(p) => {
             tracing::info!("database connected");
+            // Auto-migrate: ensures `sqlite:knowledgeable.db` is usable without manual `sqlx migrate run`.
+            // `migrate!` path is relative to `crates/api` manifest dir, so `../../migrations` = repo root.
+            match sqlx::migrate!("../../migrations").run(&p).await {
+                Ok(()) => tracing::info!("migrations applied"),
+                Err(e) => tracing::warn!(error = %e, "migration failed — continuing degraded"),
+            }
             Some(p)
         }
         Err(e) => {

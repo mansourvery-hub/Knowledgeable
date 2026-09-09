@@ -13,13 +13,8 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
-sqlx = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 domain = { workspace = true }
-graph = { workspace = true }
-learner = { workspace = true }
 tutor = { workspace = true }
 llm = { workspace = true }
-validation = { workspace = true }
-infrastructure = { workspace = true }

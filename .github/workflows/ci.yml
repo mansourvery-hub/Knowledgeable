@@ -14,20 +14,6 @@ jobs:
   rust:
     name: Rust (fmt, check, test, clippy)
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: knowledgeable
-          POSTGRES_PASSWORD: knowledgeable
-          POSTGRES_DB: knowledgeable
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -39,13 +25,15 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
-      - name: Install sqlx-cli
-        run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
+      - name: Install sqlx-cli (sqlite)
+        run: cargo install sqlx-cli --no-default-features --features sqlite
 
-      - name: Run DB migrations
+      - name: Run DB migrations (SQLite)
         env:
-          DATABASE_URL: postgres://knowledgeable:knowledgeable@localhost:5432/knowledgeable
-        run: sqlx migrate run
+          DATABASE_URL: sqlite:knowledgeable.db
+        run: |
+          sqlx database create || true
+          sqlx migrate run
 
       - name: Check formatting
         run: cargo fmt --all -- --check
@@ -58,7 +46,7 @@ jobs:
 
       - name: Tests
         env:
-          DATABASE_URL: postgres://knowledgeable:knowledgeable@localhost:5432/knowledgeable
+          DATABASE_URL: sqlite:knowledgeable.db
         run: cargo test --workspace --all-features
 
   flutter:

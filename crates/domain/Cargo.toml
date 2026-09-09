@@ -10,6 +10,8 @@ description = "Pure domain types and invariants — no I/O, no framework depende
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 

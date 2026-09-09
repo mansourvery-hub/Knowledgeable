@@ -18,9 +18,9 @@ Backend:
 - Tokio async runtime.
 - Axum HTTP/SSE server.
 - Serde + serde_json for serialization.
-- SQLx for PostgreSQL access and compile-time checked queries where practical.
-- PostgreSQL as authoritative database.
-- Optional pgvector only after retrieval requirements justify it.
+- SQLx for SQLite access and compile-time checked queries where practical (`sqlite:knowledgeable.db`, `create_if_missing`, WAL).
+- SQLite as canonical authoritative database (file-local, WAL `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`, transactions for mutations).
+- PostgreSQL is NOT default; no pgvector, no Redis, no queues unless roadmap justifies.
 - tracing + tracing-subscriber for structured observability.
 - thiserror for typed internal/domain errors.
 - anyhow only at application boundaries where contextual propagation is useful.
@@ -57,34 +57,25 @@ crates/api
   -> HTTP/SSE boundary only
 
 crates/application
-  -> use-case orchestration + transactions
+  -> use-case orchestration + transactions (depends on domain ports, not infra concretions)
 
 crates/domain
-  -> pure domain types/invariants
-
-crates/graph
-  -> graph retrieval/repository/traversal
-
-crates/learner
-  -> learner confidence/decay/review
+  -> pure domain types/invariants + validation + decay + graph ports/traversal (DB-agnostic)
 
 crates/tutor
-  -> tutor loop/prompts/tools
+  -> tutor loop/prompts/tools (reasons over domain ports)
 
 crates/llm
   -> provider abstraction/adapters
 
-crates/validation
-  -> candidate/mutation validation
-
 crates/infrastructure
-  -> SQLx/auth/config/telemetry/external I/O
+  -> SQLx SQLite (WAL/FKs/busy_timeout)/auth/config/telemetry/external I/O (implements domain ports)
 ```
 
 Forbidden dependency directions:
 
 ```text
-Flutter UI -> PostgreSQL
+Flutter UI -> SQLite (server authoritative) — must go via API
 Flutter UI -> LLM SDK
 crates/domain -> Axum
 crates/domain -> SQLx
@@ -92,6 +83,7 @@ crates/domain -> LLM SDK
 crates/tutor -> raw SQL
 crates/api -> provider-specific LLM SDK
 LLM provider adapter -> direct graph mutation
+crates/application -> infrastructure concretions (must depend on domain ports)
 ```
 
 ## 4. Flutter Rules
@@ -214,26 +206,29 @@ repository/external adapter
 
 Route handlers must be thin.
 
-## 6. PostgreSQL Rules
+## 6. SQLite Rules (canonical)
 
-- All schema changes use migrations under `/migrations`.
-- Use foreign keys.
+- All schema changes use migrations under `/migrations` (SQLite `STRICT` tables, `TEXT` UUIDs, `TEXT` ISO8601 timestamps, `REAL` confidences).
+- Use foreign keys (`PRAGMA foreign_keys=ON` per connection).
+- Use WAL mode (`journal_mode=WAL`) and `busy_timeout=5000` per `infrastructure/src/db.rs`.
 - Use unique constraints for graph relation identity.
 - Use indexes based on measured query patterns.
-- Prefer recursive CTEs for bounded dependency traversal.
-- Use transactions for all authoritative graph mutations.
+- Prefer recursive CTEs for bounded dependency traversal (SQLite supports them).
+- Use transactions (`BEGIN IMMEDIATE`) for all authoritative graph mutations.
 - Never issue per-node SQL queries for a large traversal when one bounded query is possible.
-- Use `timestamptz`.
-- Store probabilities as `real`/`double precision` with explicit range validation; do not store `0..100` percentages.
+- Use `TEXT` ISO8601 (`strftime('%Y-%m-%dT%H:%M:%fZ','now')`) — no `timestamptz`.
+- Store probabilities as `REAL` with `CHECK (x >=0 AND x <=1)`; do not store `0..100` percentages.
+- Store JSON as `TEXT CHECK (json_valid(...))`; no `JSONB`.
+- No `pgcrypto`, no `pgvector`, no PostgreSQL-specific extensions.
 
-## 7. Local SQLite Rules
+## 7. Local SQLite Rules (client cache) + Server SQLite (authoritative)
 
-Drift tables mirror only data needed by the client.
+Drift tables mirror only data needed by the client. Server SQLite is authoritative (`knowledgeable.db`).
 
 ```text
-Server PostgreSQL
+Server SQLite (WAL)
     ↓ typed sync payloads
-Flutter Drift/SQLite
+Flutter Drift/SQLite (cache)
     ↓
 UI
 ```

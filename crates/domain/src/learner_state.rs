@@ -29,6 +29,25 @@ impl LearnerConceptState {
     pub fn is_review_eligible(&self) -> bool {
         self.learner_confidence < crate::confidence::HEALTHY_THRESHOLD
     }
+
+    /// Bounded update: clamps to [0,1] and validates delta. Pure domain — no telemetry.
+    pub fn apply_delta(&mut self, delta: f32) -> Result<(), crate::errors::DomainError> {
+        crate::confidence::validate_delta(delta)?;
+        self.learner_confidence = (self.learner_confidence + delta).clamp(0.0, 1.0);
+        Ok(())
+    }
+}
+
+/// Convenience helpers re-exported from former `learner` crate (now domain).
+pub fn is_review_eligible(state: &LearnerConceptState) -> bool {
+    state.is_review_eligible()
+}
+
+pub fn apply_delta(
+    state: &mut LearnerConceptState,
+    delta: f32,
+) -> Result<(), crate::errors::DomainError> {
+    state.apply_delta(delta)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

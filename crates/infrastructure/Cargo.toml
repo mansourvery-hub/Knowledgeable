@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "SQLx/PostgreSQL, auth, config, telemetry — external I/O adapters"
+description = "SQLx/SQLite, auth, config, telemetry — external I/O adapters (WAL, FKs, busy_timeout)"
 
 [dependencies]
 tokio = { workspace = true }

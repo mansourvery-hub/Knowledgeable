@@ -93,8 +93,8 @@ relation_type
 <architecture_invariant>
 Flutter is the canonical client.
 Rust is the backend.
-PostgreSQL is authoritative.
-SQLite is client cache only.
+SQLite is the canonical authoritative store (WAL, foreign_keys=ON, busy_timeout).
+Drift/SQLite on the client is a local cache only (never authoritative).
 The tutor reasons and proposes; application code authorizes, validates, and commits.
 </architecture_invariant>
 
@@ -409,7 +409,7 @@ Never:
 Stop implementation and update architecture docs before continuing if a proposal would:
 
 ```text
-- change Flutter/Rust/PostgreSQL ownership boundaries;
+- change Flutter/Rust/SQLite ownership boundaries (e.g., reintroduce PostgreSQL as default);
 - add a second authoritative persistence system;
 - add a new canonical relation type;
 - change the meaning of world_confidence or learner_confidence;
@@ -440,7 +440,7 @@ A coding task is complete only when:
 [ ] Relevant agent-context files read.
 [ ] Existing implementation inspected.
 [ ] Canonical field names preserved.
-[ ] Flutter/Rust/PostgreSQL boundaries preserved.
+[ ] Flutter/Rust/SQLite boundaries preserved (SQLite canonical, no Docker/Postgres by default).
 [ ] LLM output treated as untrusted.
 [ ] World and learner confidence remain separate.
 [ ] Tutor graph access remains bounded.

@@ -35,8 +35,10 @@ The graph is the persistent learner model that makes each future explanation mor
 <system_constraints>
 - Flutter is the canonical client technology for mobile and web.
 - The backend is Rust and owns authoritative application state and AI orchestration.
-- PostgreSQL is the authoritative persistent store for graph/session/learner state.
-- SQLite on the client is a local cache/offline/read-optimized copy, never a competing source of truth.
+- SQLite is the canonical authoritative persistent store for graph/session/learner state (WAL, foreign_keys=ON, busy_timeout=5000, transactions for mutations).
+- PostgreSQL is NOT part of default dev/deploy; SQLite file is created automatically via sqlx `sqlite:knowledgeable.db` with `create_if_missing(true)`.
+- SQLite on the client (Drift) is a local cache/offline/read-optimized copy, never a competing source of truth.
+- Docker is NOT required for local development; native binaries + SQLite file is the canonical path.
 - The learner graph is persistent domain state, not chat history and not the primary UI.
 - Canonical knowledge is structured; the LLM is not the database.
 - `world_confidence` gates authoritative graph admission.
@@ -77,12 +79,13 @@ The graph is the persistent learner model that makes each future explanation mor
                          │ Validation              │
                          └─────┬──────────┬────────┘
                                │          │
-                     SQLx      │          │ provider-neutral LLM client
-                               ▼          ▼
-                     ┌──────────────┐  ┌───────────────────┐
-                     │ PostgreSQL   │  │ LLM providers     │
-                     │ authoritative│  │ model adapters    │
-                     └──────────────┘  └───────────────────┘
+                      SQLx      │          │ provider-neutral LLM client
+                                ▼          ▼
+                      ┌──────────────┐  ┌───────────────────┐
+                      │   SQLite     │  │ LLM providers     │
+                      │ authoritative│  │ model adapters    │
+                      │ WAL + FKs    │  │                   │
+                      └──────────────┘  └───────────────────┘
 ```
 
 ## 5. Monorepo Structure
@@ -109,15 +112,12 @@ The graph is the persistent learner model that makes each future explanation mor
 │       └── ios/
 ├── crates/
 │   ├── api/                            # Axum routes/controllers
-│   ├── application/                    # use cases/orchestration
-│   ├── domain/                         # pure domain types + invariants
-│   ├── graph/                          # graph queries/traversal/repositories
-│   ├── learner/                        # learner confidence/decay/review
+│   ├── application/                    # use cases/orchestration (depends on domain ports)
+│   ├── domain/                         # pure domain types + invariants + validation + decay + graph ports
 │   ├── tutor/                          # tutor loop, tool contracts, prompts
 │   ├── llm/                            # provider-neutral LLM traits + adapters
-│   ├── validation/                     # candidate knowledge validation
-│   └── infrastructure/                 # SQLx, auth, telemetry, config
-├── migrations/                         # PostgreSQL migrations
+│   └── infrastructure/                 # SQLx SQLite (WAL/FKs/busy_timeout), auth, telemetry, config
+├── migrations/                         # SQLite migrations (STRICT, TEXT UUIDs, ISO8601)
 ├── docs/
 │   └── agent-context/
 ├── tests/
@@ -188,33 +188,18 @@ apply_learner_observations
 
 ### 6.4 Domain: `crates/domain`
 
-Pure logic only.
+Pure logic only — database-agnostic, no I/O.
 
 Responsibilities:
 - IDs and value objects.
 - Concept and relation invariants.
-- Confidence bounds.
-- State transitions.
-- Domain-level errors.
+- Confidence bounds (`world_confidence`, `learner_confidence`).
+- Validation (schema, `world_confidence >= 0.80` gate, canonical statement checks).
+- Learner confidence: initialization, bounded updates, simple time-based decay (`grace 2y`, `half-life 12y`), review eligibility (`<0.95`).
+- Graph ports & traversal: `GraphRepository` trait (bounded, learner-scoped), `bounded_depth`, `TutorContext` types, `DEFAULT_MAX_DEPTH=3`.
+- State transitions and domain-level errors.
 
-Forbidden dependencies:
-- Axum
-- SQLx
-- LLM SDKs
-- Flutter/client code
-- filesystem/network I/O
-
-### 6.5 Graph: `crates/graph`
-
-Responsibilities:
-- Concept search.
-- Semantic relation retrieval.
-- Dependency ancestor traversal.
-- Weak prerequisite queries.
-- Bounded context construction.
-- Repository interfaces and implementations.
-
-Core query:
+Core query (implemented in `infrastructure` via SQLite recursive CTEs, defined as port in `domain`):
 
 ```text
 retrieve_learning_context(target, learner)
@@ -227,20 +212,16 @@ retrieve_learning_context(target, learner)
     -> return TutorContext
 ```
 
-The graph module does not decide the complete pedagogical sequence. The tutor does.
+Domain does not decide the complete pedagogical sequence — the tutor does. Domain stays independent of Axum, SQLx, HTTP, Flutter, and LLM providers. PostgreSQL can be introduced later by implementing the same ports without rewriting domain/application.
 
-### 6.6 Learner: `crates/learner`
+Forbidden dependencies:
+- Axum
+- SQLx
+- LLM SDKs
+- Flutter/client code
+- filesystem/network I/O
 
-Responsibilities:
-- Learner confidence initialization.
-- Confidence updates from observations.
-- Conservative time-based decay.
-- Review eligibility.
-- Graph-health queries.
-
-Initial model is intentionally only `learner_confidence` plus timestamps. See `data_models.md -> LearnerConceptState`.
-
-### 6.7 Tutor: `crates/tutor`
+### 6.5 Tutor: `crates/tutor`
 
 Responsibilities:
 - Tutor system behavior.
@@ -254,7 +235,7 @@ Responsibilities:
 
 The tutor may read graph state dynamically but cannot bypass application authorization or validation.
 
-### 6.8 LLM: `crates/llm`
+### 6.6 LLM: `crates/llm`
 
 Responsibilities:
 - Provider-neutral traits.
@@ -267,26 +248,17 @@ Responsibilities:
 
 No LLM vendor types may escape this crate's public abstraction.
 
-### 6.9 Validation: `crates/validation`
+### 6.7 Infrastructure: `crates/infrastructure`
 
 Responsibilities:
-- Candidate schema validation.
-- Duplicate/identity checks.
-- Canonical statement checks.
-- World-confidence admission gate.
-- Relation integrity.
-- Transaction-ready mutation plans.
-
-Validation should be deterministic where possible. A model-based verifier may supplement but never replace mandatory structural validation.
-
-### 6.10 Infrastructure: `crates/infrastructure`
-
-Responsibilities:
-- SQLx/PostgreSQL.
+- SQLx/SQLite (WAL, foreign_keys=ON, busy_timeout=5000, `sqlite:knowledgeable.db` with `create_if_missing`).
+- SQLite pragmas per connection, transactions for graph mutations (`BEGIN IMMEDIATE` where needed).
 - Authentication adapter.
-- Configuration.
+- Configuration (`DATABASE_URL` defaults to `sqlite:knowledgeable.db`).
 - Telemetry/logging.
 - External service adapters.
+
+Infrastructure implements `domain::GraphRepository` and other ports; application depends on domain ports, not infrastructure concretions. PostgreSQL can be reintroduced later by implementing the same ports.
 
 ## 7. Tutor Graph-Navigation Model
 
@@ -428,18 +400,17 @@ Do not review unrelated graph regions.
 
 ## 11. Persistence
 
-PostgreSQL is the authoritative backend store.
+SQLite is the canonical authoritative backend store (file-local, no daemon, no Docker).
 
-Do not introduce a dedicated graph database in v1.
+```text
+Rust backend
+  ↔ SQLx SQLite (WAL + foreign_keys + busy_timeout)
+  ↔ knowledgeable.db (auto-created, STRICT tables, TEXT UUIDs, ISO8601)
+```
 
-Rationale:
-- Graph state is small, typed, and transactional.
-- Dependency traversal can be handled with recursive SQL queries.
-- Confidence/review state is naturally relational.
-- Candidate/mutation audit records benefit from relational transactions.
-- PostgreSQL can add `pgvector` later without a second authoritative data store.
+Do not introduce a dedicated graph database in v1. Do not add PostgreSQL, pgvector, Redis, queues, or vector DBs unless a concrete roadmap requirement justifies it. SQLite's recursive CTEs handle bounded dependency traversal; transactions guarantee atomic mutations. SQLite can be replaced by PostgreSQL later via the same domain ports without rewriting domain/application.
 
-Client SQLite is a cache/local mirror only.
+Client SQLite (Drift) is a cache/local mirror only — server remains authoritative for canonical graph, mutations, and learner state.
 
 ## 12. Client Synchronization
 
@@ -466,9 +437,9 @@ Flutter
 Rust API
   -> application::stream_tutor_turn
 Tutor
-  -> graph tools
-Graph
-  -> PostgreSQL
+  -> graph tools (domain ports)
+Graph (domain port)
+  -> SQLite (WAL, FKs) via sqlx
 Tutor
   -> LLM abstraction
 LLM provider
@@ -478,11 +449,11 @@ Tutor
 Tutor
   -> structured post-turn observation/candidate extraction
 Application
-  -> validation + transaction
-PostgreSQL
-  -> authoritative mutation
+  -> domain validation (world_confidence >=0.80) + transaction
+SQLite
+  -> authoritative mutation (BEGIN IMMEDIATE, atomic)
 Flutter
-  -> apply confirmed events to local SQLite
+  -> apply confirmed events to local SQLite (Drift cache)
 ```
 
 ## 14. Security Boundary
@@ -523,10 +494,10 @@ Unit tests:
 - tutor decision helpers
 
 Integration tests:
-- Axum API + PostgreSQL
-- graph repository
+- Axum API + SQLite (in-memory or `sqlite:file:memdb?mode=memory&cache=shared` for isolation)
+- graph repository (SQLite recursive CTEs, bounded depth)
 - tutor tools
-- transactional graph mutation
+- transactional graph mutation (WAL + FKs, rollback on validation failure)
 - SSE streaming
 - authentication scope
 

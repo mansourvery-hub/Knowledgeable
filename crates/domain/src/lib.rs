@@ -5,14 +5,22 @@
 
 pub mod concept;
 pub mod confidence;
+pub mod decay;
 pub mod errors;
 pub mod ids;
 pub mod learner_state;
 pub mod relation;
+pub mod repository;
+pub mod traversal;
+pub mod validation;
 
 pub use concept::*;
 pub use confidence::*;
+pub use decay::*;
 pub use errors::*;
 pub use ids::*;
 pub use learner_state::*;
 pub use relation::*;
+pub use repository::*;
+pub use traversal::*;
+pub use validation::*;

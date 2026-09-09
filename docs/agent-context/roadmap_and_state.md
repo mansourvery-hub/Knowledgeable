@@ -53,11 +53,11 @@ Next: Phase 1 — Conversational Tutor Skeleton
 ### Exit gate
 
 ```text
-[x] cargo check passes (verified 2026-09-09)
-[x] cargo test passes (2 tests + doc-tests)
+[x] cargo check passes (verified 2026-09-09, 2026-09-09 SQLite)
+[x] cargo test passes (2 tests + doc-tests, domain decay)
 [x] flutter analyze passes (No issues)
 [x] flutter test passes (widget_test)
-[x] backend health endpoint works against PostgreSQL (degraded mode without DB; full DB via docker-compose up -d + sqlx migrate run — CI uses postgres:16-alpine service, local requires sudo pacman -S docker postgresql)
+[x] backend health endpoint works with SQLite file auto-created (sqlite:knowledgeable.db, WAL/FKs, degraded if missing → ok after cargo run; no Docker/Postgres; verified via curl)
 [x] Flutter client can reach backend in development (ApiClient baseUrl http://localhost:3000, health curl verified)
 ```
 
@@ -258,8 +258,8 @@ Next: Phase 1 — Conversational Tutor Skeleton
 
 - [ ] LLM timeout handling.
 - [ ] Provider failure normalization.
-- [ ] PostgreSQL backup/restore verification.
-- [ ] Transaction retry strategy where safe.
+- [ ] SQLite backup/restore verification (file copy + WAL checkpoint; no Postgres).
+- [ ] Transaction retry strategy where safe (busy_timeout).
 - [ ] SSE disconnect/reconnect behavior.
 
 ### Observability

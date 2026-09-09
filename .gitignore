@@ -38,10 +38,16 @@ logs/transcripts/**
 transcripts/
 conversations/
 
-# SQLite / local cache
+# SQLite / local cache (SQLite canonical, auto-created)
 *.db
+*.db-wal
+*.db-shm
+*.db-journal
 *.sqlite
 *.sqlite3
+knowledgeable.db*
+*.sqlite3-wal
+*.sqlite3-shm
 
 # Coverage
 lcov.info
