@@ -1,3 +1,4 @@
+pub mod conversations;
 pub mod error;
 pub mod routes;
 

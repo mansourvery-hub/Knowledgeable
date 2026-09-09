@@ -1,4 +1,5 @@
 pub mod config;
+pub mod conversation_repo;
 pub mod db;
 pub mod telemetry;
 

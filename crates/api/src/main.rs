@@ -27,9 +27,16 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
-    let state = api::routes::AppState { pool, version: env!("CARGO_PKG_VERSION").to_string() };
+    let llm: std::sync::Arc<dyn llm::LlmClient> = application::tutor_service::default_llm();
 
-    let router = api::create_router(state);
+    let state = api::routes::AppState { pool, llm, version: env!("CARGO_PKG_VERSION").to_string() };
+
+    let router = api::create_router(state).layer(
+        tower_http::cors::CorsLayer::new()
+            .allow_origin(tower_http::cors::Any)
+            .allow_methods([axum::http::Method::GET, axum::http::Method::POST])
+            .allow_headers(tower_http::cors::Any),
+    );
     let addr: SocketAddr = config.bind_addr().parse()?;
 
     let listener = tokio::net::TcpListener::bind(addr).await?;

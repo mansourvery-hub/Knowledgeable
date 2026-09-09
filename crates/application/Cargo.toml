@@ -10,6 +10,7 @@ description = "Use-case orchestration and transaction boundaries"
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+sqlx = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
@@ -18,3 +19,4 @@ chrono = { workspace = true }
 domain = { workspace = true }
 tutor = { workspace = true }
 llm = { workspace = true }
+infrastructure = { workspace = true }

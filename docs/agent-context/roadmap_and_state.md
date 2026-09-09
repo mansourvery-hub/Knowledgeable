@@ -65,33 +65,33 @@ Next: Phase 1 — Conversational Tutor Skeleton
 
 ### API
 
-- [ ] Conversation creation.
-- [ ] Message persistence.
-- [ ] Tutor streaming endpoint.
-- [ ] SSE event envelope.
+- [x] Conversation creation.
+- [x] Message persistence.
+- [x] Tutor streaming endpoint.
+- [x] SSE event envelope.
 
 ### Client
 
-- [ ] Conversation list.
-- [ ] Chat screen.
-- [ ] Streaming text renderer.
-- [ ] Send/retry/error UX.
+- [x] Conversation list.
+- [x] Chat screen.
+- [x] Streaming text renderer.
+- [x] Send/retry/error UX.
 
 ### Tutor
 
-- [ ] Provider-neutral `LlmClient`.
-- [ ] One configured model adapter.
-- [ ] Basic tutor prompt.
-- [ ] Conversation history handling.
+- [x] Provider-neutral `LlmClient`.
+- [x] One configured model adapter.
+- [x] Basic tutor prompt.
+- [x] Conversation history handling.
 
 ### Exit gate
 
 ```text
-[ ] User can create conversation.
-[ ] User can send a learning question.
-[ ] Tutor streams a response.
-[ ] Conversation survives reload.
-[ ] No graph behavior is assumed by the client.
+[x] User can create conversation.
+[x] User can send a learning question.
+[x] Tutor streams a response.
+[x] Conversation survives reload.
+[x] No graph behavior is assumed by the client.
 ```
 
 ## 4. Phase 2 — Graph Foundation
