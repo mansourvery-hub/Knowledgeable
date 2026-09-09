@@ -135,7 +135,7 @@ pub async fn stream_tutor_turn(
         .collect();
 
     // Build LLM request with basic tutor prompt + history
-    let system_prompt = tutor::prompts::SYSTEM_POLICY.to_string();
+    let system_prompt = tutor::prompts::get_system_policy();
     let mut all_messages = vec![ChatMessage {
         role: "system".into(),
         content: system_prompt,

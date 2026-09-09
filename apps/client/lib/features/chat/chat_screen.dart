@@ -133,6 +133,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     inputTextColor: colorScheme.onSurface,
                     inputBorderRadius: const BorderRadius.all(Radius.circular(28)),
                     inputTextStyle: theme.textTheme.bodyMedium ?? const TextStyle(),
+                    sendButtonIcon: Icon(Icons.send_rounded, color: colorScheme.primary),
                     sentMessageBodyTextStyle: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onPrimary,
                         ) ??
@@ -146,6 +147,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               },
             ),
           ),
+          if (chatState.isStreaming)
+            Container(
+              color: colorScheme.surface,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Tutor is formulating response...',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           if (chatState.error != null)
             Container(
               width: double.infinity,
