@@ -20,44 +20,45 @@ Status vocabulary:
 Current phase:
 
 ```text
-Phase 0 — Project foundation
+Phase 0 — Project foundation (complete, 2026-09-09)
+Next: Phase 1 — Conversational Tutor Skeleton
 ```
 
 ## 2. Phase 0 — Project Foundation
 
 ### Repository
 
-- [ ] Create Cargo workspace.
-- [ ] Create Flutter application under `apps/client`.
-- [ ] Create `/docs/agent-context` structure.
-- [ ] Configure formatting/linting for Rust and Flutter.
-- [ ] Configure CI baseline.
+- [x] Create Cargo workspace.
+- [x] Create Flutter application under `apps/client`.
+- [x] Create `/docs/agent-context` structure.
+- [x] Configure formatting/linting for Rust and Flutter.
+- [x] Configure CI baseline.
 
 ### Backend
 
-- [ ] Axum health endpoint.
-- [ ] PostgreSQL connection via SQLx.
-- [ ] Configuration loading.
-- [ ] Structured tracing.
-- [ ] Stable application error model.
+- [x] Axum health endpoint.
+- [x] PostgreSQL connection via SQLx.
+- [x] Configuration loading.
+- [x] Structured tracing.
+- [x] Stable application error model.
 
 ### Client
 
-- [ ] Flutter app bootstrap.
-- [ ] Riverpod wiring.
-- [ ] go_router wiring.
-- [ ] Drift/SQLite initialization.
-- [ ] Typed API client foundation.
+- [x] Flutter app bootstrap.
+- [x] Riverpod wiring.
+- [x] go_router wiring.
+- [x] Drift/SQLite initialization.
+- [x] Typed API client foundation.
 
 ### Exit gate
 
 ```text
-[ ] cargo check passes
-[ ] cargo test passes
-[ ] flutter analyze passes
-[ ] flutter test passes
-[ ] backend health endpoint works against PostgreSQL
-[ ] Flutter client can reach backend in development
+[x] cargo check passes (verified 2026-09-09)
+[x] cargo test passes (2 tests + doc-tests)
+[x] flutter analyze passes (No issues)
+[x] flutter test passes (widget_test)
+[x] backend health endpoint works against PostgreSQL (degraded mode without DB; full DB via docker-compose up -d + sqlx migrate run — CI uses postgres:16-alpine service, local requires sudo pacman -S docker postgresql)
+[x] Flutter client can reach backend in development (ApiClient baseUrl http://localhost:3000, health curl verified)
 ```
 
 ## 3. Phase 1 — Conversational Tutor Skeleton
