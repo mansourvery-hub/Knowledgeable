@@ -158,7 +158,8 @@ pub async fn stream_tutor_turn(
         let turn_id = Uuid::new_v4();
 
         loop {
-            let model_name = if std::env::var("GEMINI_API_KEY").is_ok() {
+            let is_gemini = std::env::var("GEMINI_API_KEY").is_ok();
+            let model_name = if is_gemini {
                 std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-1.5-flash".to_string())
             } else {
                 std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string())
@@ -166,7 +167,9 @@ pub async fn stream_tutor_turn(
             let req = LlmChatRequest {
                 model: model_name,
                 messages: messages.clone(),
-                tools: get_graph_tools(),
+                // Gemini OpenAI-compatible stream does not support tools/thought signatures cleanly.
+                // Disabling tools on Gemini to prevent 400 Bad Request error.
+                tools: if is_gemini { vec![] } else { get_graph_tools() },
                 stream: true,
             };
 
