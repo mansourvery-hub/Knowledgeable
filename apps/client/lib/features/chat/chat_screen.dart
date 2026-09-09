@@ -52,19 +52,49 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     ref.listen(messagesProvider(widget.conversationId), (_, _) => _scrollToBottom());
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: Text('Chat ${widget.conversationId.substring(0, 8)}'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'AI Learning Tutor',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            Text(
+              'Teaching from your frontier',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back_ios_new, size: 20, color: colorScheme.onSurface),
           onPressed: () => context.go('/'),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, color: colorScheme.onSurface),
             onPressed: () => ref.invalidate(messagesProvider(widget.conversationId)),
           ),
         ],
+        elevation: 0,
+        backgroundColor: colorScheme.surface,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: colorScheme.outlineVariant.withOpacity(0.5),
+            height: 1,
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -75,10 +105,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Failed to load messages: $e'),
-                    const SizedBox(height: 8),
+                    Text('Failed to load messages: $e', style: theme.textTheme.bodyMedium),
+                    const SizedBox(height: 12),
                     ElevatedButton(
                       onPressed: () => ref.invalidate(messagesProvider(widget.conversationId)),
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -86,35 +119,77 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
               data: (messages) {
                 if (messages.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Text(
-                        'No messages yet.\nAsk something to start learning from your frontier.',
-                        textAlign: TextAlign.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.school_outlined,
+                            size: 64,
+                            color: colorScheme.primary.withOpacity(0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Begin your learning journey',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Ask questions or outline a topic. The tutor will check your graph foundation, propose concepts to learn, and walk you through them.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
                   );
                 }
                 return ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   itemCount: messages.length + (chatState.isStreaming ? 1 : 0),
                   itemBuilder: (context, i) {
                     if (chatState.isStreaming && i == messages.length) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                            SizedBox(width: 8),
-                            Text('Tutor is thinking...',
-                                style: TextStyle(fontStyle: FontStyle.italic)),
-                          ],
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Tutor is building prompt context...',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontStyle: FontStyle.italic,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       );
                     }
@@ -124,22 +199,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.82,
+                          maxWidth: MediaQuery.of(context).size.width * 0.78,
                         ),
                         decoration: BoxDecoration(
                           color: isUser
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : Theme.of(context).colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(16).copyWith(
-                            bottomRight: isUser ? const Radius.circular(4) : null,
-                            bottomLeft: !isUser ? const Radius.circular(4) : null,
+                              ? colorScheme.primary
+                              : colorScheme.surfaceContainerHighest.withOpacity(0.7),
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(20),
+                            topRight: const Radius.circular(20),
+                            bottomLeft: isUser ? const Radius.circular(20) : const Radius.circular(4),
+                            bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(20),
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
                         child: SelectableText(
                           m.content,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isUser ? colorScheme.onPrimary : colorScheme.onSurface,
+                            height: 1.45,
+                          ),
                         ),
                       ),
                     );
@@ -151,14 +238,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           if (chatState.error != null)
             Container(
               width: double.infinity,
-              color: Theme.of(context).colorScheme.errorContainer,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: colorScheme.errorContainer,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
+                  Icon(Icons.error_outline, size: 20, color: colorScheme.onErrorContainer),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Error: ${chatState.error}',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
+                      chatState.error!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onErrorContainer,
+                      ),
                     ),
                   ),
                   TextButton(
@@ -167,50 +258,93 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         : () => ref
                             .read(chatControllerProvider(widget.conversationId).notifier)
                             .retryLast(_controller.text),
-                    child: const Text('Retry'),
+                    child: Text(
+                      'RETRY',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onErrorContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          const Divider(height: 1),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              border: Border(
+                top: BorderSide(
+                  color: colorScheme.outlineVariant.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: SafeArea(
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      minLines: 1,
-                      maxLines: 5,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        hintText: chatState.isStreaming
-                            ? 'Streaming...'
-                            : 'Ask to learn anything...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(28),
                       ),
-                      enabled: !chatState.isStreaming,
-                      onSubmitted: (_) => _send(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _controller,
+                        minLines: 1,
+                        maxLines: 5,
+                        textCapitalization: TextCapitalization.sentences,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: chatState.isStreaming
+                              ? 'Tutor is thinking...'
+                              : 'Ask anything...',
+                          hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        enabled: !chatState.isStreaming,
+                        onSubmitted: (_) => _send(),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: chatState.isStreaming ? null : _send,
-                    style: FilledButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(14),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: chatState.isStreaming ? null : _send,
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: chatState.isStreaming
+                            ? colorScheme.outlineVariant
+                            : colorScheme.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: chatState.isStreaming
+                            ? []
+                            : [
+                                BoxShadow(
+                                  color: colorScheme.primary.withOpacity(0.25),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                      ),
+                      child: chatState.isStreaming
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.send_rounded, size: 20, color: Colors.white),
                     ),
-                    child: chatState.isStreaming
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.send, size: 20),
                   ),
                 ],
               ),

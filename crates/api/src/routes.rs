@@ -1,4 +1,4 @@
-use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
+use axum::{extract::State, http::StatusCode, routing::{get, post}, Json, Router};
 use serde::Serialize;
 use sqlx::SqlitePool;
 use std::sync::Arc;
@@ -49,13 +49,15 @@ async fn health_db(
     }))
 }
 
-pub fn create_router(state: AppState) -> Router {
-    use crate::conversations as conv;
+use crate::conversations as conv;
+mod debug_graph;
 
+pub fn create_router(state: AppState) -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/health/db", get(health_db))
         .route("/v1/health", get(health))
+        .route("/debug/concept", post(debug_graph::handle_create_concept))
         // Phase 1: conversations
         .route("/v1/conversations", get(conv::list_conversations).post(conv::create_conversation))
         .route("/v1/conversations/:id", get(conv::get_conversation))

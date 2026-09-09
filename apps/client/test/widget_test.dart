@@ -8,9 +8,6 @@ import 'package:knowledgeable_client/core/api/sse_parser.dart';
 
 class FakeConversationRepository implements ConversationRepository {
   @override
-  dynamic get _client => null;
-
-  @override
   Future<Conversation> create({String? title}) async {
     return Conversation(
       id: 'test-id',

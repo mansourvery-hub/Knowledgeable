@@ -52,7 +52,11 @@ impl LlmClient for FakeLlmClient {
                 full.chars().collect::<Vec<_>>().chunks(18).map(|c| c.iter().collect()).collect();
 
             for chunk in chunks {
-                if tx.send(Ok(chunk)).await.is_err() {
+                let stream_chunk = crate::types::LlmStreamChunk {
+                    content: Some(chunk),
+                    tool_calls: None,
+                };
+                if tx.send(Ok(stream_chunk)).await.is_err() {
                     break;
                 }
                 tokio::time::sleep(std::time::Duration::from_millis(35)).await;
