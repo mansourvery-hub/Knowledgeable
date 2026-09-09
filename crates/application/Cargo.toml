@@ -1,0 +1,25 @@
+[package]
+name = "application"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Use-case orchestration and transaction boundaries"
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+domain = { workspace = true }
+graph = { workspace = true }
+learner = { workspace = true }
+tutor = { workspace = true }
+llm = { workspace = true }
+validation = { workspace = true }
+infrastructure = { workspace = true }

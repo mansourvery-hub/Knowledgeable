@@ -1,0 +1,55 @@
+# Rust
+/target/
+**/*.rs.bk
+.cargo/
+# keep Cargo.lock for reproducible builds (binary workspace)
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+.flutter_version
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Logs / transcripts
+logs/
+.opencode/transcripts/
+logs/transcripts/**
+*.md.log
+transcripts/
+conversations/
+
+# SQLite / local cache
+*.db
+*.sqlite
+*.sqlite3
+
+# Coverage
+lcov.info
+coverage/
+
+# Temporary
+tmp/
+.tmp/
+
+# FVM Version Cache
+.fvm/

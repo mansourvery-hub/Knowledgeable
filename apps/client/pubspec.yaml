@@ -1,0 +1,45 @@
+name: knowledgeable_client
+description: "Knowledgeable — AI tutor that teaches from your frontier."
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State & navigation — robust, long-lived choices per architecture
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  go_router: ^14.8.1
+
+  # Network & persistence
+  dio: ^5.7.0
+  drift: ^2.22.0
+  drift_flutter: ^0.2.4
+  sqlite3_flutter_libs: ^0.5.26
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Typed models
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.13
+  riverpod_generator: ^2.6.1
+  riverpod_lint: ^2.6.1
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+  drift_dev: ^2.22.0
+  # riverpod & freezed need build_runner; drift needs drift_dev
+
+flutter:
+  uses-material-design: true
