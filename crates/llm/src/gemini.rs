@@ -78,9 +78,9 @@ impl LlmClient for GeminiOpenAiClient {
         }
 
         // Gemini expects key as a query param or in bearer auth.
-        // The official OpenAI-compatibility API supports bearer token authorization using your Gemini API key.
-        let res = self.client.post(format!("{}/chat/completions", self.base_url))
-            .bearer_auth(&self.api_key)
+        // Appending ?key=api_key is 100% robust and bypasses any header-stripping issues.
+        let url = format!("{}/chat/completions?key={}", self.base_url, self.api_key);
+        let res = self.client.post(&url)
             .json(&payload)
             .send()
             .await
@@ -111,7 +111,8 @@ impl LlmClient for GeminiOpenAiClient {
                                 if line == "data: [DONE]" {
                                     return;
                                 }
-                                if let Some(data) = line.strip_prefix("data: ") {
+                                if let Some(data) = line.strip_prefix("data:") {
+                                    let data = data.trim();
                                     if let Ok(val) = serde_json::from_str::<serde_json::Value>(data) {
                                         if let Some(choices) = val.get("choices") {
                                             if let Some(choice) = choices.get(0) {
