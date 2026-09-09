@@ -2,8 +2,16 @@
 import 'dart:async';
 import 'dart:html' as html;
 import 'dart:js_util' as js_util;
-import 'dart:typed_data';
 import 'dart:convert';
+
+List<int> jsUint8ArrayToDartList(dynamic jsArray) {
+  final length = js_util.getProperty(jsArray, 'length') as int? ?? 0;
+  final list = List<int>.filled(length, 0);
+  for (int i = 0; i < length; i++) {
+    list[i] = js_util.getProperty(jsArray, i) as int? ?? 0;
+  }
+  return list;
+}
 
 Stream<String> sseStream(
   String url,
@@ -20,7 +28,10 @@ Stream<String> sseStream(
   headers.forEach((k, v) => js_util.setProperty(headersObj, k, v));
   js_util.setProperty(fetchOptions, 'headers', headersObj);
 
-  js_util.promiseToFuture(html.window.fetch(url, fetchOptions)).then((response) {
+  // Call JS window.fetch directly to get raw JS Promise
+  final fetchPromise = js_util.callMethod(html.window, 'fetch', [url, fetchOptions]);
+
+  js_util.promiseToFuture(fetchPromise).then((response) {
     final status = js_util.getProperty(response, 'status') as int? ?? 200;
     if (status < 200 || status >= 300) {
       controller.addError(Exception('Fetch failed with status $status'));
@@ -37,7 +48,8 @@ Stream<String> sseStream(
     final reader = js_util.callMethod(bodyStream, 'getReader', []);
 
     void readChunk() {
-      js_util.promiseToFuture(js_util.callMethod(reader, 'read', [])).then((result) {
+      final readPromise = js_util.callMethod(reader, 'read', []);
+      js_util.promiseToFuture(readPromise).then((result) {
         final done = js_util.getProperty(result, 'done') as bool? ?? false;
         if (done) {
           if (!controller.isClosed) {
@@ -47,7 +59,7 @@ Stream<String> sseStream(
         }
         final value = js_util.getProperty(result, 'value');
         if (value != null) {
-          final bytes = value as Uint8List;
+          final bytes = jsUint8ArrayToDartList(value);
           final text = utf8.decode(bytes);
           controller.add(text);
         }
