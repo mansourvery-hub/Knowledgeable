@@ -86,13 +86,16 @@ class SessionsScreen extends ConsumerWidget {
                       final c = conversations[i];
                       final title = c.title?.isNotEmpty == true ? c.title! : 'Conversation ${c.id.substring(0, 8)}';
                       return ListTile(
+                        mouseCursor: SystemMouseCursors.click,
                         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
                         subtitle: Text(
                           'Updated ${_fmt(c.updatedAt)}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.go('/c/${c.id}'),
+                        onTap: () {
+                          context.go('/c/${c.id}');
+                        },
                       );
                     },
                   ),
