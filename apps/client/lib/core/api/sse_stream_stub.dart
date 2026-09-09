@@ -1,6 +1,6 @@
 import 'dart:async';
 
-Stream<String> sseStream(
+Stream<List<int>> sseStream(
   String url,
   String body,
   Map<String, String> headers,

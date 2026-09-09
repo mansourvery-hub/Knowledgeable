@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:dio/dio.dart';
 
-Stream<String> sseStream(
+Stream<List<int>> sseStream(
   String url,
   String body,
   Map<String, String> headers,
@@ -23,6 +22,6 @@ Stream<String> sseStream(
 
   final stream = response.data!.stream;
   await for (final chunk in stream) {
-    yield utf8.decode(chunk);
+    yield chunk;
   }
 }

@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:html' as html;
 import 'dart:js_util' as js_util;
-import 'dart:convert';
 
 List<int> jsUint8ArrayToDartList(dynamic jsArray) {
   final length = js_util.getProperty(jsArray, 'length') as int? ?? 0;
@@ -13,12 +12,12 @@ List<int> jsUint8ArrayToDartList(dynamic jsArray) {
   return list;
 }
 
-Stream<String> sseStream(
+Stream<List<int>> sseStream(
   String url,
   String body,
   Map<String, String> headers,
 ) {
-  final controller = StreamController<String>();
+  final controller = StreamController<List<int>>();
 
   final fetchOptions = js_util.newObject();
   js_util.setProperty(fetchOptions, 'method', 'POST');
@@ -60,8 +59,7 @@ Stream<String> sseStream(
         final value = js_util.getProperty(result, 'value');
         if (value != null) {
           final bytes = jsUint8ArrayToDartList(value);
-          final text = utf8.decode(bytes);
-          controller.add(text);
+          controller.add(bytes);
         }
         readChunk();
       }).catchError((e) {

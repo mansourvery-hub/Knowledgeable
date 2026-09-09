@@ -55,8 +55,10 @@ class ConversationRepository {
       'Content-Type': 'application/json',
     };
 
-    final rawStream = sse_impl.sseStream(url, body, headers);
-    final lines = rawStream.transform(const LineSplitter());
+    final rawByteStream = sse_impl.sseStream(url, body, headers);
+    // Apply stateful utf8 decoder to safely handle multi-byte characters split across chunks!
+    final rawStringStream = rawByteStream.transform(utf8.decoder);
+    final lines = rawStringStream.transform(const LineSplitter());
     yield* parseSseStream(lines);
   }
 }
