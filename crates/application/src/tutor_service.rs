@@ -159,7 +159,7 @@ pub async fn stream_tutor_turn(
 
         loop {
             let model_name = if std::env::var("GEMINI_API_KEY").is_ok() {
-                std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-2.5-flash".to_string())
+                std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-1.5-flash".to_string())
             } else {
                 std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string())
             };
@@ -320,7 +320,7 @@ pub async fn stream_tutor_turn(
 pub fn default_llm() -> std::sync::Arc<dyn LlmClient> {
     if let Ok(key) = std::env::var("GEMINI_API_KEY") {
         if !key.trim().is_empty() {
-            let model = std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-2.5-flash".to_string());
+            let model = std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-1.5-flash".to_string());
             tracing::info!(model = %model, "initializing real Gemini OpenAI-Compatible LLM client");
             return std::sync::Arc::new(llm::GeminiOpenAiClient::new(key));
         }
