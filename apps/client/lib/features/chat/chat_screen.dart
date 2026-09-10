@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
@@ -42,6 +43,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _handleSendPressed(types.PartialText message) {
+    dev.log('_handleSendPressed called with: ${message.text}');
     ref.read(chatControllerProvider(widget.conversationId).notifier).send(message.text);
   }
 

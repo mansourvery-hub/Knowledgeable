@@ -53,6 +53,7 @@ class ConversationRepository {
     final headers = {
       'Accept': 'text/event-stream',
       'Content-Type': 'application/json',
+      'Authorization': (_client.dio.options.headers['Authorization'] ?? '') as String,
     };
 
     final rawByteStream = sse_impl.sseStream(url, body, headers);
