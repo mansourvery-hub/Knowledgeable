@@ -23,6 +23,8 @@ pub enum AppError {
     LlmProvider(String),
     #[error("rate limited")]
     RateLimited,
+    #[error("service unavailable")]
+    ServiceUnavailable(String),
     #[error("internal error")]
     Internal(String),
 }
@@ -46,6 +48,7 @@ impl IntoResponse for AppError {
             }
             Self::LlmProvider(_) => (StatusCode::BAD_GATEWAY, "llm_provider_error"),
             Self::RateLimited => (StatusCode::TOO_MANY_REQUESTS, "rate_limited"),
+            Self::ServiceUnavailable(_) => (StatusCode::SERVICE_UNAVAILABLE, "service_unavailable"),
             Self::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, "internal_error"),
         };
 
@@ -60,6 +63,7 @@ impl IntoResponse for AppError {
             Self::Unauthorized => "unauthorized".into(),
             Self::Forbidden => "forbidden".into(),
             Self::RateLimited => "rate limited".into(),
+            Self::ServiceUnavailable(m) => m,
         };
 
         let body = Json(ErrorBody { code: code.into(), message });

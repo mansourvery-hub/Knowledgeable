@@ -1,4 +1,9 @@
-use axum::{extract::State, http::StatusCode, routing::{get, post}, Json, Router};
+use axum::{
+    extract::State,
+    http::StatusCode,
+    routing::{get, post},
+    Json, Router,
+};
 use serde::Serialize;
 use sqlx::SqlitePool;
 use std::sync::Arc;
@@ -51,6 +56,7 @@ async fn health_db(
 
 use crate::conversations as conv;
 mod debug_graph;
+mod neighborhood;
 
 pub fn create_router(state: AppState) -> Router {
     Router::new()
@@ -58,6 +64,9 @@ pub fn create_router(state: AppState) -> Router {
         .route("/health/db", get(health_db))
         .route("/v1/health", get(health))
         .route("/debug/concept", post(debug_graph::handle_create_concept))
+        .route("/debug/graph", get(debug_graph::handle_get_graph))
+        // Phase 6 (Brick G1): versioned read-only neighborhood for graph inspection
+        .route("/v1/graph/neighborhood", get(neighborhood::handle_get_neighborhood))
         // Phase 1: conversations
         .route("/v1/conversations", get(conv::list_conversations).post(conv::create_conversation))
         .route("/v1/conversations/:id", get(conv::get_conversation))
