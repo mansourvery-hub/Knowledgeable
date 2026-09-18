@@ -403,6 +403,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// Step 6: MARKETPLACE revoked (agent marketplace outside the product
 /// surface) — nav entry hidden (already false via AGENTS); direct `/agents`
 /// nav renders null and redirects to `/c/new` by the component's own gate.
+/// Step 7: REMOTE_AGENTS revoked (remote-agent sharing + generic agent API
+/// keys outside the product surface) — settings API-keys entry, admin
+/// permission editor, and footer share action now read as denied.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -420,7 +423,6 @@ async fn roles_grant_user_everything_and_404_unknown() {
         "PEOPLE_PICKER",
         "FILE_SEARCH",
         "FILE_CITATIONS",
-        "REMOTE_AGENTS",
         "SHARED_LINKS",
         "SCHEDULES",
     ];

@@ -128,7 +128,11 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     // seam is preserved (policy §9.4). The client was built for this gate —
     // `useAppStartup` suppresses all MCP queries without USE, and the side
     // panel, tools-dropdown entry, and dialogs hide centrally.
-    "REMOTE_AGENTS",
+    // No "REMOTE_AGENTS": remote-agent sharing and generic agent API-key
+    // management are outside the product surface (policy §9.3). Revoking
+    // hides the settings API-keys entry, the admin permission editor, and
+    // the agent-footer share action centrally; nothing in the chat turn path
+    // reads this grant.
     // No "SKILLS": generic skills management is outside the product surface
     // (policy §9.3). Every consumer pairs the grant with agent capabilities
     // or lives inside removed surfaces, and the `$` mention handler
