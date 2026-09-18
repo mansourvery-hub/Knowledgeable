@@ -134,7 +134,9 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     // learner-provided material (policy §9.4). `FileSearch.tsx` returns null
     // without the grant and tools-dropdown rows pair it with capabilities —
     // so revocation hides centrally; no `/api/files/*` backend exists today.
-    "FILE_CITATIONS",
+    // No "FILE_CITATIONS": dead grant — no client code gates on this
+    // permission (only the unrelated `FileCitation` data type exists).
+    // Removing it keeps the granted set minimal and honest.
     // No "MCP_SERVERS": MCP UI is hidden for now while the future tutor-tool
     // seam is preserved (policy §9.4). The client was built for this gate —
     // `useAppStartup` suppresses all MCP queries without USE, and the side
