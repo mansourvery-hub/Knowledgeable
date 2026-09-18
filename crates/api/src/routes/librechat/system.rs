@@ -118,7 +118,10 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     "RUN_CODE",
     "WEB_SEARCH",
     "PEOPLE_PICKER",
-    "MARKETPLACE",
+    // No "MARKETPLACE": the agent marketplace is outside the product surface
+    // (policy §9.3). The client was built for this gate — `Marketplace.tsx`
+    // renders null and redirects to `/c/new` without USE, and
+    // `useShowMarketplace` already reads false (AGENTS revoked earlier).
     "FILE_SEARCH",
     "FILE_CITATIONS",
     // No "MCP_SERVERS": MCP UI is hidden for now while the future tutor-tool

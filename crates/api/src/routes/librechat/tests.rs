@@ -400,6 +400,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// surface) — endpoint picker, new-convo fallback, and provider-key listing
 /// verified unaffected for the `knowledgeable` endpoint; `/agents` route
 /// gating is a later step.
+/// Step 6: MARKETPLACE revoked (agent marketplace outside the product
+/// surface) — nav entry hidden (already false via AGENTS); direct `/agents`
+/// nav renders null and redirects to `/c/new` by the component's own gate.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -415,7 +418,6 @@ async fn roles_grant_user_everything_and_404_unknown() {
         "RUN_CODE",
         "WEB_SEARCH",
         "PEOPLE_PICKER",
-        "MARKETPLACE",
         "FILE_SEARCH",
         "FILE_CITATIONS",
         "REMOTE_AGENTS",
