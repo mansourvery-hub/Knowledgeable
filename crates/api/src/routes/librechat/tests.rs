@@ -84,6 +84,38 @@ async fn config_disables_parameters_panel() {
 }
 
 #[tokio::test]
+async fn config_interface_matches_phase1_policy() {
+    // Locks the Phase 1 config-only end state: only `modelSelect` (model
+    // picker) and `sidePanel` (hosts the Knowledgeable graph) stay visible;
+    // every other interface surface stays hidden behind the existing switch.
+    let (app, _pool) = setup().await;
+    let response = app.oneshot(get("/api/config")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let config = body_json(response).await;
+    let interface = &config["interface"];
+    for visible in ["modelSelect", "sidePanel"] {
+        assert_eq!(interface[visible], true, "{visible} must stay visible");
+    }
+    for hidden in [
+        "parameters",
+        "presets",
+        "prompts",
+        "bookmarks",
+        "multiConvo",
+        "agents",
+        "temporaryChat",
+        "runCode",
+        "webSearch",
+        "fileSearch",
+        "contextUsage",
+        "feedback",
+    ] {
+        assert_eq!(interface[hidden], false, "{hidden} must stay hidden");
+    }
+}
+
+#[tokio::test]
 async fn refresh_mints_local_session() {
     let (app, _pool) = setup().await;
     let response = app
