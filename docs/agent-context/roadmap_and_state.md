@@ -306,8 +306,11 @@ proving isolation.
   with missing routes named as gaps, not claimed functionality. (Established.)
 - [x] 0.3 Protected boundaries: Knowledgeable code, adapter, shared infra, and
   upstream-shaped code documented (§11). (Established.)
-- [ ] 0.4 Clean working-tree baseline: known-good baseline with the repo's
-  tests/build verification run and recorded before implementation begins.
+- [x] 0.4 Clean working-tree baseline: commit `c89760b` (5 policy docs files)
+  is the known-good baseline; `cargo fmt --all -- --check` clean and
+  `cargo test --workspace --all-features` green (98 passed, 0 failed) verified
+  2026-09-18 before implementation begins. (Full `scripts/verify.sh` not run:
+  its Flutter section targets the deprecated `apps/client`.)
 
 ### Phase 1 — Configuration-only disabling (safest first)
 
