@@ -417,6 +417,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// null-return / grant && capability pairing; no `/api/files/*` backend.
 /// Step 11: FILE_CITATIONS revoked (dead grant — no client code gates on it;
 /// only the unrelated `FileCitation` data type exists).
+/// Step 12: SCHEDULES revoked (scheduled chats outside the product surface)
+/// — all consumers live inside the Schedules surface itself, already hidden
+/// via the absent interface flag; revocation double-locks it.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -425,14 +428,7 @@ async fn roles_grant_user_everything_and_404_unknown() {
     assert_eq!(response.status(), StatusCode::OK);
     let role = body_json(response).await;
     assert_eq!(role["name"], "USER");
-    let expected = [
-        "BOOKMARKS",
-        "MULTI_CONVO",
-        "TEMPORARY_CHAT",
-        "PEOPLE_PICKER",
-        "SHARED_LINKS",
-        "SCHEDULES",
-    ];
+    let expected = ["BOOKMARKS", "MULTI_CONVO", "TEMPORARY_CHAT", "PEOPLE_PICKER", "SHARED_LINKS"];
     let permissions = role["permissions"].as_object().unwrap();
     assert_eq!(permissions.len(), expected.len(), "exact permission set");
     for permission_type in expected {

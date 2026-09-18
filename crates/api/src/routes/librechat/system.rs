@@ -151,7 +151,10 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     // or lives inside removed surfaces, and the `$` mention handler
     // early-returns without access — so revocation hides centrally.
     "SHARED_LINKS",
-    "SCHEDULES",
+    // No "SCHEDULES": scheduled chats are outside the product surface
+    // (policy §9.3). All three consumers live inside the Schedules surface
+    // itself (side-panel entry already hidden via the absent interface flag;
+    // panel and card) — revocation double-locks it centrally.
 ];
 
 /// `GET /api/roles/:role_name` — local role grants.
