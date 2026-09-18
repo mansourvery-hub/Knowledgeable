@@ -382,6 +382,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// Roles gate client UI and the ChatRoute boot gate (`roles.USER != null`).
 /// Single-user local mode grants the USER role every gated capability;
 /// unknown roles 404 instead of silently hiding UI.
+/// Phase 2 baseline: this locks the EXACT granted set, because several
+/// `useSideNavLinks` entries gate on these permissions alone — so shrinking
+/// this set is what will hide the removed surfaces centrally.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -390,7 +393,28 @@ async fn roles_grant_user_everything_and_404_unknown() {
     assert_eq!(response.status(), StatusCode::OK);
     let role = body_json(response).await;
     assert_eq!(role["name"], "USER");
-    for permission_type in ["PROMPTS", "BOOKMARKS", "AGENTS", "MEMORIES", "SKILLS"] {
+    let expected = [
+        "PROMPTS",
+        "BOOKMARKS",
+        "AGENTS",
+        "MEMORIES",
+        "MULTI_CONVO",
+        "TEMPORARY_CHAT",
+        "RUN_CODE",
+        "WEB_SEARCH",
+        "PEOPLE_PICKER",
+        "MARKETPLACE",
+        "FILE_SEARCH",
+        "FILE_CITATIONS",
+        "MCP_SERVERS",
+        "REMOTE_AGENTS",
+        "SKILLS",
+        "SHARED_LINKS",
+        "SCHEDULES",
+    ];
+    let permissions = role["permissions"].as_object().unwrap();
+    assert_eq!(permissions.len(), expected.len(), "exact permission set");
+    for permission_type in expected {
         assert_eq!(role["permissions"][permission_type]["USE"], true, "for {permission_type}");
     }
 
