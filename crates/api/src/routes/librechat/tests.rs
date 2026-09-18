@@ -387,6 +387,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// this set is what hides the removed surfaces centrally.
 /// Step 1: MEMORIES revoked (policy §9.6) — the Memories panel, its settings
 /// toggle, and chat-input memory affordances now read as denied.
+/// Step 2: PROMPTS revoked (prompt management removed, slash commands a
+/// disabled FUTURE) — Prompts panel, slash-command setting, and slash popover
+/// now read as denied.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -396,7 +399,6 @@ async fn roles_grant_user_everything_and_404_unknown() {
     let role = body_json(response).await;
     assert_eq!(role["name"], "USER");
     let expected = [
-        "PROMPTS",
         "BOOKMARKS",
         "AGENTS",
         "MULTI_CONVO",

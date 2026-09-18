@@ -98,7 +98,10 @@ pub async fn models() -> Json<Value> {
 /// `librechat-data-provider`). Kept as a literal list so a data-provider
 /// upgrade that adds a type fails loudly here instead of silently hiding UI.
 const LOCAL_PERMISSION_TYPES: &[&str] = &[
-    "PROMPTS",
+    // No "PROMPTS": prompt library management is outside the product surface
+    // and slash commands are a disabled FUTURE (policy §9.4). Revoking the
+    // grant hides the Prompts panel, the slash-command setting, and the
+    // chat-input slash popover centrally (`useHasAccess` strict `=== true`).
     "BOOKMARKS",
     "AGENTS",
     // No "MEMORIES": generic LibreChat memory competes with the authoritative
