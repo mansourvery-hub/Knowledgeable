@@ -412,6 +412,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// Step 9: RUN_CODE revoked (execution FUTURE/OPTIONAL, display KEEP) —
 /// `canRunCode` feeds only `CodeBlock allowExecution`, so highlighting, copy,
 /// Mermaid, and math rendering are untouched while execution UI hides.
+/// Step 10: FILE_SEARCH revoked (document RAG a FUTURE for learner-provided
+/// material) — badge-row toggle and tools-dropdown row hide via the same
+/// null-return / grant && capability pairing; no `/api/files/*` backend.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -425,7 +428,6 @@ async fn roles_grant_user_everything_and_404_unknown() {
         "MULTI_CONVO",
         "TEMPORARY_CHAT",
         "PEOPLE_PICKER",
-        "FILE_SEARCH",
         "FILE_CITATIONS",
         "SHARED_LINKS",
         "SCHEDULES",

@@ -130,7 +130,10 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     // (policy §9.3). The client was built for this gate — `Marketplace.tsx`
     // renders null and redirects to `/c/new` without USE, and
     // `useShowMarketplace` already reads false (AGENTS revoked earlier).
-    "FILE_SEARCH",
+    // No "FILE_SEARCH": document RAG is a FUTURE capability for
+    // learner-provided material (policy §9.4). `FileSearch.tsx` returns null
+    // without the grant and tools-dropdown rows pair it with capabilities —
+    // so revocation hides centrally; no `/api/files/*` backend exists today.
     "FILE_CITATIONS",
     // No "MCP_SERVERS": MCP UI is hidden for now while the future tutor-tool
     // seam is preserved (policy §9.4). The client was built for this gate —
