@@ -420,6 +420,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// Step 12: SCHEDULES revoked (scheduled chats outside the product surface)
 /// — all consumers live inside the Schedules surface itself, already hidden
 /// via the absent interface flag; revocation double-locks it.
+/// Step 13: MULTI_CONVO revoked (side-by-side compare outside the product
+/// surface) — header button, header-menu item, `+` popover handler, and
+/// settings toggle are all strict conditionals on the grant.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -428,7 +431,7 @@ async fn roles_grant_user_everything_and_404_unknown() {
     assert_eq!(response.status(), StatusCode::OK);
     let role = body_json(response).await;
     assert_eq!(role["name"], "USER");
-    let expected = ["BOOKMARKS", "MULTI_CONVO", "TEMPORARY_CHAT", "PEOPLE_PICKER", "SHARED_LINKS"];
+    let expected = ["BOOKMARKS", "TEMPORARY_CHAT", "PEOPLE_PICKER", "SHARED_LINKS"];
     let permissions = role["permissions"].as_object().unwrap();
     assert_eq!(permissions.len(), expected.len(), "exact permission set");
     for permission_type in expected {

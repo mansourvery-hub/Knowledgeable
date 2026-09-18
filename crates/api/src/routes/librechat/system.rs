@@ -113,7 +113,10 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     // learner graph (policy §9.6). Absent grants read as denied client-side
     // (`useHasAccess` strict `=== true`), hiding the Memories panel, its
     // settings toggle, and chat-input memory affordances centrally.
-    "MULTI_CONVO",
+    // No "MULTI_CONVO": side-by-side compare is outside the product surface
+    // (Phase 1: `interface.multiConvo` already false). Verified safe: the
+    // header button, header-menu item, `+` popover handler, and settings
+    // toggle are all strict conditional renders / early-returns on the grant.
     "TEMPORARY_CHAT",
     // No "RUN_CODE": executing code is a FUTURE/OPTIONAL capability while
     // displaying code stays KEEP (policy §9.4). Verified safe: `canRunCode`
