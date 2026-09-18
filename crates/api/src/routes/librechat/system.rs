@@ -102,8 +102,13 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     // and slash commands are a disabled FUTURE (policy §9.4). Revoking the
     // grant hides the Prompts panel, the slash-command setting, and the
     // chat-input slash popover centrally (`useHasAccess` strict `=== true`).
+    // No "AGENTS": agent builder/marketplace are outside the product surface
+    // (policy §9.3). Verified safe: `useEndpoints` only filters the `agents`
+    // endpoint (ours is `knowledgeable`); `useNewConvo` falls through to the
+    // non-agents endpoint; `useProviderKeys` already excludes agent providers
+    // when `agents` is unconfigured. The `/agents` route itself is a later
+    // Phase 2 route-gating step.
     "BOOKMARKS",
-    "AGENTS",
     // No "MEMORIES": generic LibreChat memory competes with the authoritative
     // learner graph (policy §9.6). Absent grants read as denied client-side
     // (`useHasAccess` strict `=== true`), hiding the Memories panel, its

@@ -396,6 +396,10 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// Step 4: SKILLS revoked (generic skills outside the product surface) —
 /// side-panel entry, chat-input rows, and the `$` mention popover (which
 /// early-returns without access) now read as denied.
+/// Step 5: AGENTS revoked (agent builder/marketplace outside the product
+/// surface) — endpoint picker, new-convo fallback, and provider-key listing
+/// verified unaffected for the `knowledgeable` endpoint; `/agents` route
+/// gating is a later step.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -406,7 +410,6 @@ async fn roles_grant_user_everything_and_404_unknown() {
     assert_eq!(role["name"], "USER");
     let expected = [
         "BOOKMARKS",
-        "AGENTS",
         "MULTI_CONVO",
         "TEMPORARY_CHAT",
         "RUN_CODE",
