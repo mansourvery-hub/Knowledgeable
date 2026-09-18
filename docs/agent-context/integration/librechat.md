@@ -270,3 +270,236 @@ To prevent vendor lock-in and keep upstream merges straightforward:
 3. **Consumer Subscription Clarification**:
    - Consumer ChatGPT Plus ($20/mo) and Gemini Advanced subscriptions **do not** provide public third-party API keys or OAuth grant flows for arbitrary chat applications.
    - Knowledgeable strictly uses official developer APIs and does not attempt fragile browser session hijacking.
+
+---
+
+## 9. Authoritative Feature-Policy Matrix (Canonical)
+
+This section is the canonical product direction for the bundled LibreChat
+frontend. It supersedes any earlier, more aggressive audit notes.
+
+**Status vocabulary.** `KEEP / DISABLE / REMOVE / FUTURE` describes **product
+direction, not necessarily immediate code deletion**:
+- `KEEP` — intended product surface. It may still need backend work; that gap
+  is a future implementation contract, not a reason to cut the feature.
+- `DISABLE` — hide from the current product surface via configuration or a
+  central UI gate. Implementation stays close to upstream.
+- `REMOVE (from product surface)` — not part of the product. First hide/disable;
+  delete implementation only later, after dependency analysis proves isolation.
+- `FUTURE` — not MVP, deliberately preserved as a possible capability with a
+  clean seam. Do not architect the cleanup to make it needlessly hard.
+
+**Two columns are recorded separately** for every row: `product decision` and
+`current backend/implementation status`. A product `KEEP` with a missing backend
+route means "build it later", never "cut it now".
+
+### 9.1 Core features — KEEP (not cleanup targets)
+
+| Feature | Product | Backend status today |
+| :--- | :--- | :--- |
+| Normal chat | KEEP | Served: `POST /api/agents/chat/:endpoint` (legacy SSE + v2 ticket/stream/status) |
+| SSE / real-time streaming | KEEP | Served (`created` / cumulative `text` deltas / `final`; `tool_progress` + `concept_annotations` frames) |
+| Conversation history, open conversations | KEEP | Served (`GET /api/convos`, `GET /api/convos/:id`, `GET /api/messages/:conversationId`) |
+| Conversation titles | KEEP | Served (`gen_title`, `POST /api/convos/update`, provisional title on turn start) |
+| Delete conversation | KEEP | Served (`DELETE /api/convos` cascade) |
+| Regenerate answers, edit previous messages, stop generation | KEEP | Client turn resend/abort against the chat endpoint; `GET .../status/:conversationId` authorizes teardown |
+| Model selection, endpoint/model infrastructure | KEEP | Served (`GET /api/endpoints`, `GET /api/models`, per-turn provider dispatch incl. turn-scoped BYOK `apiKey`) |
+| Markdown, LaTeX/math, code highlighting, copy, chat-input QoL, basic chat UX/a11y, theme/appearance, font size, RTL/LTR, auto-scroll, keep-screen-awake, smooth streaming | KEEP | Client-rendered; no dedicated backend route needed |
+| Concept highlighting | KEEP | Served (`concept_annotations` frame + `remarkConceptHighlight` + `<ConceptHighlight>`) |
+| Knowledge Graph explorer | KEEP | Served (`GET /api/graph/neighborhood` alias of canonical `GET /v1/graph/neighborhood`; `GraphExplorer` + search `GET /api/concepts/search`) |
+| Personal Knowledge Wiki | KEEP | Served (`GET /api/concepts/:id/wiki` cached pages + `WikiDrawer`) |
+| Concept search (graph pickers) | KEEP | Served (`GET /api/concepts/search`) |
+| Local conversation export/import | KEEP | Client-side data controls; keep |
+| Mermaid diagrams | KEEP | Explicitly retained rendering capability |
+
+### 9.2 Conversation organization — KEEP (earlier audit was too aggressive)
+
+| Feature | Product | Backend status today |
+| :--- | :--- | :--- |
+| Bookmarks (mark important learning conversations) | KEEP | **Missing**: no `/api/tags*` route; `interface.bookmarks: false` but `role()` still grants `BOOKMARKS.*` so the side-panel gate can still show it — future contract |
+| Pin conversation | KEEP | **Missing**: no `/api/convos/pin`; `conv_json` hardcodes `pinned: false` — future contract |
+| Archive conversation | KEEP | **Missing**: no `/api/convos/archive*`; `conv_json` hardcodes `isArchived: false` — future contract |
+| Fork / branch conversations (explore explanation path A vs B without destroying the original) | KEEP | **Missing**: no `/api/convos/fork`, no `/api/messages/branch` — future contract |
+| Search all conversations | KEEP (supporting capability for persistent learning history, not "generic clutter") | **Missing**: no `/api/search*` — future contract |
+| Share conversation (narrow exception: "Share this conversation"; NO followers, profiles, comments, collaborative editing, communities, feeds, discovery) | KEEP (post-MVP) | **Missing**: no `/api/share*`; `sharedLinksEnabled: false` — future contract |
+
+### 9.3 Removed from the current product surface (hide first; delete only if isolated)
+
+Product `REMOVE` here means **remove from the visible product**, not "delete
+every related source file on day one". These remain vendored in
+`apps/web/client/src/routes/index.tsx`, `SidePanel/*`, settings `registry.tsx`,
+and `packages/data-provider/src/api-endpoints.ts`, while the Rust adapter serves
+none of their backends (all 404/undeclared):
+
+Agent marketplace, agent builder, assistant builder, custom agents, skills,
+projects, prompt library/editor/variables, scheduled chats, generic LibreChat
+Memories (see §9.6), plugin marketplace, generic enterprise/admin UI, Langfuse
+UI/integration, generic agent API-key management, 2FA UI, SaaS
+registration/password-reset/social-login UI, and other account-management
+surfaces with no Knowledgeable counterpart.
+
+### 9.4 Disabled now, preserved for the future
+
+| Feature | Product | Note |
+| :--- | :--- | :--- |
+| Prompt slash commands | FUTURE (disabled now) | Reusable prompts could serve tutoring later; do not turn the MVP into a prompt-management app |
+| File uploads / attachments (PDFs, notes, screenshots, books, exercises) | FUTURE (disabled now) | Lack of `/api/files/*` is implementation state, not permanent rejection; keep the seam addable |
+| File search / document RAG | FUTURE | Valuable later for learner-provided material |
+| Web search | FUTURE / OPTIONAL | Never a hidden dependency of the core tutor |
+| Code execution (displaying code stays KEEP) | FUTURE / OPTIONAL | Do not implement now |
+| MCP | FUTURE / IMPORTANT POSSIBILITY (disabled UI now) | The future tutor may need MCP-compatible tools (references, docs, domain DBs, calculators). Hide UI, keep a clean integration boundary, keep pedagogical logic authoritative — never a generic MCP agent shell |
+| Speech-to-text | FUTURE | Language learning, accessibility, hands-free, oral questioning |
+| Text-to-speech | FUTURE | Pronunciation/listening, accessibility, spoken explanations |
+| Conversation / voice mode | FUTURE | Pedagogically interesting; not MVP; no voice-product effort now |
+| Provider API keys (BYOK) | FUTURE product capability (omit in MVP UI) | Backend already honors turn-scoped `apiKey`; future settings UI needs strong security boundaries, not the whole generic provider-management product |
+| Login / accounts | FUTURE, BUT IMPORTANT | Needed for sync, cloud data, hosted deployments; single-user stub today (`GET /api/user`, `POST|GET /api/auth/refresh`) must not imply sync can never exist |
+| Token usage UI | FUTURE / IMPORTANT FOR BYOK | Cost visibility matters with user keys; keep out of MVP main UI |
+| Billing / credits | FUTURE / DEPLOYMENT-DEPENDENT | Relevant only for hosted SaaS; never architect the MVP around billing |
+
+### 9.5 Reasoning display ("show thinking")
+
+Policy: **available as an optional user setting, OFF by default**
+(`showThinkingAtom` / `registry.tsx` `showThinking`). Rationale: transparency
+builds pedagogical trust, but always-on thinking is noisy and distracts from
+learning. Distinguish pedagogical explanation ("why the tutor is teaching this
+prerequisite") and supported model-generated reasoning summaries/status from
+private/internal chain-of-thought — Knowledgeable never depends on exposing the
+latter.
+
+### 9.6 Generic LibreChat Memories — REMOVE (architectural decision)
+
+Do not maintain two competing memory concepts. LibreChat-style preference memory
+("prefers concise explanations") must not compete with the Knowledgeable
+learner model ("low confidence in concept X, missing prerequisite Y"). The
+graph/learner state stays authoritative; hide/remove Memories from the product
+surface (`MemoryPanel`, `MemoryToggle`, `/api/memories*` stays unimplemented).
+
+### 9.7 Parameters / presets / traces / artifacts
+
+- **Parameters** — DISABLE: do not expose technical model knobs not backed by
+  the Knowledgeable endpoint (today `interface.parameters: true`; cleanup sets
+  it `false` via config).
+- **Presets** — DISABLE, not MVP (`interface.presets: false`, no `/api/presets`).
+- **Generic traces** — DISABLE: keep pedagogically useful tutor/tool transparency
+  (`tool_progress` → `ToolActivity`) where required; do not expose generic infra
+  telemetry (`Trace/*`, no `/api/traces*`).
+- **Artifacts** — DISABLE/REVIEW: not a central product concept; retain shared
+  rendering infra only where cheap.
+
+---
+
+## 10. Current Backend Boundary (What the Adapter Actually Serves)
+
+Implemented in `crates/api/src/routes/librechat/` (`mod.rs`, `system.rs`,
+`convos.rs`, `chat.rs`, plus `wiki.rs`, `concepts.rs`):
+
+```text
+GET  /api/config
+GET  /api/user
+GET|POST /api/auth/refresh            (local single-user session stub)
+GET  /api/endpoints
+GET  /api/models                      (env-truthful + local-tutor fallback)
+GET  /api/roles/:role_name            (USER grants; unknown names 404)
+GET  /api/convos                      (list; nextCursor null)
+GET  /api/convos/:id
+GET  /api/convos/gen_title/:id
+POST /api/convos/update               ({ arg: { conversationId, title } })
+DELETE /api/convos                    ({ arg: { conversationId } })
+GET  /api/messages/:conversationId
+POST /api/agents/chat/:endpoint       (legacy SSE or v2 start ticket)
+GET  /api/agents/chat/stream/:stream_id
+GET  /api/agents/chat/status/:conversationId
+GET  /api/concepts/:id/wiki
+GET  /api/concepts/search
+GET  /api/graph/neighborhood          (alias of canonical /v1/graph/neighborhood)
+```
+
+Explicitly NOT implemented (any UI calling these degrades — the reason cleanup
+hides the UI first): `/api/search*`, `/api/share*`, `/api/files*`,
+`/api/tags*`, `/api/convos/{fork,pin,archive,duplicate}`, `/api/messages/branch`,
+`/api/presets*`, `/api/prompts*`, `/api/skills*`, `/api/memories*`,
+`/api/projects*`, `/api/schedules*`, `/api/mcp*`, `/api/agents*` (agent CRUD),
+`/api/assistants*`, `/api/traces*`, `/api/balance`, 2FA/auth-provider/admin/
+Langfuse surfaces. Known mismatch to handle in cleanup: `system.rs`
+`interface.* = false` does NOT hide everything, because `system.rs` `role()`
+grants every `PermissionTypes.*` capability and several side-panel entries
+(`useSideNavLinks.ts`: prompts, bookmarks, memories, skills, MCP, files) gate
+only on permissions, not on `interfaceConfig`.
+
+---
+
+## 11. Protected Boundaries
+
+- `apps/web/client/src/knowledgeable/` — protected Knowledgeable boundary
+  (concept highlighting, wiki drawer, graph explorer, API clients, stores).
+  LibreChat cleanup must not modify it unless an explicit integration contract
+  requires it.
+- `crates/api/src/routes/librechat/` — narrow adapter contract. Add a backend
+  route only for an actual Knowledgeable product requirement, never merely
+  because a dormant frontend component expects it.
+- Shared frontend infrastructure (chat rendering, message tree, React Query,
+  endpoint selection, SSE, mobile layout, a11y, markdown, error handling) —
+  protect even when it lives near a hidden feature.
+- Intentionally upstream-shaped code — keep file structure, avoid renames,
+  restructuring, abstraction rewrites, formatting churn, or unrelated import
+  reorganization so a future upstream merge diffs cleanly.
+
+---
+
+## 12. Upstream-Maintenance Constraints (Mandatory)
+
+1. **Prefer existing configuration switches.** If LibreChat exposes
+   `webSearch / runCode / fileSearch / multiConvo / temporaryChat / presets /
+   prompts / bookmarks / ... : false`, use that seam first; do not rewrite
+   feature internals to hide them.
+2. **Prefer existing capability/permission gates.** Reuse interface config,
+   feature flags, capabilities, and `role()` permissions; do not invent a
+   parallel flag framework without genuine necessity.
+3. **Prefer centralized UI gates over feature-internal modification.** Change one
+   navigation registry, menu registry, route registration, or capability mapping
+   rather than dozens of files inside the feature. The ideal patch is small and
+   obvious.
+4. **Do not fork feature internals unnecessarily.** Central gate → UI
+   unavailable, while the upstream implementation stays close to upstream. Never
+   start by rewriting a feature's components/providers/routing.
+5. **Keep Knowledgeable-specific code isolated** under
+   `apps/web/client/src/knowledgeable/`.
+6. **Preserve upstream file structure** — no gratuitous renames, moves, or churn.
+7. **Keep the adapter contract narrow** — no backend route without a real
+   Knowledgeable product requirement (prevents unused-UI → backend-work →
+   maintenance-burden spirals).
+8. **Do not confuse "product KEEP" with "implement immediately."**
+   `Fork = KEEP` means the backend gap belongs in the future roadmap, not that
+   the next PR builds it.
+9. **Remove product surface before deleting infrastructure**: hide/disable →
+   verify core flows → inspect dependencies → identify genuinely dead code →
+   only then consider deleting isolated dead implementation. Never begin with
+   `rm -rf feature-directory`.
+10. **Protect shared infrastructure** supporting chat, rendering, state, SSE, and
+    a11y.
+11. **Every cleanup batch must be independently verifiable**: narrow scope,
+    explicit expected behavior, verification contract, rollback point, small diff.
+12. **Minimize divergence**: a 3-line configuration change beats a 300-line
+    custom rewrite; isolate genuinely necessary custom code at an explicit
+    Knowledgeable seam.
+13. **Upstream updates are first-class**: the end state must support
+    `pull upstream → resolve a small set of deliberate patches → run focused
+    verification → continue`, with Knowledgeable changes easy to identify and
+    gating changes centralized.
+
+**Per-batch discipline:** `READ → MAP → CHANGE ONE SMALL SEAM → VERIFY →
+INSPECT DIFF → COMMIT/BASELINE → NEXT SEAM`. Never hand an agent a giant list
+and hope a rewrite still works; the project optimizes for controlled evolution,
+not maximum deletion.
+
+## 13. Product Philosophy
+
+Knowledgeable is a focused AI learning environment built on LibreChat's mature
+chat UX and adapted to a Rust/SQLite pedagogical backend. LibreChat supplies
+commodity infrastructure; Knowledgeable supplies the learner model, knowledge
+graph, prerequisite awareness, reactive teaching, pedagogical state, concept
+highlighting, and the personal knowledge wiki. The target is "expose only the
+features that support Knowledgeable, keep useful future capabilities possible,
+and minimize divergence from upstream" — not "remove everything LibreChat
+does". The staged execution contracts live in
+`docs/agent-context/roadmap_and_state.md` §4.

@@ -48,7 +48,7 @@
 
 ## Next Steps
 - T23 (READY→IN PROGRESS): graph tab rehaul — SVG canvas (`graphLayout` + `GraphCanvas`) integrated into the explorer (root-anchored, review-aware), lists kept as fallback. Code + 74 Jest green, tsc clean. Live check pending a running stack.
-- T24 (FUTURE): LibreChat feature audit — inventory every bundled feature against the product vision, then trim/disable all legacy extras.
+- T24 (FUTURE): LibreChat product-surface policy + staged cleanup roadmap — canonical policy in `docs/agent-context/integration/librechat.md` §9–§13 and phased contracts in `docs/agent-context/roadmap_and_state.md` §4. Direction: trim the visible product while preserving LibreChat's architecture (KEEP bookmarks/pin/archive/fork/search/minimal-share; FUTURE files/MCP/speech/BYOK/accounts/billing; REMOVE generic memories/enterprise surfaces from view). Implementation NOT started; execute incrementally per phase contracts.
 - Fixed post-T21: unknown `/api/*` + `/v1/*` paths stay JSON 404 under a mounted web build (the SPA fallback served 200 HTML and crashed boot parsing). Covered by regression test.
 - User-path E2E (canonical stack: `./start.sh` + seeded DB + keyed backend): keyed turn with 3 tool-activity items, weak badge (Factor · 30%), graph neighborhood renders — 6/6 green.
 - Beta prep: commit hygiene (large uncommitted worktree needs a scoped commit series), keyed structured-generation proof (wiki gen vs live Gemini), Ollama-offline gate if a server is available.

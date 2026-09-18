@@ -16,6 +16,40 @@ Demonstrate an AI tutor that identifies and logs learner confusion/misunderstand
 - `log_observation` (tool).
 - Minimalist knowledge graph storage (SQLite).
 
+## MVP Scope
+The MVP stays centered on:
+```text
+chat
++
+streaming
++
+reactive tutor/tool use
++
+learner graph/state
++
+conversation persistence
+```
+Mermaid diagram rendering is explicitly retained as part of core chat rendering.
+
+## Deliberately Out of MVP (Future, Not Rejected)
+These are NOT MVP requirements, but they are NOT permanently rejected. Each is a
+future capability with its own integration seam; see the canonical matrix in
+`docs/agent-context/integration/librechat.md` and the staged roadmap in
+`docs/agent-context/roadmap_and_state.md`:
+- Conversation organization backend work still missing: bookmarks, pin, archive,
+  fork/branch, conversation search, minimal sharing (product KEEP; backend gaps
+  are post-MVP contracts, not scope cuts).
+- Prompt slash commands, file attachments/uploads, file search/document RAG,
+  web search, code execution, MCP (future tutor-tool capability; hide UI now,
+  preserve the seam).
+- Speech-to-text, text-to-speech, conversation/voice mode.
+- Provider API keys / BYOK management UI, login/accounts/sync, token-usage UI,
+  billing/credits (deployment-dependent futures).
+- Reasoning/"thinking" display: optional user setting, OFF by default; never a
+  dependency on private chain-of-thought.
+- Disabled in MVP: technical parameter knobs, presets, generic traces, and
+  artifacts as a product concept (retain shared rendering infra where cheap).
+
 ## Excluded Capabilities
 - Cloud sync.
 - Collaboration features.

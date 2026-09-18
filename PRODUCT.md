@@ -19,7 +19,7 @@ Self-directed learners, students, and professionals acquiring complex new skills
 ## UX requirements
 - Minimalist, distraction-free chat.
 - Real-time stream processing.
-- Transparency of tutor's reasoning (as required for pedagogical trust).
+- Pedagogical transparency for trust: the tutor explains *why* it is teaching a prerequisite. Model "thinking"/reasoning display is an optional user setting, OFF by default, and must never depend on exposing private internal chain-of-thought.
 
 ## Constraints
 - Must function within a local-first or hybrid architecture (currently hybrid with Axum backend).
@@ -27,7 +27,13 @@ Self-directed learners, students, and professionals acquiring complex new skills
 
 ## Non-goals
 - Full curriculum generation (we focus on the learner's current frontier).
-- Social features (collaboration).
+- Full social/collaboration surfaces: followers, social profiles, comments, collaborative editing, public communities, content feeds, social discovery.
+- Minimal "Share this conversation" is a deliberate, narrow exception to the above (post-MVP): a learner may share a useful explanation/conversation. It must not grow into collaboration or a content ecosystem.
+
+## Product direction
+- Knowledgeable is a focused AI learning environment built on LibreChat's mature chat UX and adapted to a Rust/SQLite pedagogical backend. LibreChat supplies commodity infrastructure; Knowledgeable supplies the learner model, knowledge graph, prerequisite awareness, reactive teaching, pedagogical state, concept highlighting, and the personal knowledge wiki.
+- Cleanup goal: expose only the features that support Knowledgeable, keep useful future capabilities possible, and minimize divergence from upstream.
+- Canonical feature policy (KEEP / DISABLE / REMOVE-from-surface / FUTURE, with product decision recorded separately from backend status) lives in `docs/agent-context/integration/librechat.md`. The staged cleanup roadmap lives in `docs/agent-context/roadmap_and_state.md`.
 
 ## Important assumptions
 - LLM tool-calling can correctly model pedagogical state.

@@ -275,3 +275,101 @@ yet exercised live)._
 _`./scripts/dev` for development; the Axum binary serves the built client
 for single-binary production. Offline path (`local-tutor`, no keys) verified
 throughout; Ollama-offline streaming still open (no local server here)._
+
+---
+
+## 4. LibreChat Product-Surface Cleanup Roadmap (Canonical, Not Started)
+
+Policy source: `docs/agent-context/integration/librechat.md` §9–§13
+(feature matrix, backend boundary, protected boundaries, upstream constraints).
+`PRODUCT.md` / `MVP.md` hold the product/MVP intent; this section holds the
+staged execution contracts. Implementation has NOT started — this task only
+codifies the roadmap. Each phase is a set of small, independently verifiable
+contracts with a narrow scope, explicit expected behavior, a verification
+contract, a rollback point, and a small diff. Per-batch discipline:
+`READ → MAP → CHANGE ONE SMALL SEAM → VERIFY → INSPECT DIFF →
+COMMIT/BASELINE → NEXT SEAM`.
+
+Scope guard for every phase: trim the visible product while preserving
+LibreChat's architecture wherever practical. Prefer existing config switches,
+existing permission gates, and centralized UI gates; do not fork feature
+internals; keep `apps/web/client/src/knowledgeable/` isolated; keep the Rust
+adapter narrow; never delete implementation before hiding, verifying, and
+proving isolation.
+
+### Phase 0 — Documentation and baseline
+
+- [x] 0.1 Authoritative feature matrix: exactly one canonical matrix (§9 above
+  in the integration doc) recording product decision AND backend status
+  separately. (Established by the policy-codification task.)
+- [x] 0.2 Current backend boundary: actual adapter routes documented (§10),
+  with missing routes named as gaps, not claimed functionality. (Established.)
+- [x] 0.3 Protected boundaries: Knowledgeable code, adapter, shared infra, and
+  upstream-shaped code documented (§11). (Established.)
+- [ ] 0.4 Clean working-tree baseline: known-good baseline with the repo's
+  tests/build verification run and recorded before implementation begins.
+
+### Phase 1 — Configuration-only disabling (safest first)
+
+Targets where LibreChat already exposes switches: parameters, presets,
+temporary chat, multi-conversation, web search, file search, code execution,
+and siblings.
+- [ ] 1.1 The feature is invisible/unavailable to the user.
+- [ ] 1.2 Core chat still works.
+- [ ] 1.3 Conversation history still works.
+- [ ] 1.4 Model selection still works.
+- [ ] 1.5 SSE streaming still works.
+- [ ] 1.6 No Knowledgeable-specific functionality regresses.
+- [ ] 1.7 The diff uses existing LibreChat seams, not feature-internal rewrites.
+
+### Phase 2 — Centralized UI gating
+
+For features lacking config support but hideable at central seams: side-panel
+entries, chat-input tools, menus, settings sections, unsupported nav routes.
+Must handle the known `system.rs` mismatch (`interface.* = false` is NOT enough
+because `role()` grants every permission and several `useSideNavLinks` entries
+gate on permissions only).
+- [ ] 2.1 Unsupported features no longer appear in normal navigation.
+- [ ] 2.2 Direct navigation to disabled surfaces cannot produce broken/dead states.
+- [ ] 2.3 Core navigation remains intact.
+- [ ] 2.4 Knowledgeable Graph/Wiki navigation remains intact.
+- [ ] 2.5 Changes are centralized and upstream-friendly.
+
+### Phase 3 — Remove clearly unwanted product surfaces
+
+Agents, agent marketplace/builder, assistant builder, skills, projects, prompt
+management, schedules, LibreChat memories, plugin marketplace, generic
+enterprise/admin, unnecessary account surfaces, Langfuse UI. Hide/disable first;
+do NOT immediately delete implementation files.
+- [ ] 3.1 The user cannot accidentally enter the removed surface.
+- [ ] 3.2 Normal chat has no broken references to the removed surface.
+- [ ] 3.3 No shared component required by core chat was deleted.
+- [ ] 3.4 Dependency analysis identifies genuinely dead implementation.
+- [ ] 3.5 Only genuinely isolated dead code is considered for deletion.
+
+### Phase 4 — Keep/future features: preserve clean seams
+
+Bookmarks, pin, archive, fork/branch, conversation search, minimal share, file
+attachments, file search, MCP, STT, TTS, voice/conversation mode, provider API
+keys/BYOK, login/accounts/sync, token usage, billing, prompt slash commands.
+- [ ] 4.1 They are not accidentally deleted during cleanup.
+- [ ] 4.2 Where currently unsupported, they are documented as future backend/product work.
+- [ ] 4.3 The current MVP remains small despite preserving future capability.
+- [ ] 4.4 Future functionality has a clearly identifiable integration seam.
+- [ ] 4.5 No speculative backend implementation is introduced for dormant UI.
+
+### Phase 5 — Optional post-MVP feature projects (explicitly out of cleanup)
+
+Each becomes its own feature project, never one giant "enable everything"
+task: bookmarks, pin, archive, conversation search, fork/branch, minimal
+sharing, attachments, document search/RAG, speech, MCP, BYOK, accounts/sync,
+token usage, billing, prompt slash commands, voice mode.
+
+### Phase 6 — Upstream synchronization discipline
+
+- [ ] 6.1 Upstream changes review cleanly against a mostly recognizable tree.
+- [ ] 6.2 Knowledgeable-specific changes are easy to identify.
+- [ ] 6.3 Configuration/gating changes remain centralized.
+- [ ] 6.4 Minimal unrelated diff noise.
+- [ ] 6.5 Focused tests verify chat, streaming, conversations, message
+  rendering, model selection, Graph/Wiki, and navigation after an update.
