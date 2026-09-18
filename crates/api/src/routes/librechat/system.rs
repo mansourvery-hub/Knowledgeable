@@ -43,7 +43,7 @@ pub async fn config(State(_state): State<AppState>) -> Json<Value> {
         "titleGenerationTiming": "final",
         "interface": {
             "modelSelect": true,
-            "parameters": true,
+            "parameters": false,
             "sidePanel": true,
             "presets": false,
             "prompts": false,

@@ -71,6 +71,19 @@ async fn config_advertises_knowledgeable_endpoint() {
 }
 
 #[tokio::test]
+async fn config_disables_parameters_panel() {
+    // Phase 1 seam: the client gates the Parameters side panel on
+    // `interfaceConfig.parameters === true` (useSideNavLinks.ts), so the
+    // adapter hides it with the existing switch — no UI rewrite.
+    let (app, _pool) = setup().await;
+    let response = app.oneshot(get("/api/config")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let config = body_json(response).await;
+    assert_eq!(config["interface"]["parameters"], false);
+}
+
+#[tokio::test]
 async fn refresh_mints_local_session() {
     let (app, _pool) = setup().await;
     let response = app
