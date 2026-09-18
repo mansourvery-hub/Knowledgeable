@@ -121,7 +121,10 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     // `useAppStartup` suppresses all MCP queries without USE, and the side
     // panel, tools-dropdown entry, and dialogs hide centrally.
     "REMOTE_AGENTS",
-    "SKILLS",
+    // No "SKILLS": generic skills management is outside the product surface
+    // (policy §9.3). Every consumer pairs the grant with agent capabilities
+    // or lives inside removed surfaces, and the `$` mention handler
+    // early-returns without access — so revocation hides centrally.
     "SHARED_LINKS",
     "SCHEDULES",
 ];

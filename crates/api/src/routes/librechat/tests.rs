@@ -393,6 +393,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// Step 3: MCP_SERVERS revoked (MCP UI hidden, future tutor-tool seam kept) —
 /// side-panel entry, tools-dropdown row, and dialogs hide, and `useAppStartup`
 /// suppresses all MCP queries without USE.
+/// Step 4: SKILLS revoked (generic skills outside the product surface) —
+/// side-panel entry, chat-input rows, and the `$` mention popover (which
+/// early-returns without access) now read as denied.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -413,7 +416,6 @@ async fn roles_grant_user_everything_and_404_unknown() {
         "FILE_SEARCH",
         "FILE_CITATIONS",
         "REMOTE_AGENTS",
-        "SKILLS",
         "SHARED_LINKS",
         "SCHEDULES",
     ];
