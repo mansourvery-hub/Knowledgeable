@@ -16,6 +16,7 @@ const settingsContext: SettingsContextValue = {
   hasUserProvidedEndpoints: false,
   hasMultiConvo: false,
   hasPrompts: false,
+  hasTemporaryChat: false,
   isLocalProvider: true,
   twoFactorEnabled: false,
   allowAccountDeletion: true,
@@ -98,6 +99,18 @@ describe('settings registry', () => {
 
     it('hides the setting when stateful code sessions are unavailable', () => {
       expect(entry?.show?.({ ...settingsContext, hasStatefulCodeSessions: false })).toBe(false);
+    });
+  });
+
+  describe('default temporary chat visibility', () => {
+    const entry = registry.find((setting) => setting.id === 'defaultTemporaryChat');
+
+    it('shows the setting when temporary chat is granted', () => {
+      expect(entry?.show?.({ ...settingsContext, hasTemporaryChat: true })).toBe(true);
+    });
+
+    it('hides the setting when temporary chat is revoked', () => {
+      expect(entry?.show?.({ ...settingsContext, hasTemporaryChat: false })).toBe(false);
     });
   });
 });

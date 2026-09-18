@@ -424,10 +424,10 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// surface) — header button, header-menu item, `+` popover handler, and
 /// settings toggle are all strict conditionals on the grant.
 /// Step 14: TEMPORARY_CHAT revoked (ephemeral chats outside the product
-/// surface) — header toggle/indicator, menu item, and shortcut hide; normal
-/// path untouched (backend never returns `isTemporary`/`expiredAt`).
-/// Follow-up: `defaultTemporaryChat` settings toggle has no upstream `show`
-/// gate and stays visible pending its own small frontend seam.
+/// surface) — header toggle/indicator, menu item, shortcut, and (via the
+/// central settings-registry `show` gate) the `defaultTemporaryChat` toggle
+/// hide; normal path untouched (backend never returns
+/// `isTemporary`/`expiredAt`).
 /// Step 15: PEOPLE_PICKER revoked (principal picking serves per-resource
 /// sharing dialogs with no backend; future minimal share is link-based so
 /// SHARED_LINKS stays held) — admin section hides; principal search was

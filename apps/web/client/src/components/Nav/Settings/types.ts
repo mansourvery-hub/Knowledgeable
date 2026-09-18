@@ -46,6 +46,7 @@ export interface SettingsContextValue {
   hasUserProvidedEndpoints: boolean;
   hasMultiConvo: boolean;
   hasPrompts: boolean;
+  hasTemporaryChat: boolean;
   isLocalProvider: boolean;
   twoFactorEnabled: boolean;
   allowAccountDeletion: boolean;

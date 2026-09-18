@@ -440,6 +440,7 @@ export const registry: SettingEntry[] = [
     tab: CHAT,
     section: 'conversations',
     labelKey: 'com_nav_default_temporary_chat',
+    show: (ctx) => ctx.hasTemporaryChat,
     Component: toggleControl({
       stateAtom: store.defaultTemporaryChat,
       localizationKey: 'com_nav_default_temporary_chat',

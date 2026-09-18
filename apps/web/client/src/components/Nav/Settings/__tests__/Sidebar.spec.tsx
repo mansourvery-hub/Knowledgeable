@@ -14,6 +14,7 @@ const ctx: SettingsContextValue = {
   hasUserProvidedEndpoints: false,
   hasMultiConvo: false,
   hasPrompts: false,
+  hasTemporaryChat: false,
   isLocalProvider: true,
   twoFactorEnabled: false,
   allowAccountDeletion: true,

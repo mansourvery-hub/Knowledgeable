@@ -26,6 +26,10 @@ export function useSettingsContext(): SettingsContextValue {
     permissionType: PermissionTypes.PROMPTS,
     permission: Permissions.USE,
   });
+  const hasTemporaryChat = useHasAccess({
+    permissionType: PermissionTypes.TEMPORARY_CHAT,
+    permission: Permissions.USE,
+  });
 
   const balanceEnabled = startupConfig?.balance?.enabled === true;
   const langfuseConnectionAccess = startupConfig?.langfuseConnectionAccess === true;
@@ -37,6 +41,7 @@ export function useSettingsContext(): SettingsContextValue {
   const hasRemoteAgentsBool = hasRemoteAgents === true;
   const hasMultiConvoBool = hasMultiConvo === true;
   const hasPromptsBool = hasPrompts === true;
+  const hasTemporaryChatBool = hasTemporaryChat === true;
   const engineTTS = useRecoilValue<string>(store.engineTTS);
   const hasUserProvidedEndpoints = useProviderKeys().length > 0;
   const hasStatefulCodeSessions =
@@ -52,6 +57,7 @@ export function useSettingsContext(): SettingsContextValue {
       hasUserProvidedEndpoints,
       hasMultiConvo: hasMultiConvoBool,
       hasPrompts: hasPromptsBool,
+      hasTemporaryChat: hasTemporaryChatBool,
       isLocalProvider,
       twoFactorEnabled,
       allowAccountDeletion,
@@ -69,6 +75,7 @@ export function useSettingsContext(): SettingsContextValue {
       hasUserProvidedEndpoints,
       hasMultiConvoBool,
       hasPromptsBool,
+      hasTemporaryChatBool,
       isLocalProvider,
       twoFactorEnabled,
       allowAccountDeletion,
