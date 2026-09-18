@@ -111,7 +111,18 @@ pub async fn create_message(
     role: MessageRole,
     content: &str,
 ) -> Result<ConversationMessage, sqlx::Error> {
-    let id = Uuid::new_v4();
+    create_message_with_id(pool, Uuid::new_v4(), conversation_id, role, content).await
+}
+
+/// Persists a message under a caller-chosen id. Used by protocol adapters that
+/// must advertise a stable message id to the client before persistence completes.
+pub async fn create_message_with_id(
+    pool: &SqlitePool,
+    id: Uuid,
+    conversation_id: Uuid,
+    role: MessageRole,
+    content: &str,
+) -> Result<ConversationMessage, sqlx::Error> {
     let now = Utc::now();
     let now_s = now.to_rfc3339();
     let id_s = id.to_string();
@@ -167,4 +178,32 @@ pub async fn list_messages(
             created_at: parse_dt(&created_at),
         })
         .collect())
+}
+
+/// Updates a conversation's title and bumps `updated_at`.
+pub async fn update_conversation_title(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+    title: &str,
+) -> Result<(), sqlx::Error> {
+    let now = Utc::now().to_rfc3339();
+    sqlx::query("UPDATE conversations SET title = ?, updated_at = ? WHERE id = ?")
+        .bind(title)
+        .bind(&now)
+        .bind(conversation_id.to_string())
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+/// Deletes a conversation. Messages cascade via the schema's foreign key.
+pub async fn delete_conversation(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("DELETE FROM conversations WHERE id = ?")
+        .bind(conversation_id.to_string())
+        .execute(pool)
+        .await?;
+    Ok(())
 }

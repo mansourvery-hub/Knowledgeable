@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="74" failures="0" errors="0" time="236.498">
+  <testsuite name="GraphCanvas" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:43:17" time="0.732" tests="4">
+    <testcase classname="GraphCanvas renders positioned nodes and typed edges" name="GraphCanvas renders positioned nodes and typed edges" time="0.043">
+    </testcase>
+    <testcase classname="GraphCanvas truncates long labels but keeps full names for hover" name="GraphCanvas truncates long labels but keeps full names for hover" time="0.017">
+    </testcase>
+    <testcase classname="GraphCanvas notifies on click and keyboard activation" name="GraphCanvas notifies on click and keyboard activation" time="0.014">
+    </testcase>
+    <testcase classname="GraphCanvas renders nothing without nodes" name="GraphCanvas renders nothing without nodes" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="graphLayout" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:43:17" time="0.141" tests="4">
+    <testcase classname="graphLayout computes BFS depths from the root" name="graphLayout computes BFS depths from the root" time="0.001">
+    </testcase>
+    <testcase classname="graphLayout places every node exactly once with the root centered" name="graphLayout places every node exactly once with the root centered" time="0.003">
+    </testcase>
+    <testcase classname="graphLayout drops dangling edges and sizes the viewBox to fit" name="graphLayout drops dangling edges and sizes the viewBox to fit" time="0.004">
+    </testcase>
+    <testcase classname="graphLayout parks unreachable nodes on an outer ring instead of dropping them" name="graphLayout parks unreachable nodes on an outer ring instead of dropping them" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="GraphPanel" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:43:18" time="0.533" tests="8">
+    <testcase classname="GraphPanel validates UUID shape on the client" name="GraphPanel validates UUID shape on the client" time="0.002">
+    </testcase>
+    <testcase classname="GraphPanel prompts for a root concept without fetching on mount" name="GraphPanel prompts for a root concept without fetching on mount" time="0.014">
+    </testcase>
+    <testcase classname="GraphPanel rejects a malformed ID without fetching" name="GraphPanel rejects a malformed ID without fetching" time="0.061">
+    </testcase>
+    <testcase classname="GraphPanel loads and renders the neighborhood for a valid ID" name="GraphPanel loads and renders the neighborhood for a valid ID" time="0.029">
+    </testcase>
+    <testcase classname="GraphPanel drills down when a node is selected" name="GraphPanel drills down when a node is selected" time="0.025">
+    </testcase>
+    <testcase classname="GraphPanel maps 404 to a not-found message and 503 to unavailable" name="GraphPanel maps 404 to a not-found message and 503 to unavailable" time="0.026">
+    </testcase>
+    <testcase classname="GraphPanel searches by name and loads the picked concept" name="GraphPanel searches by name and loads the picked concept" time="0.039">
+    </testcase>
+    <testcase classname="GraphPanel shows an empty state when search matches nothing" name="GraphPanel shows an empty state when search matches nothing" time="0.017">
+    </testcase>
+  </testsuite>
+  <testsuite name="remarkConceptHighlight" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:43:18" time="0.354" tests="7">
+    <testcase classname="remarkConceptHighlight wraps known mentions with highlight data" name="remarkConceptHighlight wraps known mentions with highlight data" time="0.009">
+    </testcase>
+    <testcase classname="remarkConceptHighlight leaves weak and new mentions as plain text (T25: chat is known-only)" name="remarkConceptHighlight leaves weak and new mentions as plain text (T25: chat is known-only)" time="0.002">
+    </testcase>
+    <testcase classname="remarkConceptHighlight prefers the longest name on overlap and skips subwords" name="remarkConceptHighlight prefers the longest name on overlap and skips subwords" time="0.006">
+    </testcase>
+    <testcase classname="remarkConceptHighlight leaves fenced code, inline code, and math byte-identical" name="remarkConceptHighlight leaves fenced code, inline code, and math byte-identical" time="0.003">
+    </testcase>
+    <testcase classname="remarkConceptHighlight never touches HTML tags or attributes" name="remarkConceptHighlight never touches HTML tags or attributes" time="0.003">
+    </testcase>
+    <testcase classname="remarkConceptHighlight passes through without annotations" name="remarkConceptHighlight passes through without annotations" time="0.001">
+    </testcase>
+    <testcase classname="remarkConceptHighlight highlights inside emphasis and link labels" name="remarkConceptHighlight highlights inside emphasis and link labels" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="GraphExplorer" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:43:18" time="55.307" tests="6">
+    <testcase classname="GraphExplorer renders counts, confidence, and the edge-type legend" name="GraphExplorer renders counts, confidence, and the edge-type legend" time="0.05">
+    </testcase>
+    <testcase classname="GraphExplorer filters to the review/weak view when toggled" name="GraphExplorer filters to the review/weak view when toggled" time="0.01">
+    </testcase>
+    <testcase classname="GraphExplorer notifies the parent when a node is selected" name="GraphExplorer notifies the parent when a node is selected" time="0.009">
+    </testcase>
+    <testcase classname="GraphExplorer renders loading, error+retry, and empty states accessibly" name="GraphExplorer renders loading, error+retry, and empty states accessibly" time="0.014">
+    </testcase>
+    <testcase classname="GraphExplorer renders the empty state when no neighborhood is loaded" name="GraphExplorer renders the empty state when no neighborhood is loaded" time="0.006">
+    </testcase>
+    <testcase classname="GraphExplorer renders the canvas map and keeps the root anchored under the review filter" name="GraphExplorer renders the canvas map and keeps the root anchored under the review filter" time="0.034">
+    </testcase>
+  </testsuite>
+  <testsuite name="annotation store" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:44:14" time="9.177" tests="5">
+    <testcase classname="annotation store stores and reads annotations per message" name="annotation store stores and reads annotations per message" time="0.41">
+    </testcase>
+    <testcase classname="annotation store rejects malformed envelopes without touching the store" name="annotation store rejects malformed envelopes without touching the store" time="1.21">
+    </testcase>
+    <testcase classname="annotation store consumes a well-formed envelope even when no entry survives" name="annotation store consumes a well-formed envelope even when no entry survives" time="0.199">
+    </testcase>
+    <testcase classname="annotation store sanitizes entries and caps per-message storage" name="annotation store sanitizes entries and caps per-message storage" time="0.046">
+    </testcase>
+    <testcase classname="annotation store notifies hook subscribers and supports targeted/all clears" name="annotation store notifies hook subscribers and supports targeted/all clears" time="0.5">
+    </testcase>
+  </testsuite>
+  <testsuite name="wikiDrawer store" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:47:08" time="1.133" tests="5">
+    <testcase classname="wikiDrawer store opens, ignores empties, and closes idempotently" name="wikiDrawer store opens, ignores empties, and closes idempotently" time="0.011">
+    </testcase>
+    <testcase classname="wikiClient builds the wiki URL and rejects empty ids" name="wikiClient builds the wiki URL and rejects empty ids" time="0.012">
+    </testcase>
+    <testcase classname="wikiClient returns the typed page on 200" name="wikiClient returns the typed page on 200" time="0.001">
+    </testcase>
+    <testcase classname="wikiClient maps 404 codes to not-ready vs not-found" name="wikiClient maps 404 codes to not-ready vs not-found" time="0.001">
+    </testcase>
+    <testcase classname="wikiClient maps transport failure to unavailable and rejects malformed payloads" name="wikiClient maps transport failure to unavailable and rejects malformed payloads" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="graphClient" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:47:10" time="0.259" tests="10">
+    <testcase classname="graphClient builds the /api alias URL with clamped depth/limit" name="graphClient builds the /api alias URL with clamped depth/limit" time="0.002">
+    </testcase>
+    <testcase classname="graphClient rejects an empty concept id without fetching" name="graphClient rejects an empty concept id without fetching" time="0.001">
+    </testcase>
+    <testcase classname="graphClient returns the typed neighborhood on 200" name="graphClient returns the typed neighborhood on 200" time="0.005">
+    </testcase>
+    <testcase classname="graphClient maps 400 to validation, 404 to not-found, 503 to unavailable" name="graphClient maps 400 to validation, 404 to not-found, 503 to unavailable" time="0.002">
+    </testcase>
+    <testcase classname="graphClient maps other statuses to NeighborhoodError with the envelope code" name="graphClient maps other statuses to NeighborhoodError with the envelope code" time="0">
+    </testcase>
+    <testcase classname="graphClient maps network failure to unavailable (never a raw TypeError leak)" name="graphClient maps network failure to unavailable (never a raw TypeError leak)" time="0">
+    </testcase>
+    <testcase classname="graphClient rejects malformed payloads instead of crashing render" name="graphClient rejects malformed payloads instead of crashing render" time="0.001">
+    </testcase>
+    <testcase classname="searchConcepts short-circuits empty queries without fetching" name="searchConcepts short-circuits empty queries without fetching" time="0.001">
+    </testcase>
+    <testcase classname="searchConcepts returns sanitized hits and drops invalid entries" name="searchConcepts returns sanitized hits and drops invalid entries" time="0">
+    </testcase>
+    <testcase classname="searchConcepts maps transport failure to unavailable" name="searchConcepts maps transport failure to unavailable" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="ConceptHighlight" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:47:10" time="0.158" tests="3">
+    <testcase classname="ConceptHighlight renders badge styles per status with an accessible label" name="ConceptHighlight renders badge styles per status with an accessible label" time="0.017">
+    </testcase>
+    <testcase classname="ConceptHighlight degrades to plain text on invalid props" name="ConceptHighlight degrades to plain text on invalid props" time="0.003">
+    </testcase>
+    <testcase classname="ConceptHighlight opens the wiki drawer on click when a concept id is present" name="ConceptHighlight opens the wiki drawer on click when a concept id is present" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="tool progress store" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:47:10" time="0.131" tests="3">
+    <testcase classname="tool progress store stores started then upgrades to finished by call id" name="tool progress store stores started then upgrades to finished by call id" time="0.002">
+    </testcase>
+    <testcase classname="tool progress store rejects malformed envelopes without touching the store" name="tool progress store rejects malformed envelopes without touching the store" time="0.002">
+    </testcase>
+    <testcase classname="tool progress store caps per-message storage and notifies subscribers" name="tool progress store caps per-message storage and notifies subscribers" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="ToolActivity" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:47:10" time="0.138" tests="3">
+    <testcase classname="ToolActivity renders nothing without activities" name="ToolActivity renders nothing without activities" time="0.004">
+    </testcase>
+    <testcase classname="ToolActivity shows pulsing active checks and settled finished ones" name="ToolActivity shows pulsing active checks and settled finished ones" time="0.006">
+    </testcase>
+    <testcase classname="ToolActivity falls back to the raw tool name for unknown tools" name="ToolActivity falls back to the raw tool name for unknown tools" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="graphUtils" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:47:10" time="0.1" tests="10">
+    <testcase classname="graphUtils clamps depth to [0,5] with default 3" name="graphUtils clamps depth to [0,5] with default 3" time="0.002">
+    </testcase>
+    <testcase classname="graphUtils clamps limit to [1,100] with default 50" name="graphUtils clamps limit to [1,100] with default 50" time="0.001">
+    </testcase>
+    <testcase classname="graphUtils derives healthy/review/unseen from the 0.95 threshold" name="graphUtils derives healthy/review/unseen from the 0.95 threshold" time="0.001">
+    </testcase>
+    <testcase classname="graphUtils treats unseen nodes as not review-eligible" name="graphUtils treats unseen nodes as not review-eligible" time="0">
+    </testcase>
+    <testcase classname="graphUtils prefers the server-derived review flag when present" name="graphUtils prefers the server-derived review flag when present" time="0">
+    </testcase>
+    <testcase classname="graphUtils filters the review/weak view" name="graphUtils filters the review/weak view" time="0">
+    </testcase>
+    <testcase classname="graphUtils counts concepts, links, and health buckets" name="graphUtils counts concepts, links, and health buckets" time="0">
+    </testcase>
+    <testcase classname="graphUtils formats confidence as percent or unseen" name="graphUtils formats confidence as percent or unseen" time="0">
+    </testcase>
+    <testcase classname="graphUtils labels the semantic vs dependency distinction" name="graphUtils labels the semantic vs dependency distinction" time="0.001">
+    </testcase>
+    <testcase classname="graphUtils sorts weakest first with unseen last" name="graphUtils sorts weakest first with unseen last" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="WikiDrawer" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:43:17" time="234.956" tests="3">
+    <testcase classname="WikiDrawer renders nothing without a concept" name="WikiDrawer renders nothing without a concept" time="0.063">
+    </testcase>
+    <testcase classname="WikiDrawer loads and renders the cached page with anchors and gauge" name="WikiDrawer loads and renders the cached page with anchors and gauge" time="0.084">
+    </testcase>
+    <testcase classname="WikiDrawer flags stale pages and explains not-ready with retry" name="WikiDrawer flags stale pages and explains not-ready with retry" time="0.186">
+    </testcase>
+  </testsuite>
+  <testsuite name="concept highlight pipeline" errors="0" failures="0" skipped="0" timestamp="2026-09-18T14:43:17" time="235.054" tests="3">
+    <testcase classname="concept highlight pipeline registers concept-highlight in the shared components map" name="concept highlight pipeline registers concept-highlight in the shared components map" time="0.02">
+    </testcase>
+    <testcase classname="concept highlight pipeline badges known prose mentions while sparing code, math, and weak mentions" name="concept highlight pipeline badges known prose mentions while sparing code, math, and weak mentions" time="0.407">
+    </testcase>
+    <testcase classname="concept highlight pipeline renders nothing extra while streaming (no annotations yet)" name="concept highlight pipeline renders nothing extra while streaming (no annotations yet)" time="0.007">
+    </testcase>
+  </testsuite>
+</testsuites>

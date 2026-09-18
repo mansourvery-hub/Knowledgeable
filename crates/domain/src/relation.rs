@@ -28,3 +28,13 @@ impl ConceptRelation {
         Ok(())
     }
 }
+
+/// Reference to a relation endpoint: an authoritative concept or a pending
+/// candidate (data_models §12). Candidates resolve inside validation/commit;
+/// persisted authoritative relations always hold `concept_id` values.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ConceptRef {
+    Existing { concept_id: Uuid },
+    Candidate { candidate_id: Uuid },
+}

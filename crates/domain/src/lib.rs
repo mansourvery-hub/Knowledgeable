@@ -3,6 +3,7 @@
 //! Forbidden dependencies: Axum, SQLx, LLM SDKs, filesystem/network I/O.
 //! See `architecture.md -> Module Boundaries` and `data_models.md`.
 
+pub mod annotation;
 pub mod concept;
 pub mod confidence;
 pub mod conversation;
@@ -14,7 +15,9 @@ pub mod relation;
 pub mod repository;
 pub mod traversal;
 pub mod validation;
+pub mod wiki;
 
+pub use annotation::*;
 pub use concept::*;
 pub use confidence::*;
 pub use conversation::*;
@@ -26,3 +29,4 @@ pub use relation::*;
 pub use repository::*;
 pub use traversal::*;
 pub use validation::*;
+pub use wiki::*;

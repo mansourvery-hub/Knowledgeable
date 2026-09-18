@@ -2,31 +2,38 @@
 //! Only this crate may depend on provider SDKs. Vendor types must not leak.
 
 use async_trait::async_trait;
-use serde::de::DeserializeOwned;
 
 pub mod error;
 pub mod fake;
-pub mod openai;
 pub mod gemini;
+pub mod openai;
+pub mod structured;
+pub mod stub;
 pub mod types;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_config;
 
 pub use error::{LlmError, LlmErrorKind};
 pub use fake::FakeLlmClient;
-pub use openai::OpenAiClient;
 pub use gemini::GeminiOpenAiClient;
-pub use types::{ChatMessage, LlmChatRequest, LlmStream, LlmStructuredRequest, ToolDefinition, ToolCall, FunctionCall, LlmStreamChunk, ToolCallChunk, FunctionCallChunk};
+pub use openai::OpenAiClient;
+pub use stub::StubLlmClient;
+pub use types::{
+    ChatMessage, FunctionCallChunk, LlmChatRequest, LlmStream, LlmStreamChunk,
+    LlmStructuredRequest, ToolCall, ToolCallChunk, ToolDefinition,
+};
 
 #[async_trait]
 pub trait LlmClient: Send + Sync {
     async fn stream_chat(&self, request: LlmChatRequest) -> Result<LlmStream, LlmError>;
 
-    async fn generate_structured<T: DeserializeOwned + Send>(
+    /// Structured JSON generation. Object-safe (value in/out) so services can
+    /// hold trait objects; providers without support return `Internal`.
+    async fn generate_structured(
         &self,
         request: LlmStructuredRequest,
-    ) -> Result<T, LlmError>
-    where
-        Self: Sized;
+    ) -> Result<serde_json::Value, LlmError>;
 }

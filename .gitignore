@@ -59,3 +59,19 @@ tmp/
 
 # FVM Version Cache
 .fvm/
+# Vendored web frontend (apps/web, LibreChat)
+apps/web/node_modules/
+apps/web/**/node_modules/
+apps/web/**/dist/
+apps/web/client/vite-output.log
+apps/web/**/*.tsbuildinfo
+
+# Local run logs
+backend.log
+server.log
+apps/client/flutter.log
+
+# Flutter build outputs and caches
+apps/client/node_modules/
+apps/client/test-results/
+apps/client/build/

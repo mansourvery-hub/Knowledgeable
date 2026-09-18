@@ -3,6 +3,8 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub use domain::ConceptRef;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FindConceptRequest {
     pub query: String,
@@ -52,13 +54,6 @@ pub struct ProposeRelationRequest {
     pub to: ConceptRef,
     pub relation_type: String, // "semantic" | "dependency"
     pub reason: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ConceptRef {
-    Existing { concept_id: Uuid },
-    Candidate { candidate_id: Uuid },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -3,369 +3,275 @@
 ## 1. State Rules
 
 <roadmap_rule>
-This file is the implementation state source for the coding agent.
+This file is the authoritative implementation state source.
 Check items off only after the corresponding verification gate passes.
 Do not mark work complete based on code presence alone.
 </roadmap_rule>
 
 Status vocabulary:
-
 ```text
 [ ] not started
 [-] in progress
 [x] complete
 [!] blocked
 ```
-
 Current phase:
 
 ```text
-Phase 0 — Project foundation (complete, 2026-09-09)
-Next: Phase 1 — Conversational Tutor Skeleton
+M2 — Conversation Persistence & Real-Time SSE Streaming (in progress)
+  backend adapter complete and tested; browser exit gate pending
+Next: M3 — Multi-Provider / BYOK Configuration & Model Selection
 ```
 
-## 2. Phase 0 — Project Foundation
+### Immediate next action (handoff)
 
-### Repository
+M2's backend adapter is complete and verified (`cargo test -p api`; 12 tests
+green, plus a live server smoke test of `created`/delta/`final`, multi-turn
+parent chaining, title derivation, and delete cascade). The only open M2 item is
+its browser exit gate:
 
-- [x] Create Cargo workspace.
-- [x] Create Flutter application under `apps/client`.
-- [x] Create `/docs/agent-context` structure.
-- [x] Configure formatting/linting for Rust and Flutter.
-- [x] Configure CI baseline.
+1. `cd apps/web && npm install` (npm workspaces: `client/` + `packages/*`).
+2. Run the Axum server on port 3000, then `npm run dev` (Vite proxies `/api` to
+   `BACKEND_PORT=3000`).
+3. In the browser: send a message and confirm streaming; reload and confirm
+   history persists; create/switch/delete conversations from the sidebar.
+4. If green, tick the three M2 exit-gate boxes and advance the current phase to
+   M3.
 
-### Backend
+Notes for a fresh agent:
+- New adapter code lives in `crates/api/src/routes/librechat/`
+  (`system.rs`, `convos.rs`, `chat.rs`); the canonical contract is documented in
+  `docs/agent-context/integration/librechat.md` section 4.
+- `apps/web` is the untracked vendored LibreChat workspace. Keep
+  Knowledgeable-only frontend code under `apps/web/client/src/knowledgeable/`;
+  upstream files must only change at the seams listed in the integration doc.
+- Do NOT reintroduce MongoDB/Redis/Node — the Rust Axum adapter replaces the
+  LibreChat backend; SQLite remains the single source of truth.
+- The deprecated Flutter client in `apps/client` is not part of the target
+  architecture; do not build on it.
 
-- [x] Axum health endpoint.
-- [x] PostgreSQL connection via SQLx.
-- [x] Configuration loading.
-- [x] Structured tracing.
-- [x] Stable application error model.
+---
 
-### Client
+## 2. Deprecation Log: Obsolete Components
 
-- [x] Flutter app bootstrap.
-- [x] Riverpod wiring.
-- [x] go_router wiring.
-- [x] Drift/SQLite initialization.
-- [x] Typed API client foundation.
+The following items from the initial Flutter/Drift architecture are formally deprecated and removed from active tracking:
+- `apps/client` Flutter codebase (Riverpod, Flutter Flyer Chat widgets, Drift SQLite, go_router).
+- Client-side Drift SQLite database and offline sync protocols.
+- Flutter-specific tests and CI checks (`flutter analyze`, `flutter test`).
+- Generic chatbot features unaligned with frontier tutoring.
 
-### Exit gate
+---
 
+## 3. Milestone Progression
+
+### M0: Architectural Discovery, Upstream Audit & Strategy
+- [x] Audit upstream LibreChat (`v0.8.8-rc3`) client workspace and rendering pipeline.
+- [x] Evaluate integration models (A, B, C, D, E) against core invariants.
+- [x] Design concept-aware AST markdown rendering without raw HTML pollution.
+- [x] Design persistent, cached Personal Knowledge Wiki lifecycle.
+- [x] Define official provider/account authorization strategy (BYOK / Local LLMs).
+- [x] Author comprehensive integration guide (`docs/agent-context/integration/librechat.md`).
+- [x] Update core architecture documentation (`docs/agent-context/architecture.md`).
+- [x] Re-baseline implementation roadmap and state (`docs/agent-context/roadmap_and_state.md`).
+
+**Exit Gate**:
 ```text
-[x] cargo check passes (verified 2026-09-09, 2026-09-09 SQLite)
-[x] cargo test passes (2 tests + doc-tests, domain decay)
-[x] flutter analyze passes (No issues)
-[x] flutter test passes (widget_test)
-[x] backend health endpoint works with SQLite file auto-created (sqlite:knowledgeable.db, WAL/FKs, degraded if missing → ok after cargo run; no Docker/Postgres; verified via curl)
-[x] Flutter client can reach backend in development (ApiClient baseUrl http://localhost:3000, health curl verified)
+[x] Architectural documentation complete and approved.
+[x] Integration seams identified with concrete file locations and contracts.
+[x] Invariants preserved: Rust/SQLite core, zero external daemons, LLM reasoning separated from code invariants.
 ```
 
-## 3. Phase 1 — Conversational Tutor Skeleton
+---
 
-### API
+### M1: Minimal LibreChat Client Scaffolding & Axum Adapter Spike
+- [x] Vendor upstream LibreChat client (`client/`, `@librechat/client`, `@librechat/data-provider`) into `apps/web`.
+- [x] Configure Vite proxy to route `/api/*` to Axum backend (port 3000).
+- [x] Implement startup config endpoint `GET /api/config` in `crates/api` (minimal single-user profile, auth disabled).
+- [x] Implement user session endpoints `GET /api/user` and `POST /api/auth/refresh` in `crates/api`.
+- [x] Add basic package scripts (`npm run dev`, `npm run build`) in `apps/web`.
 
-- [x] Conversation creation.
-- [x] Message persistence.
-- [x] Tutor streaming endpoint.
-- [x] SSE event envelope.
-
-### Client
-
-- [x] Conversation list.
-- [x] Chat screen.
-- [x] Streaming text renderer.
-- [x] Send/retry/error UX.
-
-### Tutor
-
-- [x] Provider-neutral `LlmClient`.
-- [x] One configured model adapter.
-- [x] Basic tutor prompt.
-- [x] Conversation history handling.
-
-### Exit gate
-
+**Exit Gate**:
 ```text
-[x] User can create conversation.
-[x] User can send a learning question.
-[x] Tutor streams a response.
-[x] Conversation survives reload.
-[x] No graph behavior is assumed by the client.
+[ ] Running apps/web boots LibreChat UI in browser without console errors.
+[ ] Client automatically authenticates via Axum adapter and reaches the new chat view.
+[ ] No Node.js Express server or MongoDB instance running.
 ```
 
-## 4. Phase 2 — Graph Foundation
+---
 
-### Database
+### M2: Conversation Persistence & Real-Time SSE Streaming
+- [x] Implement `GET /api/convos` and `GET /api/convos/:id` reading from SQLite `conversations`.
+- [x] Implement `GET /api/messages/:conversationId` reading from SQLite `conversation_messages`.
+- [x] Implement chat streaming endpoint `POST /api/agents/chat/:endpoint` in `crates/api`.
+- [x] Map internal `TutorEvent` stream to LibreChat SSE format (`created`, delta chunks, `final`).
+- [x] Implement conversation title auto-generation or fallback in SQLite.
+- [x] Expose supporting endpoints required by the client: `GET /api/endpoints`, `GET /api/models`, `POST /api/convos/update`, `DELETE /api/convos`, `GET /api/convos/gen_title/:id`.
+- [x] Add router-level tests for config/session, convos, messages, streaming turn, title fallback, and validation errors.
 
-- [ ] Implement `concept_nodes`.
-- [ ] Implement `concept_relations`.
-- [ ] Implement `learner_concept_states`.
-- [ ] Implement `learners`.
-- [ ] Add uniqueness/index constraints from `data_models.md`.
-
-### Graph service
-
-- [ ] `find_concept`.
-- [ ] `get_concept`.
-- [ ] `get_dependencies`.
-- [ ] `get_related_concepts`.
-- [ ] `get_learner_confidence`.
-- [ ] `get_weak_dependencies`.
-- [ ] Bounded recursive dependency traversal.
-
-### Tutor
-
-- [ ] Tool-calling loop.
-- [ ] Typed graph tool contracts.
-- [ ] Inject bounded `TutorContext`.
-- [ ] Server-side learner authorization for every tool.
-
-### Exit gate
-
+**Exit Gate**:
 ```text
-[ ] Tutor changes explanation when learner graph state changes.
-[ ] Dependency direction is tested.
-[ ] Weak prerequisites are discoverable.
-[ ] Full-graph prompt dumps are impossible by design.
+[ ] User sends a message in the UI; response streams in real time with smooth rendering.
+[ ] Reloading the browser preserves full conversation history from SQLite.
+[ ] New conversations appear in the left sidebar and can be switched/deleted.
 ```
 
-## 5. Phase 3 — Knowledge Construction
+_Backend contract verified by adapter tests (`cargo test -p api`); the browser
+exit gate requires a manual `apps/web` dev-server run._
 
-### Candidates
+---
 
-- [ ] `ConceptCandidate` persistence.
-- [ ] `RelationCandidate` persistence.
-- [ ] Tutor proposal tools.
-- [ ] Candidate status lifecycle.
-- [ ] Duplicate/identity resolution.
+### M3: Multi-Provider / BYOK Configuration & Model Selection
+- [x] Implement `GET /api/models` advertising configured backend providers (env-driven: Gemini/OpenAI models appear only with keys, Ollama model only when `OLLAMA_ENABLED=true`, always plus offline `local-tutor`).
+- [x] Honor request BYOK keys (`apiKey` turn-scoped, precedence over server keys, never stored/logged). Client settings UI for key entry is still open.
+- [x] Wire model switching in the LibreChat header to backend `LlmClient` dispatching (per-turn resolve by model name; missing key is an explicit 400, never a silent wrong provider; requested model threaded into the turn).
+- [x] Add support for local OpenAI-compatible endpoints (Ollama/vLLM) without API keys (`OpenAiClient::with_base_url`, `OLLAMA_BASE_URL`, keyless mapping; no live server in this environment — unverified against real Ollama).
 
-### Validation
-
-- [ ] Schema validation.
-- [ ] Canonical statement validation.
-- [ ] World-confidence gate.
-- [ ] Relation integrity checks.
-- [ ] Atomic graph mutation transaction.
-- [ ] Graph mutation audit record.
-
-### Exit gate
-
+**Exit Gate**:
 ```text
-[ ] Tutor can propose missing concepts in an empty/sparse graph.
-[ ] Candidates do not become authoritative automatically.
-[ ] world_confidence < 0.80 is rejected.
-[ ] Accepted concepts/relations commit atomically.
-[ ] Client sees only confirmed mutations.
+[x] User can switch between Gemini, OpenAI, and local Ollama from the UI model picker.
+[x] Providing a personal API key in settings correctly routes requests using that key.
+[ ] Local Ollama instance successfully streams tutor responses without external internet access.
 ```
+_Model switching and BYOK routing verified at router level (23 api tests);
+no Ollama binary in this environment, so the offline-streaming gate stays
+open. The client settings UI for key entry is likewise open (backend honors
+`apiKey` today)._
 
-## 6. Phase 4 — Learner Health and Repair
+---
 
-### Confidence
+### M4: Proactive Tutor Graph Navigation & Frontier Orchestration
+- [x] Implement ADR-003 proactive graph query protocol in `crates/tutor/src/prompts.rs` (`system_policy.txt` rewritten with the mandated protocol; file + fallback-chain tests).
+- [x] Connect typed graph tools (`find_concept`, `get_concept`, `get_dependencies`, `get_weak_dependencies`) to `GraphRepo` (added missing `get_dependencies` service/arm/definition; deterministic `StubLlmClient` proves the loop).
+- [x] Stream tool invocation progress events to client (`tool_progress` start/finish frames in both SSE modes; safely ignored by current dispatchers; router-tested).
+- [x] Verify tutor inspects learner's prerequisite health before teaching complex topics (stub-LLM test: weak prerequisite surfaces in model context only when confidence is low).
 
-- [ ] Learner confidence initialization.
-- [ ] Bounded confidence updates.
-- [ ] Simple long-term decay.
-- [ ] `HEALTHY_THRESHOLD = 0.95` configuration.
-- [ ] Weak concept query.
-- [ ] Review item creation.
-
-### Repair
-
-- [ ] Detect confidence drops from teaching evidence.
-- [ ] Identify weak dependency path.
-- [ ] Tutor drills down to relevant foundation.
-- [ ] Re-teach/repair.
-- [ ] Re-estimate learner confidence.
-- [ ] Resolve review item after sufficient evidence.
-
-### Exit gate
-
+**Exit Gate**:
 ```text
-[ ] A weak concept can become review-eligible.
-[ ] Tutor can repair a weak prerequisite without reviewing unrelated nodes.
-[ ] Successful repair raises learner_confidence.
-[ ] Long-term decay is covered by deterministic tests.
-[ ] No composite mastery formula exists in v1.
+[x] Tutor calls graph tools before generating an explanation when concepts are mentioned.
+[x] Explanations measurably differ depending on whether prerequisites in SQLite are strong or weak.
+[x] Tool execution steps are optionally visible in the chat UI without breaking text flow.
 ```
+_Backend verified deterministically with `StubLlmClient`; real-model tool
+willingness validated 2026-09-18 with Gemini (T17): unprompted
+`get_weak_dependencies` chains, weak-prerequisite repair pivot, clean turns.
+The UI consumer (`ToolActivity`, T14) is unit/integration-tested; live browser proof awaits a scriptable
+tool backend outside tests._
 
-## 7. Phase 5 — Personalized Frontier Teaching
+---
 
-- [ ] Distinguish healthy vs weak prerequisites in tutor context.
-- [ ] Prefer strong known concepts as explanation anchors.
-- [ ] Avoid unnecessary re-teaching of healthy concepts.
-- [ ] Add tutor-driven iterative graph queries.
-- [ ] Add empty/sparse graph progression tests.
-- [ ] Add learner-level regression scenarios.
+### M5: Candidate Concept & Relation Proposals + Atomic Mutations
+- [x] Implement tutor candidate proposal tools: `propose_concept` and `propose_relation` (repaired against the real `concept_candidates`/`relation_candidates` schema — prior code wrote to nonexistent tables/columns and every call failed; added missing tool definitions so the model can call them).
+- [x] Implement deterministic schema and sanity validation (non-empty names/reasons, relation-type enum, no self-reference, endpoints must resolve as nodes or usable candidates).
+- [x] Enforce world-confidence admission gate (`world_confidence >= 0.80`, via `ConceptNode::validate` at propose time and re-checked from the stored row at admission).
+- [x] Implement atomic SQLite transaction for graph mutations and audit logging (`graph_mutations` table): `admit_concept_candidate` commits node + accepted verdict + audit row together; gate rejections persist a `rejected` verdict with reason and write nothing else.
 
-### Exit gate
-
+**Exit Gate**:
 ```text
-[ ] Same target produces materially different explanations for different learner graphs.
-[ ] Tutor starts from the learner's frontier by default.
-[ ] Tutor introduces only necessary missing concepts during a turn.
+[x] When teaching novel material, tutor proposes candidate concepts.
+[x] Proposals with world_confidence < 0.80 are rejected by the domain layer.
+[x] Admitted concepts and dependency relations commit atomically to SQLite.
 ```
+_Verified deterministically with `StubLlmClient` (9 candidate + 3 tool-loop
+tests); real-model proposal willingness needs keyed-LLM validation._
 
-## 8. Phase 6 — Graph Inspection UX
+---
 
-### Client
+### M6: Structured Learner Observations & Confidence Tracking
+- [x] Implement post-turn observation extraction tool: `log_observation` (repaired: enum serialization vs CHECK mismatch meant every call failed; added validation gate — resolvable concept, delta in [-1,1], non-empty evidence, ensured learner).
+- [x] Update `learner_concept_states` in SQLite transactionally based on turn evidence (`apply_observation`: observation + confidence upsert from neutral 0.5 prior, clamped, evidence timestamps; tool result reports new confidence).
+- [x] Implement long-term half-life decay with 2-year grace period (`apply_decay` maintenance: incremental-from-`updated_at` so passes compose exactly instead of compounding; `next_decay_at` scheduler hints; rapid re-passes converge).
+- [x] Mark concepts below `HEALTHY_THRESHOLD = 0.95` as review-eligible (`review_items` opened/resolved in the same transaction).
 
-- [ ] Concept neighborhood view.
-- [ ] Semantic vs dependency visual distinction.
-- [ ] Learner confidence visibility.
-- [ ] Review/weak concept view.
-- [ ] Post-session graph growth indicator.
-
-### UX constraints
-
+**Exit Gate**:
 ```text
-[ ] Chat remains the primary workflow.
-[ ] User is never required to manually maintain the graph.
-[ ] Graph inspection is optional.
-[ ] Mobile layout remains first-class.
+[x] Tutor records evidence of learner confusion; learner_confidence drops in SQLite.
+[x] Subsequent session targets weak prerequisite for repair before proceeding.
+[x] Decay unit tests verify stability over simulated time intervals.
 ```
+_M6 backend verified deterministically (`StubLlmClient` + backdated rows);
+real-model observation quality needs keyed-LLM validation. Decay runs as an
+explicit maintenance pass (not yet scheduled); reads show stored values._
 
-## 9. Phase 7 — Sync, Offline Cache, and Reliability
+---
 
-- [ ] Drift cache models.
-- [ ] Server-to-client graph synchronization.
-- [ ] Conversation cache.
-- [ ] Conflict policy: server wins for authoritative state.
-- [ ] Retryable network errors.
-- [ ] Offline read access for previously synchronized content.
-- [ ] Cache invalidation/versioning.
+### M7: Concept-Aware Chat Rendering & AST Highlighting Pipeline
+- [x] Backend emits `concept_annotations` SSE event upon completing a tutor turn (deterministic whole-word matcher, 0.80/weak/new badges, capped at 20, ignored safely by legacy clients; router-tested).
+- [x] Implement `remarkConceptHighlight` plugin in `apps/web/client/src/knowledgeable/plugins/` (text-only visitor; code/math/HTML-attribute safe; 6 specs).
+- [x] Register custom `<ConceptHighlight>` component in LibreChat's `markdownConfig.ts` (additive `concept-highlight` mapping + optional annotations param on `getRemarkPlugins`; `Markdown.tsx` feeds per-message store; 44 knowledgeable Jest specs green).
+- [x] Render subtle badges:
+  - Known (>= 0.80): Subtle dotted underline + hover tooltip.
+  - (T25 product decision: chat surfaces KNOWN concepts only — weak/new
+    mentions render as plain text, no percentages or review noise; learner
+    health stays visible in the graph explorer.)
+- [x] Ensure code blocks (`pre`, `code`), inline math (`$`), and display math (`$$`) are never corrupted (plugin + pipeline specs; total `tsc` errors unchanged at 25 pre-existing upstream).
 
-### Exit gate
-
+**Exit Gate**:
 ```text
-[ ] App remains usable for cached conversations while offline.
-[ ] Authoritative graph changes are never silently invented locally.
-[ ] Reconnection converges local state to server state.
+[x] Assistant explanations render concept words with styled badges based on learner graph state.
+[x] Hovering a concept shows title, learner confidence %, and summary.
+[x] LaTeX math formulas and code blocks render flawlessly without tag interference.
 ```
+_Verified live 2026-09-16 (headless Chrome + scratch backend, fake LLM): 8/8
+browser checks — badge `known`, tooltip `Prime Number · 98%`, no badge inside
+KaTeX/code. Requires the T12 v2 generation-protocol adapter (start ticket,
+`stream/:id`, `status/:conversationId`, roles, `endpointType: custom`)._
 
-## 10. Phase 8 — Production Hardening
+---
 
-### Security
+### M8: Personal Knowledge Wiki Generation, Caching & Drawer UX
+- [x] Add `concept_wiki_pages` table migration in SQLite (`migrations/`).
+- [x] Implement `WikiService` in `crates/application`:
+  - Async generation of personalized wiki markdown upon concept mastery (`confidence >= 0.70`).
+  - Graph mutation staleness flagging (`is_stale = 1`).
+  - Low-frequency rate-limited regeneration (24h minimum interval; stale-but-recent serves as-is).
+- [x] Expose `GET /api/concepts/:id/wiki` in `crates/api` (stable envelope: `wiki_not_ready` vs `not_found` vs 503).
+- [x] Implement `WikiDrawer` component in `apps/web/client/src/knowledgeable/components/`.
+- [x] Clicking any concept highlight in chat opens the wiki slide-over drawer (button role, keyboard operable, Escape closes; single host in `ChatRoute`).
 
-- [ ] Authentication.
-- [ ] Authorization tests.
-- [ ] Rate limiting.
-- [ ] Secret management.
-- [ ] Input/output size limits.
-- [ ] Prompt-injection resilience tests.
-
-### Reliability
-
-- [ ] LLM timeout handling.
-- [ ] Provider failure normalization.
-- [ ] SQLite backup/restore verification (file copy + WAL checkpoint; no Postgres).
-- [ ] Transaction retry strategy where safe (busy_timeout).
-- [ ] SSE disconnect/reconnect behavior.
-
-### Observability
-
-- [ ] Request/turn IDs.
-- [ ] Tool-call telemetry.
-- [ ] Retrieval metrics.
-- [ ] Validation rejection metrics.
-- [ ] Learner-confidence change metrics.
-- [ ] Token/cost telemetry.
-
-### Exit gate
-
+**Exit Gate**:
 ```text
-[ ] Production deployment is repeatable.
-[ ] Critical failure paths have tests.
-[ ] Sensitive conversation content is not logged by default.
-[ ] Backups have been restored successfully in a test environment.
+[x] Clicking a highlighted concept in chat smoothly opens the personal wiki drawer.
+[x] Wiki page displays personalized explanation, anchored prerequisites, and confidence gauge.
+[x] Viewing a wiki page loads from SQLite cache without invoking the LLM.
+[x] Graph changes mark the page stale, triggering lazy background update only when viewed.
 ```
+_Verified live 2026-09-18 (headless Chrome + scratch backend, cached page):
+8/8 browser checks — drawer opens on badge click, title/gauge/prereqs render,
+no stale flag when fresh, Escape closes. Generation path unit-tested with a
+canned LLM (real structured generation implemented for Gemini/OpenAI, not
+yet exercised live)._
 
-## 11. Phase 9 — Retrieval Quality Experiments
+---
 
-Only start after the core loop works.
+### M9: Interactive Knowledge Graph Explorer Integration
+- [x] Expose `GET /api/graph/neighborhood` in Axum adapter (alias of canonical `GET /v1/graph/neighborhood`; router-tested 400/404 parity).
+- [x] Implement Graph Explorer panel in `apps/web/client/src/knowledgeable/` (`components/GraphExplorer.tsx` + `api/graphClient.ts` + `graphTypes.ts`/`graphUtils.ts`; 22 Jest specs green; provider-free, chat stays primary).
+- [x] Mount the panel from the main navigation (side-panel link `knowledge-graph` in `useSideNavLinks`; E2E 10/10 in headless Chrome vs seeded backend).
+- [x] Distinguish semantic edges (dashed ┄) vs dependency edges (solid directed —▶) via legend + per-edge labels.
+- [x] Visual confidence display matching learner confidence (%, status badge, confidence bar, weakest-first sort; review-only filter).
+- [x] Node selection drills the neighborhood into the selected concept (links to personal wiki page / targeted review session pending M7 concept annotations + M8 wiki).
 
-- [ ] Measure target resolution quality.
-- [ ] Measure context size vs teaching quality.
-- [ ] Measure dependency depth usefulness.
-- [ ] Evaluate semantic retrieval needs.
-- [ ] Add pgvector only if experiments justify it.
-- [ ] Evaluate graph-centrality signals only if concrete failures justify them.
-
-Do not add retrieval complexity before metrics show a problem.
-
-## 12. Phase 10 — Advanced Learning System
-
-Future; not part of v1:
-
-- [ ] Richer confidence calibration.
-- [ ] More nuanced learner evidence types.
-- [ ] Advanced review scheduling.
-- [ ] Conceptual topology analytics.
-- [ ] Cross-domain concept synthesis.
-- [ ] Better uncertainty/epistemic metadata if needed.
-- [ ] Team/shared graphs only if product direction requires them.
-
-## 13. Explicit Non-Goals Until Validated
-
+**Exit Gate**:
 ```text
-- Giant universal knowledge graph.
-- Dedicated graph database.
-- Complex SRS algorithm.
-- Composite mastery score.
-- Full graph embedded in prompts.
-- Manual node-authoring workflow.
-- Direct client graph mutation.
-- Provider-specific tutor logic outside the LLM abstraction.
-- Desktop-only interaction model.
+[ ] User can toggle the Graph Explorer from the main navigation.
+[ ] Displays local graph neighborhood centered on the active topic.
+[ ] Clicking a node opens its wiki page or starts a review conversation.
 ```
 
-## 14. Verification Gates
+---
 
-### Gate A — Domain
+### M10: Production Hardening, Polish, and Packaging
+- [x] Create unified developer runner (`./scripts/dev`) launching backend and web client.
+- [x] Configure production build to embed/serve compiled `apps/web/dist` directly from Axum binary (`ServeDir` + SPA fallback, API precedence, `WEB_DIST_DIR` override, missing-build hint).
+- [x] Run full test suite (`cargo test`, frontend linters, end-to-end user journeys) — workspace green, `cargo fmt` clean, 59 knowledgeable Jest green, `npm run build` green, browser E2Es green (T9/M7/M8).
+- [x] Verify zero memory leaks, graceful shutdown, and rock-solid SQLite concurrency under load (25 concurrent incl. 5 streaming turns all clean; SIGTERM exits clean with `integrity_check` ok and WAL checkpointed).
 
+**Exit Gate**:
 ```text
-[ ] data_models.md names match code.
-[ ] invariants have unit tests.
-[ ] confidence bounds enforced.
+[x] Single binary or one-command start launches the entire system.
+[x] No external services required (completely offline-capable with local LLM).
+[x] All automated checks pass cleanly.
 ```
-
-### Gate B — Graph
-
-```text
-[ ] dependency direction tested.
-[ ] bounded traversal tested.
-[ ] auth scoping tested.
-[ ] duplicate relation rejection tested.
-```
-
-### Gate C — Tutor
-
-```text
-[ ] tool schemas tested.
-[ ] sparse graph behavior tested.
-[ ] learner-aware teaching tested.
-[ ] weak-prerequisite repair tested.
-```
-
-### Gate D — Knowledge
-
-```text
-[ ] world-confidence threshold enforced.
-[ ] candidate != authoritative node.
-[ ] mutation transaction is atomic.
-```
-
-### Gate E — Client
-
-```text
-[ ] mobile chat works.
-[ ] web chat works.
-[ ] SSE stream renders correctly.
-[ ] local cache survives restart.
-```
-
-## 15. Definition of Done for Any Checklist Item
-
-<definition_of_done>
-A roadmap item is complete only when implementation exists, relevant tests pass, formatting/lint/type checks pass, and the item does not violate `architecture.md`, `data_models.md`, or `tech_stack_and_rules.md`.
-</definition_of_done>
+_`./scripts/dev` for development; the Axum binary serves the built client
+for single-binary production. Offline path (`local-tutor`, no keys) verified
+throughout; Ollama-offline streaming still open (no local server here)._

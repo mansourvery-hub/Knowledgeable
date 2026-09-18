@@ -10,6 +10,19 @@ ASK → UNDERSTAND THE LEARNER → TEACH FROM THE FRONTIER → OBSERVE → UPDAT
 
 The learner graph is the persistent model behind tutoring, not the UI. See `knowledgeable_blueprint.md`.
 
+## Quick start (M10)
+
+```bash
+./scripts/dev              # backend :3000 + web client :3090 (single command)
+./scripts/dev --backend-only
+./scripts/verify.sh        # fmt, check, test, clippy
+```
+
+Production: `npm run build` in `apps/web`, then the Axum binary serves
+`apps/web/client/dist` itself (`/`, SPA fallback; `/api/*` takes precedence).
+Override with `WEB_DIST_DIR`. The vendored LibreChat client in `apps/web` is
+the current presentation layer (see `docs/agent-context/integration/`).
+
 ## Stack (robust, modern, long-lived)
 
 - **Client:** Flutter 3.47 + Dart 3.13, Riverpod, go_router, Drift + SQLite, Dio, freezed/json_serializable

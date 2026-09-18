@@ -1,7 +1,9 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{LlmClient, LlmChatRequest, ChatMessage, LlmStreamChunk, ToolCallChunk, FunctionCallChunk};
+    use crate::{
+        ChatMessage, FunctionCallChunk, LlmChatRequest, LlmClient, LlmStreamChunk, ToolCallChunk,
+    };
     use tokio::sync::mpsc;
 
     #[tokio::test]
@@ -9,13 +11,7 @@ mod tests {
         let client = crate::FakeLlmClient::new("fake");
         let req = LlmChatRequest {
             model: "fake".into(),
-            messages: vec![ChatMessage {
-                role: "user".into(),
-                content: "Hello".into(),
-                name: None,
-                tool_calls: None,
-                tool_call_id: None,
-            }],
+            messages: vec![ChatMessage::User { content: "Hello".into() }],
             tools: vec![],
             stream: true,
         };

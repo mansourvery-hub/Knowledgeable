@@ -3,515 +3,229 @@
 ## 1. Scope
 
 <architecture_goal>
-Build a cross-platform AI tutor whose persistent learner graph models what a person understands and is actively used to teach at the edge of that learner's understanding.
+Build an AI tutor whose persistent learner graph models what an individual understands and is actively used to teach at the edge of that learner's understanding, presented through a battle-tested, rich conversational interface derived from LibreChat.
 </architecture_goal>
 
 ## 2. Product Model
 
 <product_definition>
-Knowledgeable is not a graph-management product and not a generic chatbot.
-The primary loop is conversational tutoring.
-The graph is the persistent learner model that makes each future explanation more relevant.
+Knowledgeable is not a generic chatbot and not an abstract graph visualizer.
+The primary interaction is natural conversational tutoring.
+The graph is the persistent learner model that makes each future explanation grounded and adapted to the learner's frontier.
+The personal wiki is a persistent, human-readable projection of that graph.
 </product_definition>
 
-### Core loop
+### Core Loop
 
 <core_loop>
-1. Learner asks to understand something.
-2. Tutor resolves the target concept when possible.
-3. Tutor queries the learner graph through bounded tools.
-4. Tutor identifies the current learning frontier.
-5. Tutor teaches using strong known concepts as anchors and inserts only necessary missing concepts.
-6. If required knowledge is missing, tutor proposes candidate concepts and dependencies.
-7. Candidate knowledge passes validation before authoritative graph admission.
-8. Tutor observes evidence about learner understanding.
-9. Learner confidence is updated.
-10. Concepts below the health threshold become review-eligible.
-11. Accepted concepts and relations expand the learner graph for future sessions.
+1. Learner asks a question or explores a topic.
+2. Tutor resolves target concepts in the learner graph.
+3. Tutor proactively queries the graph (ADR-003) to inspect the learner's frontier and prerequisite health.
+4. Tutor explains using established concepts as anchors, inserting missing foundations as needed.
+5. Missing concepts or relationships are proposed as candidates with `world_confidence` validation.
+6. Tutor observes evidence of learner understanding or confusion.
+7. Learner confidence updates are committed transactionally to SQLite.
+8. Concepts mentioned in the explanation are semantically highlighted in the chat UI based on learner confidence.
+9. Mastered concepts generate or update persistent Personal Knowledge Wiki pages.
+10. Accepted graph additions expand the learner's foundation for future sessions.
 </core_loop>
+
+---
 
 ## 3. Architectural Invariants
 
 <system_constraints>
-- Flutter is the canonical client technology for mobile and web.
-- The backend is Rust and owns authoritative application state and AI orchestration.
-- SQLite is the canonical authoritative persistent store for graph/session/learner state (WAL, foreign_keys=ON, busy_timeout=5000, transactions for mutations).
-- PostgreSQL is NOT part of default dev/deploy; SQLite file is created automatically via sqlx `sqlite:knowledgeable.db` with `create_if_missing(true)`.
-- SQLite on the client (Drift) is a local cache/offline/read-optimized copy, never a competing source of truth.
-- Docker is NOT required for local development; native binaries + SQLite file is the canonical path.
-- The learner graph is persistent domain state, not chat history and not the primary UI.
-- Canonical knowledge is structured; the LLM is not the database.
-- `world_confidence` gates authoritative graph admission.
-- `learner_confidence` measures learner understanding/health.
-- Canonical truth is stable; learner-facing wording is adaptive.
-- Semantic/reference edges and dependency edges are distinct.
-- The tutor teaches from the learner frontier by default.
-- Weak prerequisites are repaired before heavily depending on them.
-- Missing knowledge is created on demand; do not require a giant universal ontology.
-- LLM output is untrusted input until deterministic validation and authorization succeed.
-- Clients cannot directly mutate authoritative graph knowledge.
-- Tutor graph navigation is tool-driven and bounded; never dump the entire graph into an LLM prompt.
-- Keep the initial domain model intentionally small.
+- **Presentation Layer**: Vendored LibreChat client (`apps/web`) is the primary presentation layer. The legacy Flutter client (`apps/client`) is deprecated.
+- **Backend Core**: The backend is Rust (Axum, Tokio) and owns all authoritative state, graph logic, and AI orchestration.
+- **Single Canonical Database**: SQLite is the canonical authoritative persistent store (`knowledgeable.db`, `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`, STRICT tables, atomic transactions).
+- **Zero-Daemon Topology**: No MongoDB, Postgres, Redis, MeiliSearch, or Docker containers are required for default local execution.
+- **Authoritative Graph Rule**: The graph is persistent domain state in SQLite, not chat history. Canonical knowledge is structured; the LLM is not the database.
+- **Dual Confidence Model**:
+  - `world_confidence` (>= 0.80) gates authoritative admission of concepts/relations into the global knowledge pool.
+  - `learner_confidence` (0.0 to 1.0) measures the individual's understanding, subject to time-based decay with a 2-year grace period.
+- **Proactive Graph Navigation (ADR-003)**: The tutor orchestrator proactively queries graph tools *before* and *during* explanation. The tutor never receives an unconstrained graph prompt dump.
+- **Clean Markdown Protocol**: The LLM outputs standard, unpolluted Markdown. Concept highlighting is applied post-generation via AST inspection against the graph, never through brittle LLM-generated HTML.
+- **Persistent Wiki as Derived Projection**: The Personal Knowledge Wiki is a persistent, cached artifact derived from the authoritative graph. It is maintained with low frequency upon milestone transitions, never regenerated on every visit.
+- **Strict Separation of Auth**: Learner identity (local profile or account) is decoupled from Model provider authorization (BYOK developer keys, server env keys, or local Ollama/vLLM endpoints). Consumer subscriptions (ChatGPT Plus, Gemini Advanced) are not hijackable and require official API keys.
 </system_constraints>
+
+---
 
 ## 4. System Topology
 
 ```text
-                         ┌─────────────────────────┐
-                         │        Flutter          │
-                         │                         │
-                         │ Chat                    │
-                         │ Sessions                │
-                         │ Review                  │
-                         │ Graph inspection        │
-                         │ Local SQLite cache      │
-                         └────────────┬────────────┘
-                                      │ HTTPS + SSE
-                                      ▼
-                         ┌─────────────────────────┐
-                         │       Rust API          │
-                         │         Axum            │
-                         │                         │
-                         │ Auth / API              │
-                         │ Tutor orchestration     │
-                         │ Graph application svc   │
-                         │ Learner state service   │
-                         │ Validation              │
-                         └─────┬──────────┬────────┘
-                               │          │
-                      SQLx      │          │ provider-neutral LLM client
-                                ▼          ▼
-                      ┌──────────────┐  ┌───────────────────┐
-                      │   SQLite     │  │ LLM providers     │
-                      │ authoritative│  │ model adapters    │
-                      │ WAL + FKs    │  │                   │
-                      └──────────────┘  └───────────────────┘
+               ┌─────────────────────────────────────────┐
+               │         LibreChat Client (React/Vite)   │
+               │                   apps/web              │
+               │  - Chat UX, Streaming, Markdown/LaTeX   │
+               │  - Concept Highlighting (Remark plugin) │
+               │  - Personal Wiki Drawer                 │
+               │  - Graph Explorer Drawer                │
+               └────────────────────┬────────────────────┘
+                                    │ HTTP / SSE (/api/*)
+                                    ▼
+               ┌─────────────────────────────────────────┐
+               │         Knowledgeable Axum Server       │
+               │                 crates/api              │
+               │  - LibreChat API Adapter (/api/*)       │
+               │  - Native REST API (/v1/*)              │
+               └────────────────────┬────────────────────┘
+                                    │
+                                    ▼
+               ┌─────────────────────────────────────────┐
+               │             Application Layer           │
+               │            crates/application           │
+               │  - Tutor Orchestration                  │
+               │  - Conversation Management              │
+               │  - Graph Query & Mutation Engine        │
+               │  - Wiki Caching & Staleness Engine      │
+               └─────────┬──────────────────────┬────────┘
+                         │                      │
+       Domain Ports      │                      │ Provider-neutral
+                         ▼                      ▼
+               ┌──────────────────┐   ┌──────────────────────────┐
+               │    crates/domain │   │        crates/llm        │
+               │  - Concepts      │   │  - Streaming LlmClient   │
+               │  - Relations     │   │  - Gemini / OpenAI       │
+               │  - Learner State │   │  - Anthropic / Local     │
+               │  - Invariants    │   └──────────────────────────┘
+               │  - Wiki Models   │
+               └─────────┬────────┘
+                         │ SQLx
+                         ▼
+               ┌─────────────────────────────────────────┐
+               │       SQLite (knowledgeable.db)         │
+               │  WAL mode, foreign_keys=ON, STRICT      │
+               │  - Conversations & Messages             │
+               │  - Concept Nodes & Relations            │
+               │  - Learner Concept States               │
+               │  - Observations & Candidates            │
+               │  - Concept Wiki Pages (cached)          │
+               └─────────────────────────────────────────┘
 ```
+
+---
 
 ## 5. Monorepo Structure
 
 ```text
 /
 ├── apps/
-│   └── client/                         # Flutter application: mobile + web
-│       ├── lib/
-│       │   ├── app/                    # app bootstrap, routing, theme
-│       │   ├── core/                   # shared client infrastructure
-│       │   ├── features/
-│       │   │   ├── auth/
-│       │   │   ├── chat/
-│       │   │   ├── sessions/
-│       │   │   ├── review/
-│       │   │   └── graph/
-│       │   ├── data/                   # API/local repositories, DTOs
-│       │   ├── state/                  # Riverpod providers/notifiers
-│       │   └── widgets/                # reusable UI primitives
-│       ├── test/
-│       ├── web/
-│       ├── android/
-│       └── ios/
+│   ├── web/                            # Vendored LibreChat workspace (React, Vite, Tailwind, TanStack Query)
+│   │   ├── client/                     # @librechat/frontend SPA
+│   │   │   └── src/
+│   │   │       ├── knowledgeable/      # Knowledgeable extensions (Wiki drawer, Concept renderer, Graph view)
+│   │   │       └── ...                 # Upstream client components, hooks, stores
+│   │   ├── packages/
+│   │   │   ├── client/                 # @librechat/client component library
+│   │   │   ├── data-provider/          # librechat-data-provider (API client, schemas, query hooks)
+│   │   │   └── data-schemas/           # @librechat/data-schemas
+│   │   └── package.json                # Workspace root (proxies /api to Axum on :3000)
+│   └── client/                         # [DEPRECATED] Legacy Flutter client
 ├── crates/
-│   ├── api/                            # Axum routes/controllers
-│   ├── application/                    # use cases/orchestration (depends on domain ports)
-│   ├── domain/                         # pure domain types + invariants + validation + decay + graph ports
-│   ├── tutor/                          # tutor loop, tool contracts, prompts
-│   ├── llm/                            # provider-neutral LLM traits + adapters
-│   └── infrastructure/                 # SQLx SQLite (WAL/FKs/busy_timeout), auth, telemetry, config
-├── migrations/                         # SQLite migrations (STRICT, TEXT UUIDs, ISO8601)
+│   ├── api/                            # Axum HTTP/SSE server + LibreChat adapter (/api/*)
+│   ├── application/                    # Tutor loop, conversation service, graph service, wiki service
+│   ├── tutor/                          # System prompts, proactive query protocol, tool definitions
+│   ├── domain/                         # Pure domain entities, invariants, decay math, repository traits
+│   ├── llm/                            # Provider-neutral LLM client traits + provider implementations
+│   └── infrastructure/                 # SQLite repositories (SQLx), WAL connection pool, migrations
+├── migrations/                         # SQLite migrations (STRICT schema, TEXT UUIDs, ISO8601 UTC)
 ├── docs/
 │   └── agent-context/
-├── tests/
-│   ├── integration/
-│   └── e2e/
-├── scripts/
-├── Cargo.toml
-└── pubspec.yaml / apps/client/pubspec.yaml
+│       ├── architecture.md             # This document
+│       ├── integration/librechat.md    # LibreChat seam analysis, contracts, upgrade plan
+│       ├── data_models.md              # Authoritative domain & persistence models
+│       ├── tech_stack_and_rules.md     # Development guidelines & architectural rules
+│       ├── prompt_guidelines.md        # Agent behavior rules
+│       └── roadmap_and_state.md        # Dependency-ordered milestone roadmap
+├── tests/                              # Integration & E2E tests
+├── Cargo.toml                          # Cargo workspace definition
+└── knowledgeable.db                    # File-local SQLite database
 ```
 
-Cross-references:
-- Data names and persistence schemas: `data_models.md`.
-- Framework/library rules: `tech_stack_and_rules.md`.
-- Implementation order: `roadmap_and_state.md`.
-- Agent behavior: `prompt_guidelines.md`.
+---
 
-## 6. Module Boundaries
+## 6. Component Boundaries & Responsibilities
 
-### 6.1 Flutter client: `apps/client`
+### 6.1 Presentation Layer: `apps/web` (LibreChat Client)
+- **Role**: Presentation and interaction only.
+- **Responsibilities**:
+  - Message rendering (Markdown, KaTeX math formulas, syntax highlighted code, tables).
+  - Streaming SSE consumption via `useSSE`.
+  - Concept highlighting: Injects `remarkConcept` plugin into `react-markdown` pipeline to render known/weak/new concepts with confidence badges.
+  - Slide-over drawers for Personal Knowledge Wiki and Knowledge Graph explorer.
+  - Settings UI for model selection and user BYOK API keys.
+- **Forbidden**:
+  - Direct calculation of learner confidence or graph decay.
+  - Direct mutation of authoritative graph state.
+  - Direct LLM provider network calls bypassing the backend tutor orchestrator.
 
-Responsibilities:
-- Chat UI and streaming rendering.
-- Session list/history.
-- Review suggestions and review interaction.
-- Optional graph topology inspection.
-- Local SQLite caching.
-- Client-side navigation and transient UI state.
-- Syncing server-authoritative state into local storage.
+### 6.2 API & Adapter Layer: `crates/api`
+- **Role**: Transport and protocol adapter.
+- **Responsibilities**:
+  - Maps LibreChat client endpoints (`/api/config`, `/api/user`, `/api/convos`, `/api/messages`, `/api/ask`) to internal application services.
+  - Formats tutor stream events into LibreChat SSE event contracts (`created`, delta chunks, tool steps, `concept_annotations`, `final`).
+  - Exposes native Knowledgeable endpoints (`/api/concepts/:id/wiki`, `/api/graph/neighborhood`).
+  - Enforces request validation and maps internal domain errors to HTTP statuses.
 
-Must not:
-- Decide truth/world confidence.
-- Calculate authoritative learner confidence.
-- Mutate graph nodes/relations directly.
-- Call LLM providers directly.
-- Encode pedagogical business rules that belong to the backend.
+### 6.3 Application Layer: `crates/application`
+- **Role**: Use case orchestration and workflow execution.
+- **Responsibilities**:
+  - `TutorService`: Drives the multi-turn conversational loop, invokes the LLM, executes proactive graph tools, and crystallizes turn evidence.
+  - `ConversationService`: Manages conversation lifecycles and message histories in SQLite.
+  - `GraphService`: Executes bounded neighborhood queries, prerequisite checks, and transactional mutations.
+  - `WikiService`: Manages personal wiki page generation, caching, and staleness evaluation.
 
-See `tech_stack_and_rules.md -> Flutter Rules` and `data_models.md -> API Models`.
+### 6.4 Tutor & Prompt Layer: `crates/tutor`
+- **Role**: Pedagogical intelligence and tool definitions.
+- **Responsibilities**:
+  - Prompts enforcing ADR-003 Proactive Graph Querying protocol.
+  - Typed tool definitions: `find_concept`, `get_concept`, `get_dependencies`, `get_weak_dependencies`, `propose_concept`, `log_observation`.
+  - Tool execution handlers executing against domain repository ports.
 
-### 6.2 API: `crates/api`
+### 6.5 Domain Layer: `crates/domain`
+- **Role**: Pure business logic and domain invariants (Zero I/O).
+- **Responsibilities**:
+  - Entities: `ConceptNode`, `ConceptRelation`, `LearnerConceptState`, `LearnerObservation`, `ConceptCandidate`, `ConceptWikiPage`.
+  - Invariants: Admission gates (`world_confidence >= 0.80`), confidence clamps `[0.0, 1.0]`, DAG cycle prevention.
+  - Half-life confidence decay calculations.
+  - Repository interfaces (ports).
 
-Responsibilities:
-- HTTP/SSE endpoints.
-- Authentication and authorization boundary.
-- Request/response serialization.
-- Request validation.
-- Rate limiting hooks.
-- Mapping application errors to stable API errors.
+### 6.6 Infrastructure Layer: `crates/infrastructure`
+- **Role**: Concrete persistence and external integrations.
+- **Responsibilities**:
+  - SQLite repositories implemented with SQLx using recursive Common Table Expressions (CTEs) for graph traversal.
+  - Connection pooling with `journal_mode=WAL`, `foreign_keys=ON`, and `busy_timeout=5000`.
+  - Atomic database transactions for graph updates.
 
-Must remain thin; business logic belongs in `crates/application` and lower layers.
+---
 
-### 6.3 Application: `crates/application`
+## 7. Knowledge Triad: Graph, Annotations, and Wiki
 
-Responsibilities:
-- Coordinate use cases spanning multiple domain services.
-- Own transaction boundaries.
-- Enforce authorization context before service calls.
-- Coordinate tutor, graph, learner, validation, and persistence.
-
-Examples:
-```text
-start_session
-send_message
-stream_tutor_turn
-commit_graph_mutation
-create_review_session
-apply_learner_observations
-```
-
-### 6.4 Domain: `crates/domain`
-
-Pure logic only — database-agnostic, no I/O.
-
-Responsibilities:
-- IDs and value objects.
-- Concept and relation invariants.
-- Confidence bounds (`world_confidence`, `learner_confidence`).
-- Validation (schema, `world_confidence >= 0.80` gate, canonical statement checks).
-- Learner confidence: initialization, bounded updates, simple time-based decay (`grace 2y`, `half-life 12y`), review eligibility (`<0.95`).
-- Graph ports & traversal: `GraphRepository` trait (bounded, learner-scoped), `bounded_depth`, `TutorContext` types, `DEFAULT_MAX_DEPTH=3`.
-- State transitions and domain-level errors.
-
-Core query (implemented in `infrastructure` via SQLite recursive CTEs, defined as port in `domain`):
+Authoritative knowledge flows through three interconnected projections:
 
 ```text
-retrieve_learning_context(target, learner)
-    -> resolve target
-    -> retrieve target concept
-    -> traverse dependency ancestors to bounded depth
-    -> retrieve bounded semantic neighbors
-    -> retrieve weak prerequisites
-    -> include learner confidence for returned concepts
-    -> return TutorContext
+                       AUTHORITATIVE GRAPH
+                      (SQLite Persistent DAG)
+                                 │
+                 ┌───────────────┼───────────────┐
+                 │               │               │
+                 ▼               ▼               ▼
+           Tutor Context   UI Annotations   Personal Wiki
+          (Bounded Tool      (Real-time      (Persistent
+           Retrieval)       AST Highlighting) Cached Artifact)
 ```
 
-Domain does not decide the complete pedagogical sequence — the tutor does. Domain stays independent of Axum, SQLx, HTTP, Flutter, and LLM providers. PostgreSQL can be introduced later by implementing the same ports without rewriting domain/application.
+1. **Authoritative Graph**: Single source of truth in SQLite. Represents concepts, semantic relations, prerequisite dependencies, and learner confidence.
+2. **Tutor Context**: Dynamically assembled candidate frontier retrieved by bounded tools during a tutoring turn.
+3. **UI Annotations**: Real-time semantic highlights matching message text against known concepts, color-coded by learner health (known = subtle, weak = amber, new = blue).
+4. **Personal Wiki**: Persistent human-readable markdown explanations anchored to the learner's existing prerequisites. Cached in SQLite, marked stale on graph mutations, and regenerated with low frequency.
 
-Forbidden dependencies:
-- Axum
-- SQLx
-- LLM SDKs
-- Flutter/client code
-- filesystem/network I/O
+---
 
-### 6.5 Tutor: `crates/tutor`
+## 8. Deprecation and Migration Strategy
 
-Responsibilities:
-- Tutor system behavior.
-- Tool schemas.
-- LLM tool loop.
-- Target/frontier reasoning.
-- Graph navigation decisions.
-- Candidate concept/relation proposals.
-- Extraction of structured learner observations.
-- Tutor event streaming.
-
-The tutor may read graph state dynamically but cannot bypass application authorization or validation.
-
-### 6.6 LLM: `crates/llm`
-
-Responsibilities:
-- Provider-neutral traits.
-- Streaming text.
-- Structured generation.
-- Tool-call transport.
-- Provider adapters.
-- Retry policy for transient provider errors.
-- Provider error normalization.
-
-No LLM vendor types may escape this crate's public abstraction.
-
-### 6.7 Infrastructure: `crates/infrastructure`
-
-Responsibilities:
-- SQLx/SQLite (WAL, foreign_keys=ON, busy_timeout=5000, `sqlite:knowledgeable.db` with `create_if_missing`).
-- SQLite pragmas per connection, transactions for graph mutations (`BEGIN IMMEDIATE` where needed).
-- Authentication adapter.
-- Configuration (`DATABASE_URL` defaults to `sqlite:knowledgeable.db`).
-- Telemetry/logging.
-- External service adapters.
-
-Infrastructure implements `domain::GraphRepository` and other ports; application depends on domain ports, not infrastructure concretions. PostgreSQL can be reintroduced later by implementing the same ports.
-
-## 7. Tutor Graph-Navigation Model
-
-The tutor operates over two spaces:
-
-```text
-LEARNER GRAPH
-    = what the learner already has + confidence/health
-
-CONCEPTUAL SEARCH SPACE
-    = concepts the tutor may need to introduce
-```
-
-### Known territory
-
-```text
-user request
-    -> target resolved
-    -> bounded graph reads
-    -> strong known concepts identified
-    -> weak prerequisites identified
-    -> tutor teaches from the frontier
-```
-
-### Unknown territory
-
-```text
-user request
-    -> target absent/poorly connected
-    -> tutor asks graph for nearby known foundations
-    -> tutor proposes missing intermediate concepts
-    -> candidates validated
-    -> accepted concepts become graph state
-    -> tutor continues the lesson
-```
-
-### Tutor tool boundary
-
-Minimum tool set:
-
-```text
-find_concept(query, limit)
-get_concept(concept_id)
-get_dependencies(concept_id, depth)
-get_related_concepts(concept_id, limit)
-get_learner_confidence(concept_ids)
-get_weak_dependencies(concept_id, threshold, depth)
-propose_concept(candidate)
-propose_relation(candidate)
-propose_learner_update(update)
-```
-
-The exact serialized contracts are defined in `data_models.md -> Tutor Tool Contracts`.
-
-## 8. Dynamic Context Construction
-
-<dynamic_context_rule>
-Do not attempt to solve pedagogical context selection with either a giant prompt or a purely deterministic algorithm.
-Use deterministic bounded retrieval to construct a candidate region; let the tutor LLM decide which pieces matter and request additional graph reads when necessary.
-</dynamic_context_rule>
-
-Pipeline:
-
-```text
-Target request
-    ↓
-Target resolution
-    ↓
-Deterministic bounded retrieval
-    ↓
-Candidate TutorContext
-    ↓
-LLM reasoning + graph tool calls
-    ↓
-Teaching sequence / frontier decision
-```
-
-The system must support an initially sparse graph. Missing intermediate concepts are normal and are created incrementally.
-
-## 9. Graph Mutation Pipeline
-
-<graph_mutation_pipeline>
-Conversation
-    ↓
-Tutor reasoning
-    ↓
-Candidate concept/relation/learner-update proposals
-    ↓
-Typed schema validation
-    ↓
-Identity/duplicate resolution
-    ↓
-World-confidence admission gate
-    ↓
-Relation/invariant validation
-    ↓
-Transactional commit
-    ↓
-Learner confidence initialization/update
-    ↓
-Persist mutation audit record
-</graph_mutation_pipeline>
-
-Admission rule:
-
-```text
-world_confidence < WORLD_CONFIDENCE_MIN
-    -> authoritative node admission rejected
-
-world_confidence >= WORLD_CONFIDENCE_MIN
-    -> candidate may be admitted if all other validation passes
-```
-
-Initial `WORLD_CONFIDENCE_MIN = 0.80`. See `data_models.md -> Constants`.
-
-## 10. Learner Graph Repair
-
-When a learner's understanding is found to be weaker than expected:
-
-```text
-current target
-    ↓
-weak required prerequisite
-    ↓
-inspect dependency ancestors
-    ↓
-identify smallest weak path
-    ↓
-repair/reteach
-    ↓
-observe learner understanding
-    ↓
-update learner_confidence
-    ↓
-return to original target
-```
-
-Do not review unrelated graph regions.
-
-## 11. Persistence
-
-SQLite is the canonical authoritative backend store (file-local, no daemon, no Docker).
-
-```text
-Rust backend
-  ↔ SQLx SQLite (WAL + foreign_keys + busy_timeout)
-  ↔ knowledgeable.db (auto-created, STRICT tables, TEXT UUIDs, ISO8601)
-```
-
-Do not introduce a dedicated graph database in v1. Do not add PostgreSQL, pgvector, Redis, queues, or vector DBs unless a concrete roadmap requirement justifies it. SQLite's recursive CTEs handle bounded dependency traversal; transactions guarantee atomic mutations. SQLite can be replaced by PostgreSQL later via the same domain ports without rewriting domain/application.
-
-Client SQLite (Drift) is a cache/local mirror only — server remains authoritative for canonical graph, mutations, and learner state.
-
-## 12. Client Synchronization
-
-```text
-Flutter action
-    -> API request
-    -> server transaction
-    -> server response / SSE event
-    -> local repository update
-    -> UI update
-```
-
-Rules:
-- Server state wins on conflicts.
-- Local writes may be optimistic only for UI-only state.
-- Graph/learner authoritative mutations are server-confirmed before final local commit.
-- Sync payloads are versionable and typed.
-
-## 13. Runtime Request Flow
-
-```text
-Flutter
-  -> POST /v1/conversations/:conversation_id/messages
-Rust API
-  -> application::stream_tutor_turn
-Tutor
-  -> graph tools (domain ports)
-Graph (domain port)
-  -> SQLite (WAL, FKs) via sqlx
-Tutor
-  -> LLM abstraction
-LLM provider
-  -> streamed events
-Tutor
-  -> SSE events to client
-Tutor
-  -> structured post-turn observation/candidate extraction
-Application
-  -> domain validation (world_confidence >=0.80) + transaction
-SQLite
-  -> authoritative mutation (BEGIN IMMEDIATE, atomic)
-Flutter
-  -> apply confirmed events to local SQLite (Drift cache)
-```
-
-## 14. Security Boundary
-
-- All graph access is scoped by authenticated `learner_id`.
-- The model never supplies the authoritative authenticated learner identity.
-- Tool implementations derive learner scope from server context.
-- Secrets exist only server-side.
-- Client SQLite stores only data permitted for local caching.
-- Candidate graph writes occur only through server application services.
-- LLM output is untrusted.
-- User content is untrusted.
-
-## 15. Observability
-
-Capture structured metadata for:
-- request/session/turn IDs
-- model/provider identifiers
-- tool calls and tool latency
-- graph retrieval depth/count
-- candidate proposal counts
-- validation rejection reasons
-- learner-confidence changes
-- token/cost metrics when available
-- end-to-end latency
-- database query latency
-
-Do not log full private conversation content by default.
-
-## 16. Testing Boundaries
-
-Unit tests:
-- domain invariants
-- confidence updates
-- decay
-- graph traversal
-- validation
-- tutor decision helpers
-
-Integration tests:
-- Axum API + SQLite (in-memory or `sqlite:file:memdb?mode=memory&cache=shared` for isolation)
-- graph repository (SQLite recursive CTEs, bounded depth)
-- tutor tools
-- transactional graph mutation (WAL + FKs, rollback on validation failure)
-- SSE streaming
-- authentication scope
-
-Client tests:
-- widgets
-- Riverpod state
-- repository mapping
-- stream event handling
-
-E2E tests:
-- empty graph -> first learning session -> graph growth
-- known concept -> personalized explanation
-- weak prerequisite -> repair -> continuation
-- low world confidence -> candidate rejected
-- long-term decay -> review suggestion
-
-See `roadmap_and_state.md -> Verification Gates`.
+The legacy Flutter client (`apps/client`) is formally deprecated:
+- **Obsolete Components**: Flutter Riverpod state providers, Flyer Chat widget wrappers, Drift SQLite client database, and Flutter Web/Android/iOS build pipelines.
+- **Retained & Reused Concepts**: Graph neighborhood traversal visualization logic, review queue contracts, and theme tokens are translated into React components within `apps/web/client/src/knowledgeable/`.
+- **Clean Transition**: Development focuses 100% on the `apps/web` (LibreChat client) + `crates/` (Rust core) architecture.

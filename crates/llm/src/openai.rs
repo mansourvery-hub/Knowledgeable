@@ -1,13 +1,17 @@
 use crate::{
     error::LlmError,
-    types::{LlmChatRequest, LlmStream, LlmStructuredRequest, LlmStreamChunk, ToolCallChunk, FunctionCallChunk},
+    types::{
+        ChatMessage, FunctionCallChunk, LlmChatRequest, LlmStream, LlmStreamChunk,
+        LlmStructuredRequest, ToolCallChunk,
+    },
     LlmClient,
 };
+
 use async_trait::async_trait;
 use reqwest::Client;
+use serde_json::json;
 use tokio::sync::mpsc;
 use tokio_stream::StreamExt;
-use serde_json::json;
 
 pub struct OpenAiClient {
     client: Client,
@@ -23,6 +27,16 @@ impl OpenAiClient {
             base_url: "https://api.openai.com/v1".to_string(),
         }
     }
+
+    /// OpenAI-compatible endpoint with a custom base URL (M3: local Ollama /
+    /// vLLM without API keys). The key may be empty; it is sent only when set.
+    pub fn with_base_url(api_key: impl Into<String>, base_url: impl Into<String>) -> Self {
+        Self {
+            client: Client::builder().use_rustls_tls().build().unwrap(),
+            api_key: api_key.into(),
+            base_url: base_url.into(),
+        }
+    }
 }
 
 #[async_trait]
@@ -31,29 +45,36 @@ impl LlmClient for OpenAiClient {
         // Prepare OpenAI API Chat payload
         let mut messages = Vec::new();
         for m in request.messages {
-            let mut payload = json!({
-                "role": m.role,
-                "content": m.content,
-            });
-            if let Some(name) = m.name {
-                payload["name"] = json!(name);
-            }
-            if let Some(tool_calls) = m.tool_calls {
-                let tc_val: Vec<serde_json::Value> = tool_calls.into_iter().map(|tc| {
-                    json!({
-                        "id": tc.id,
-                        "type": tc.r#type,
-                        "function": {
-                            "name": tc.function.name,
-                            "arguments": tc.function.arguments,
-                        }
-                    })
-                }).collect();
-                payload["tool_calls"] = json!(tc_val);
-            }
-            if let Some(id) = m.tool_call_id {
-                payload["tool_call_id"] = json!(id);
-            }
+            let mut payload = match m {
+                ChatMessage::System { content } => json!({"role": "system", "content": content}),
+                ChatMessage::User { content } => json!({"role": "user", "content": content}),
+                ChatMessage::Assistant { content, tool_calls, metadata } => {
+                    let mut p = json!({"role": "assistant", "content": if content.is_empty() { serde_json::Value::Null } else { json!(content) }});
+                    if let Some(tool_calls) = tool_calls {
+                        let tc_val: Vec<serde_json::Value> = tool_calls
+                            .into_iter()
+                            .map(|tc| {
+                                json!({
+                                    "id": tc.id,
+                                    "type": "function",
+                                    "function": {
+                                        "name": tc.name,
+                                        "arguments": tc.arguments,
+                                    }
+                                })
+                            })
+                            .collect();
+                        p["tool_calls"] = json!(tc_val);
+                    }
+                    p
+                }
+                ChatMessage::Tool { content, tool_call_id, name } => json!({
+                    "role": "tool",
+                    "content": content,
+                    "tool_call_id": tool_call_id,
+                    "name": name,
+                }),
+            };
             messages.push(payload);
         }
 
@@ -64,29 +85,41 @@ impl LlmClient for OpenAiClient {
         });
 
         if !request.tools.is_empty() {
-            let tools_val: Vec<serde_json::Value> = request.tools.into_iter().map(|t| {
-                json!({
-                    "type": "function",
-                    "function": {
-                        "name": t.name,
-                        "description": t.description,
-                        "parameters": t.parameters,
-                    }
+            let tools_val: Vec<serde_json::Value> = request
+                .tools
+                .into_iter()
+                .map(|t| {
+                    json!({
+                        "type": "function",
+                        "function": {
+                            "name": t.name,
+                            "description": t.description,
+                            "parameters": t.parameters,
+                        }
+                    })
                 })
-            }).collect();
+                .collect();
             payload["tools"] = json!(tools_val);
         }
 
-        let res = self.client.post(format!("{}/chat/completions", self.base_url))
+        let res = self
+            .client
+            .post(format!("{}/chat/completions", self.base_url))
             .bearer_auth(&self.api_key)
             .json(&payload)
             .send()
             .await
-            .map_err(|e| LlmError::Provider { message: e.to_string(), source: Some(Box::new(e)) })?;
+            .map_err(|e| LlmError::Provider {
+                message: e.to_string(),
+                source: Some(Box::new(e)),
+            })?;
 
         if !res.status().is_success() {
             let err_text = res.text().await.unwrap_or_default();
-            return Err(LlmError::Provider { message: format!("OpenAI error status {}: {}", err_text, err_text), source: None });
+            return Err(LlmError::Provider {
+                message: format!("OpenAI error status {}: {}", err_text, err_text),
+                source: None,
+            });
         }
 
         let mut stream = res.bytes_stream();
@@ -110,35 +143,65 @@ impl LlmClient for OpenAiClient {
                                     return;
                                 }
                                 if let Some(data) = line.strip_prefix("data: ") {
-                                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(data) {
+                                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(data)
+                                    {
                                         if let Some(choices) = val.get("choices") {
                                             if let Some(choice) = choices.get(0) {
                                                 if let Some(delta) = choice.get("delta") {
-                                                    let content = delta.get("content").and_then(|c| c.as_str()).map(|s| s.to_string());
+                                                    let content = delta
+                                                        .get("content")
+                                                        .and_then(|c| c.as_str())
+                                                        .map(|s| s.to_string());
                                                     let mut tool_calls = None;
-                                                    if let Some(tc_list) = delta.get("tool_calls").and_then(|v| v.as_array()) {
+                                                    if let Some(tc_list) = delta
+                                                        .get("tool_calls")
+                                                        .and_then(|v| v.as_array())
+                                                    {
                                                         let mut converted = Vec::new();
                                                         for tc in tc_list {
-                                                            let index = tc.get("index").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
-                                                            let id = tc.get("id").and_then(|v| v.as_str()).map(|s| s.to_string());
-                                                            let r#type = tc.get("type").and_then(|v| v.as_str()).map(|s| s.to_string());
+                                                            let index = tc
+                                                                .get("index")
+                                                                .and_then(|v| v.as_i64())
+                                                                .unwrap_or(0)
+                                                                as i32;
+                                                            let id = tc
+                                                                .get("id")
+                                                                .and_then(|v| v.as_str())
+                                                                .map(|s| s.to_string());
                                                             let mut function = None;
                                                             if let Some(func) = tc.get("function") {
-                                                                function = Some(FunctionCallChunk {
-                                                                    name: func.get("name").and_then(|v| v.as_str()).map(|s| s.to_string()),
-                                                                    arguments: func.get("arguments").and_then(|v| v.as_str()).map(|s| s.to_string()),
-                                                                });
+                                                                function =
+                                                                    Some(FunctionCallChunk {
+                                                                        name: func
+                                                                            .get("name")
+                                                                            .and_then(|v| {
+                                                                                v.as_str()
+                                                                            })
+                                                                            .map(|s| s.to_string()),
+                                                                        arguments: func
+                                                                            .get("arguments")
+                                                                            .and_then(|v| {
+                                                                                v.as_str()
+                                                                            })
+                                                                            .map(|s| s.to_string()),
+                                                                        thought_signature: None,
+                                                                    });
                                                             }
                                                             converted.push(ToolCallChunk {
                                                                 index,
                                                                 id,
-                                                                r#type,
                                                                 function,
                                                             });
                                                         }
                                                         tool_calls = Some(converted);
                                                     }
-                                                    let _ = tx.send(Ok(LlmStreamChunk { content, tool_calls })).await;
+                                                    let _ = tx
+                                                        .send(Ok(LlmStreamChunk {
+                                                            content,
+                                                            tool_calls,
+                                                            metadata: None,
+                                                        }))
+                                                        .await;
                                                 }
                                             }
                                         }
@@ -148,7 +211,12 @@ impl LlmClient for OpenAiClient {
                         }
                     }
                     Err(e) => {
-                        let _ = tx.send(Err(LlmError::Provider { message: e.to_string(), source: Some(Box::new(e)) })).await;
+                        let _ = tx
+                            .send(Err(LlmError::Provider {
+                                message: e.to_string(),
+                                source: Some(Box::new(e)),
+                            }))
+                            .await;
                         return;
                     }
                 }
@@ -158,10 +226,19 @@ impl LlmClient for OpenAiClient {
         Ok(rx)
     }
 
-    async fn generate_structured<T: serde::de::DeserializeOwned + Send>(
+    async fn generate_structured(
         &self,
-        _request: LlmStructuredRequest,
-    ) -> Result<T, LlmError> {
-        Err(LlmError::Internal("generate_structured not yet implemented for OpenAI".into()))
+        request: LlmStructuredRequest,
+    ) -> Result<serde_json::Value, LlmError> {
+        let url = format!("{}/chat/completions", self.base_url);
+        crate::structured::structured_completion(
+            &self.client,
+            &url,
+            &self.api_key,
+            &request.model,
+            &request.prompt,
+            &request.schema,
+        )
+        .await
     }
 }

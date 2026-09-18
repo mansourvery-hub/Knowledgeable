@@ -1,0 +1,130 @@
+npm notice run @librechat/frontend@v0.8.8-rc3 dev
+npm notice run cross-env NODE_ENV=development vite
+
+  VITE v8.3.0  ready in 1217 ms
+
+  ➜  Local:   http://localhost:3090/
+
+warn - The class `ease-[…]` is ambiguous and matches multiple utilities.
+warn - If this is content and not a class, replace it with `ease-&lsqb;…&rsqb;` to silence this warning.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+8:22:49 PM [vite] (client) hmr update /src/style.css, /src/App.jsx, /src/components/Chat/Input/ChatForm.tsx, /src/components/Chat/Messages/MessagesView.tsx, /src/components/Chat/Messages/MultiMessage.tsx, /src/components/Chat/Messages/Thread/List.tsx, /src/components/Chat/Messages/Content/EditMessage.tsx, /src/components/Chat/Messages/Content/EditContentParts.tsx, /src/routes/Root.tsx, /src/components/Nav/KeyboardShortcutsDialog.tsx, /src/components/Chat/Menus/OpenSidebar.tsx, /src/components/Nav/ShortcutRecorder.tsx and 540 more
+8:24:15 PM [vite] (client) hmr update /src/style.css
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Regular.woff2, use /fonts/Inter-Regular.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-Bold.woff2, use /fonts/Inter-Bold.woff2.
+Files in the public directory are served at the root path.
+Instead of /public/fonts/Inter-SemiBold.woff2, use /fonts/Inter-SemiBold.woff2.
+npm error Lifecycle script `dev` failed with error:
+npm error code 143
+npm error path /home/mohamed/Desktop/Github/Knowledgeable/apps/web/client
+npm error workspace @librechat/frontend@v0.8.8-rc3
+npm error location /home/mohamed/Desktop/Github/Knowledgeable/apps/web/client
+npm error command failed
+npm error command sh -c cross-env NODE_ENV=development vite

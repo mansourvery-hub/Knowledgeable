@@ -592,3 +592,137 @@ Advanced:
 ```
 
 The canonical concept remains truth-bearing across all stages. The learner-specific `learner_statement` can evolve.
+
+## 21. Concept Wiki Page Model
+
+The Personal Knowledge Wiki is a persistent, human-readable projection of the learner graph. It is maintained with low frequency and cached in SQLite.
+
+```rust
+pub struct ConceptWikiPage {
+    pub id: Uuid,
+    pub learner_id: Uuid,
+    pub concept_id: Uuid,
+    pub title: String,
+    pub summary: String,
+    pub personalized_content: String,
+    pub known_prerequisites: Vec<PrerequisiteAnchor>,
+    pub related_concepts: Vec<RelatedAnchor>,
+    pub learner_confidence_at_generation: f32,
+    pub version: u32,
+    pub is_stale: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+pub struct PrerequisiteAnchor {
+    pub concept_id: Uuid,
+    pub name: String,
+    pub learner_confidence: f32,
+}
+
+pub struct RelatedAnchor {
+    pub concept_id: Uuid,
+    pub name: String,
+    pub relation_type: RelationType,
+}
+```
+
+### Database Schema
+
+```sql
+CREATE TABLE IF NOT EXISTS concept_wiki_pages (
+    id TEXT PRIMARY KEY NOT NULL,
+    learner_id TEXT NOT NULL REFERENCES learners(id) ON DELETE CASCADE,
+    concept_id TEXT NOT NULL REFERENCES concept_nodes(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    personalized_content TEXT NOT NULL,
+    known_prerequisites TEXT NOT NULL CHECK (json_valid(known_prerequisites)),
+    related_concepts TEXT NOT NULL CHECK (json_valid(related_concepts)),
+    learner_confidence_at_generation REAL NOT NULL CHECK (learner_confidence_at_generation >= 0.0 AND learner_confidence_at_generation <= 1.0),
+    version INTEGER NOT NULL DEFAULT 1,
+    is_stale INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    UNIQUE(learner_id, concept_id)
+) STRICT;
+```
+
+## 22. Concept Annotation Models (Chat Rendering)
+
+The tutor turn identifies concepts mentioned in explanations and emits semantic annotations for client-side AST rendering.
+
+```rust
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ConceptAnnotation {
+    pub concept_id: Uuid,
+    pub name: String,
+    pub learner_confidence: f32,
+    pub status: ConceptAnnotationStatus,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ConceptAnnotationStatus {
+    Known,   // learner_confidence >= 0.80
+    Weak,    // learner_confidence < 0.80
+    New,     // Newly introduced concept
+}
+```
+
+### SSE Event Format
+
+```json
+{
+  "event": "concept_annotations",
+  "data": {
+    "concepts": [
+      {
+        "concept_id": "936DA01F-9ABD-4D9D-80C7-02AF85C822A8",
+        "name": "Fourier transform",
+        "learner_confidence": 0.95,
+        "status": "known"
+      }
+    ]
+  }
+}
+```
+
+## 23. LibreChat Adapter Contracts
+
+Projections required by the LibreChat frontend (`apps/web`):
+
+### Startup Configuration (`GET /api/config`)
+```json
+{
+  "appTitle": "Knowledgeable",
+  "interface": {
+    "privacyPolicy": { "externalUrl": "" },
+    "termsOfService": { "externalUrl": "" },
+    "modelSelect": true,
+    "parameters": true,
+    "sidePanel": true,
+    "presets": false,
+    "prompts": false,
+    "bookmarks": true,
+    "multiConvo": false,
+    "agents": false
+  },
+  "endpoints": {
+    "knowledgeable": {
+      "name": "Knowledgeable Tutor",
+      "availableModels": ["gemini-1.5-flash", "gpt-4o-mini", "local-tutor"]
+    }
+  },
+  "emailLoginEnabled": false,
+  "registrationEnabled": false,
+  "socialLogins": []
+}
+```
+
+### LibreChat SSE Streaming Payload (`POST /api/ask/knowledgeable`)
+- Initial: `data: {"created": true, "message": {"messageId": "...", "conversationId": "...", "sender": "Knowledgeable", "isCreatedByUser": false}}`
+- Delta chunk: `data: {"text": "..."}`
+- Annotations: `data: {"event": "concept_annotations", "data": {"concepts": [...]}}`
+- Final: `data: {"final": true, "conversation": {"conversationId": "...", "title": "..."}, "message": {"messageId": "...", "text": "...", "sender": "Knowledgeable"}}`
+

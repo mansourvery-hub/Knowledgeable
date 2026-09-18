@@ -52,3 +52,18 @@ pub async fn list_messages(
 ) -> Result<Vec<ConversationMessage>, sqlx::Error> {
     infrastructure::conversation_repo::list_messages(pool, conversation_id).await
 }
+
+pub async fn update_conversation_title(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+    title: &str,
+) -> Result<(), sqlx::Error> {
+    infrastructure::conversation_repo::update_conversation_title(pool, conversation_id, title).await
+}
+
+pub async fn delete_conversation(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+) -> Result<(), sqlx::Error> {
+    infrastructure::conversation_repo::delete_conversation(pool, conversation_id).await
+}

@@ -9,25 +9,35 @@ pub struct LlmChatRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChatMessage {
-    pub role: String,
-    pub content: String,
-    pub name: Option<String>,
-    pub tool_calls: Option<Vec<ToolCall>>,
-    pub tool_call_id: Option<String>,
+pub enum ChatMessage {
+    #[serde(rename = "system")]
+    System { content: String },
+    #[serde(rename = "user")]
+    User { content: String },
+    #[serde(rename = "assistant")]
+    Assistant {
+        content: String,
+        tool_calls: Option<Vec<ToolCall>>,
+        metadata: Option<serde_json::Value>,
+    },
+    #[serde(rename = "tool")]
+    Tool { content: String, tool_call_id: String, name: String },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolCall {
     pub id: String,
-    pub r#type: String, // typically "function"
-    pub function: FunctionCall,
+    pub name: String,
+    pub arguments: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thought_signature: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FunctionCall {
+pub struct ToolResult {
+    pub tool_call_id: String,
     pub name: String,
-    pub arguments: String, // JSON string of arguments
+    pub output: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,13 +60,13 @@ pub type LlmStream = tokio::sync::mpsc::Receiver<Result<LlmStreamChunk, crate::e
 pub struct LlmStreamChunk {
     pub content: Option<String>,
     pub tool_calls: Option<Vec<ToolCallChunk>>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolCallChunk {
     pub index: i32,
     pub id: Option<String>,
-    pub r#type: Option<String>,
     pub function: Option<FunctionCallChunk>,
 }
 
@@ -64,4 +74,6 @@ pub struct ToolCallChunk {
 pub struct FunctionCallChunk {
     pub name: Option<String>,
     pub arguments: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thought_signature: Option<String>,
 }

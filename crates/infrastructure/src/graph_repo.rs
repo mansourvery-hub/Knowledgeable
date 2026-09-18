@@ -91,6 +91,61 @@ pub async fn find_concepts(
         .collect())
 }
 
+/// Candidates for M7 turn annotation (Brick A2).
+///
+/// Active concepts only (archived never render as highlights), each paired
+/// with the learner's confidence (`None` = unseen). Deterministic
+/// `canonical_name` order; `limit` clamps total rows to [1, 500] so a large
+/// graph cannot blow up the annotation pass. Single round-trip.
+pub async fn list_annotatable_concepts(
+    pool: &SqlitePool,
+    learner_id: Uuid,
+    limit: i64,
+) -> Result<Vec<(ConceptNode, Option<f32>)>, sqlx::Error> {
+    let limit = limit.clamp(1, 500);
+    let rows = sqlx::query_as::<
+        _,
+        (String, String, String, Option<String>, f32, String, String, String, Option<f32>),
+    >(
+        "SELECT n.id, n.canonical_name, n.canonical_statement, n.learner_statement, \
+                n.world_confidence, n.status, n.created_at, n.updated_at, \
+                s.learner_confidence \
+         FROM concept_nodes n \
+         LEFT JOIN learner_concept_states s \
+           ON s.concept_id = n.id AND s.learner_id = ? \
+         WHERE n.status = 'active' \
+         ORDER BY n.canonical_name ASC \
+         LIMIT ?",
+    )
+    .bind(learner_id.to_string())
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, stmt, l_stmt, conf, status, created, updated, learner_conf)| {
+            (
+                ConceptNode {
+                    id: id.parse().unwrap(),
+                    canonical_name: name,
+                    canonical_statement: stmt,
+                    learner_statement: l_stmt,
+                    world_confidence: conf,
+                    status: if status == "active" {
+                        ConceptStatus::Active
+                    } else {
+                        ConceptStatus::Archived
+                    },
+                    created_at: parse_dt(&created),
+                    updated_at: parse_dt(&updated),
+                },
+                learner_conf,
+            )
+        })
+        .collect())
+}
+
 pub async fn get_weak_dependencies(
     pool: &SqlitePool,
     concept_id: Uuid,

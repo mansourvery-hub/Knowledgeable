@@ -29,14 +29,32 @@ async fn main() -> anyhow::Result<()> {
 
     let llm: std::sync::Arc<dyn llm::LlmClient> = application::tutor_service::default_llm();
 
-    let state = api::routes::AppState { pool, llm, version: env!("CARGO_PKG_VERSION").to_string() };
+    let state = api::routes::AppState {
+        pool,
+        llm,
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        streams: api::routes::new_registry(),
+        web_dist_dir: Some(
+            std::env::var("WEB_DIST_DIR")
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|_| std::path::PathBuf::from("apps/web/client/dist")),
+        ),
+    };
 
-    let router = api::create_router(state).layer(
-        tower_http::cors::CorsLayer::new()
-            .allow_origin(tower_http::cors::Any)
-            .allow_methods([axum::http::Method::GET, axum::http::Method::POST])
-            .allow_headers(tower_http::cors::Any),
-    );
+    tracing::info!("router created");
+    // Native Linux app sends no Origin header (no CORS). Web dev server on
+    // localhost:8080 / 127.0.0.1:8080 needs explicit origins — browsers treat
+    // them as different origins.
+    let cors = tower_http::cors::CorsLayer::new()
+        .allow_origin(tower_http::cors::AllowOrigin::list([
+            axum::http::HeaderValue::from_static("http://localhost:8080"),
+            axum::http::HeaderValue::from_static("http://127.0.0.1:8080"),
+        ]))
+        .allow_methods(tower_http::cors::AllowMethods::any())
+        .allow_headers(tower_http::cors::AllowHeaders::any())
+        .expose_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION]);
+    let router = api::create_router(state).layer(cors);
+
     let addr: SocketAddr = config.bind_addr().parse()?;
 
     let listener = tokio::net::TcpListener::bind(addr).await?;

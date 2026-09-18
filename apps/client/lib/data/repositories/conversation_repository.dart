@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as dev;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -47,8 +48,10 @@ class ConversationRepository {
     required String conversationId,
     required String content,
   }) async* {
+    dev.log('ConversationRepository.streamMessage entered, convId: $conversationId, content: $content');
     final dio = _client.dio;
     final url = '${dio.options.baseUrl}/v1/conversations/$conversationId/messages';
+    dev.log('ConversationRepository.streamMessage: POST to $url');
     final body = jsonEncode({'content': content});
     final headers = {
       'Accept': 'text/event-stream',
@@ -57,10 +60,15 @@ class ConversationRepository {
     };
 
     final rawByteStream = sse_impl.sseStream(url, body, headers);
+    dev.log('ConversationRepository.streamMessage: obtained rawByteStream');
     // Apply stateful utf8 decoder to safely handle multi-byte characters split across chunks!
     final rawStringStream = rawByteStream.transform(utf8.decoder);
     final lines = rawStringStream.transform(const LineSplitter());
-    yield* parseSseStream(lines);
+    
+    await for (final envelope in parseSseStream(lines)) {
+      dev.log('ConversationRepository.streamMessage: yielding envelope ${envelope.event}');
+      yield envelope;
+    }
   }
 }
 

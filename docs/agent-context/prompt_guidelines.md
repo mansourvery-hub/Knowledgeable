@@ -112,6 +112,7 @@ Do not move responsibilities across these boundaries without updating `architect
 - Keep tool inputs/outputs bounded.
 - Use typed tool schemas.
 - Prefer structured outputs for machine-consumed data.
+- **Thought Signatures**: Always preserve `thought_signature` fields received from the model in subsequent function-calling requests; omitting them will cause API validation errors.
 </llm_constraints>
 
 The LLM is responsible for:
@@ -281,6 +282,20 @@ Rules:
 - Keep system policy concise.
 - Do not dynamically rewrite system policy from model output.
 - Version prompts when tutoring behavior changes materially.
+
+### System Policy Requirements (ADR-003)
+
+The system policy MUST include an explicit "Graph Query Protocol" section that mandates proactive tool usage:
+
+```text
+**Graph Query Protocol (use before responding)**:
+- ALWAYS call `find_concept` or `get_concept` when a user mentions a concept by name or asks about a topic
+- Use `get_weak_dependencies` BEFORE explaining a concept to identify prerequisites the learner struggles with
+- Use `get_related_concepts` to find semantic neighbors for analogies and connections
+- Use `log_observation` to record understanding, confusion, or misconceptions with evidence
+```
+
+**Rationale**: Without explicit instruction, LLMs default to conversational responses without querying the learner graph, leading to generic explanations disconnected from the learner's actual knowledge state. The graph is the source of truth — not conversation history.
 
 ## 15. Tool Design Rules
 

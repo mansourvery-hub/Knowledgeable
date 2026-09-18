@@ -15,6 +15,8 @@ pub enum AppError {
     Forbidden,
     #[error("not found")]
     NotFound(String),
+    #[error("wiki not ready")]
+    WikiNotReady(String),
     #[error("conflict")]
     Conflict(String),
     #[error("graph mutation rejected")]
@@ -42,6 +44,7 @@ impl IntoResponse for AppError {
             Self::Unauthorized => (StatusCode::UNAUTHORIZED, "unauthorized"),
             Self::Forbidden => (StatusCode::FORBIDDEN, "forbidden"),
             Self::NotFound(_) => (StatusCode::NOT_FOUND, "not_found"),
+            Self::WikiNotReady(_) => (StatusCode::NOT_FOUND, "wiki_not_ready"),
             Self::Conflict(_) => (StatusCode::CONFLICT, "conflict"),
             Self::GraphMutationRejected(_) => {
                 (StatusCode::UNPROCESSABLE_ENTITY, "graph_mutation_rejected")
@@ -56,6 +59,7 @@ impl IntoResponse for AppError {
         let message = match self {
             Self::Validation(m) => m,
             Self::NotFound(m) => m,
+            Self::WikiNotReady(m) => m,
             Self::Conflict(m) => m,
             Self::GraphMutationRejected(m) => m,
             Self::LlmProvider(_) => "upstream provider error".into(),

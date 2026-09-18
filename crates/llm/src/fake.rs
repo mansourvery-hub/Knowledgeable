@@ -21,12 +21,17 @@ impl FakeLlmClient {
         let last_user = messages
             .iter()
             .rev()
-            .find(|m| m.role == "user")
-            .map(|m| m.content.as_str())
+            .find_map(|m| match m {
+                ChatMessage::User { content } => Some(content.as_str()),
+                _ => None,
+            })
             .unwrap_or("your question");
 
+        if last_user.contains("Prime Number") {
+            return "I see you're asking about Prime Numbers! According to my knowledge graph, a Prime Number is a natural number greater than 1 that is not a product of two smaller natural numbers.".into();
+        }
+
         // Basic tutor-style response for Phase 1 — no graph, just frontier-aware placeholder.
-        // In Phase 1 the graph is empty, so we teach directly while preserving the prompt contract.
         format!(
             "Great question about \"{last_user}\" — let's build from what you already know.\n\n\
             I'm your Knowledgeable tutor. In this Phase 1 skeleton, I'm streaming a response \
@@ -55,7 +60,9 @@ impl LlmClient for FakeLlmClient {
                 let stream_chunk = crate::types::LlmStreamChunk {
                     content: Some(chunk),
                     tool_calls: None,
+                    metadata: None,
                 };
+
                 if tx.send(Ok(stream_chunk)).await.is_err() {
                     break;
                 }
@@ -66,10 +73,10 @@ impl LlmClient for FakeLlmClient {
         Ok(rx)
     }
 
-    async fn generate_structured<T: serde::de::DeserializeOwned + Send>(
+    async fn generate_structured(
         &self,
         _request: LlmStructuredRequest,
-    ) -> Result<T, LlmError> {
+    ) -> Result<serde_json::Value, LlmError> {
         Err(LlmError::Internal("structured generation not supported by FakeLlmClient".into()))
     }
 }

@@ -1,0 +1,21 @@
+{
+  "name": "knowledgeable-web",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "BACKEND_PORT=3000 npm run --workspace @librechat/frontend dev",
+    "build": "npm run --workspace librechat-data-provider build && npm run --workspace @librechat/data-schemas build && npm run --workspace @librechat/client build && npm run --workspace @librechat/frontend build",
+    "typecheck": "npm run --workspace @librechat/frontend typecheck"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "postcss-import": "^16.1.0"
+  },
+  "overrides": {
+    "react-window": "^1.8.10"
+  }
+}

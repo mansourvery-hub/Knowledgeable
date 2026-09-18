@@ -51,6 +51,7 @@ pub fn apply_delta(
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ObservationType {
     Understands,
     Confusion,
@@ -58,6 +59,22 @@ pub enum ObservationType {
     RecallFailure,
     ApplicationFailure,
     NewUnderstanding,
+}
+
+impl ObservationType {
+    /// Stable lowercase wire value matching the SQLite CHECK constraint.
+    /// (Plain `serde_json::to_string` would embed JSON quotes.)
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Understands => "understands",
+            Self::Confusion => "confusion",
+            Self::Misconception => "misconception",
+            Self::RecallFailure => "recall_failure",
+            Self::ApplicationFailure => "application_failure",
+            Self::NewUnderstanding => "new_understanding",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

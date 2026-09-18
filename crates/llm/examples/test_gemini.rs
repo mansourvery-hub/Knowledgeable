@@ -1,65 +1,54 @@
-use llm::{LlmClient, LlmChatRequest, ChatMessage};
-use dotenvy::dotenv;
-use std::env;
+use llm::{ChatMessage, GeminiOpenAiClient, LlmChatRequest, LlmClient};
+use tokio_stream::StreamExt; // Need this to call next() on stream
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let _ = dotenv();
-    
-    let api_key = match env::var("GEMINI_API_KEY") {
-        Ok(k) if !k.trim().is_empty() => k,
-        _ => {
-            println!("Error: GEMINI_API_KEY is not set or empty in your .env file!");
-            return Ok(());
-        }
-    };
+    let key = std::env::var("GEMINI_API_KEY").expect("GEMINI_API_KEY must be set");
+    let client = GeminiOpenAiClient::new(key);
 
-    let model = env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-1.5-flash".to_string());
-    println!("Testing Gemini client with model: {} using key: {}...", model, &api_key[0..6]);
-
-    let client = llm::GeminiOpenAiClient::new(api_key);
     let req = LlmChatRequest {
-        model,
-        messages: vec![ChatMessage {
-            role: "user".into(),
-            content: "Write a short 2-sentence response saying hello.".into(),
-            name: None,
-            tool_calls: None,
-            tool_call_id: None,
-        }],
+        model: "gemini-3.5-flash".into(),
+        messages: vec![ChatMessage::User { content: "What is a prime number?".into() }],
         tools: vec![],
         stream: true,
     };
 
-    println!("Starting chat stream...");
-    let mut rx = match client.stream_chat(req).await {
-        Ok(stream) => stream,
-        Err(e) => {
-            println!("Failed to start chat stream: {:?}", e);
-            return Ok(());
-        }
-    };
-
-    println!("Stream successfully started! Reading chunks:");
-    let mut full_response = String::new();
-    while let Some(chunk_res) = rx.recv().await {
-        match chunk_res {
-            Ok(chunk) => {
-                if let Some(text) = chunk.content {
-                    print!("{}", text);
-                    std::io::Write::flush(&mut std::io::stdout())?;
-                    full_response.push_str(&text);
-                }
-            }
-            Err(e) => {
-                println!("\nError during streaming: {:?}", e);
-                return Ok(());
+    println!("Sending first request...");
+    let mut stream = client.stream_chat(req).await?;
+    let mut response1 = String::new();
+    while let Some(chunk) = stream.recv().await {
+        if let Ok(c) = chunk {
+            if let Some(text) = c.content {
+                print!("{}", text);
+                response1.push_str(&text);
             }
         }
     }
+    println!("\n--- Response 1 received ---");
 
-    println!("\n\nStream finished successfully!");
-    println!("Full Response: {}", full_response);
+    let req2 = LlmChatRequest {
+        model: "gemini-3.5-flash".into(),
+        messages: vec![
+            ChatMessage::User { content: "What is a prime number?".into() },
+            ChatMessage::Assistant { content: response1, tool_calls: None, metadata: None },
+            ChatMessage::User {
+                content: "And what is the maximum prime number less than 10?".into(),
+            },
+        ],
+        tools: vec![],
+        stream: true,
+    };
+
+    println!("\nSending second request...");
+    let mut stream2 = client.stream_chat(req2).await?;
+    while let Some(chunk) = stream2.recv().await {
+        if let Ok(c) = chunk {
+            if let Some(text) = c.content {
+                print!("{}", text);
+            }
+        }
+    }
+    println!("\n--- Response 2 received ---");
 
     Ok(())
 }

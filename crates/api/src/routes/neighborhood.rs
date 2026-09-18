@@ -64,6 +64,8 @@ mod tests {
             pool,
             llm: std::sync::Arc::new(llm::FakeLlmClient::new("test")),
             version: "test".into(),
+            streams: crate::routes::new_registry(),
+            web_dist_dir: None,
         }
     }
 

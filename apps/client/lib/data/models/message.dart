@@ -23,4 +23,19 @@ class Message {
 
   bool get isUser => role == 'user';
   bool get isAssistant => role == 'assistant';
+
+  Message copyWith({
+    String? id,
+    String? conversationId,
+    String? role,
+    String? content,
+    DateTime? createdAt,
+  }) =>
+      Message(
+        id: id ?? this.id,
+        conversationId: conversationId ?? this.conversationId,
+        role: role ?? this.role,
+        content: content ?? this.content,
+        createdAt: createdAt ?? this.createdAt,
+      );
 }

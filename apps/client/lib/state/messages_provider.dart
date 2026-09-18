@@ -25,18 +25,21 @@ class MessagesNotifier extends FamilyAsyncNotifier<List<Message>, String> {
   }
 
   void updateLastAssistant(String textDelta, {bool append = true}) {
-    final current = state.valueOrNull ?? [];
-    if (current.isEmpty) return;
-    final last = current.last;
-    if (!last.isAssistant) return;
-    final updated = Message(
-      id: last.id,
-      conversationId: last.conversationId,
-      role: last.role,
-      content: append ? last.content + textDelta : textDelta,
-      createdAt: last.createdAt,
+    final current = state.valueOrNull;
+    if (current == null || current.isEmpty) return;
+    
+    // Check if the last message is assistant
+    if (!current.last.isAssistant) return;
+
+    final updated = current.last.copyWith(
+      content: append ? current.last.content + textDelta : textDelta,
     );
-    state = AsyncData([...current.sublist(0, current.length - 1), updated]);
+    
+    // Optimized update: only replace the last item
+    state = AsyncData([
+      ...current.sublist(0, current.length - 1),
+      updated,
+    ]);
   }
 }
 

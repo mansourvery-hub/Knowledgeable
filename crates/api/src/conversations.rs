@@ -151,7 +151,7 @@ pub async fn send_message(
         .ok_or_else(|| crate::error::AppError::NotFound("conversation not found".into()))?;
     let _ = conv;
 
-    let mut rx = application::tutor_service::stream_tutor_turn(pool, id, req.content, llm)
+    let mut rx = application::tutor_service::stream_tutor_turn(pool, id, req.content, llm, None)
         .await
         .map_err(|e| crate::error::AppError::Internal(e.to_string()))?;
 

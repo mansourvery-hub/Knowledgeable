@@ -30,6 +30,25 @@
 | T5 | Manual E2E Validation | T3 | COMPLETE |
 | T7 | Fix Tool Calling Engine | T1 | COMPLETE |
 | T8 | Graph neighborhood API (`GET /v1/graph/neighborhood`, bounded CTE + learner confidence + 503) | - | COMPLETE |
+| T9 | Graph Visualizer frontend — neighborhood view (`GraphExplorer` + `GraphPanel` + `graphClient` via `/api/graph/neighborhood`; semantic vs dependency distinction, confidence visibility, review/weak view; mounted in side nav; chat remains primary) | T8 | COMPLETE (28 Jest green; live browser E2E 10/10 vs seeded backend) |
+| T10 | M7 backend annotations (`domain::annotation` matcher + `annotate_turn` + `concept_annotations` SSE frame) | - | COMPLETE (domain 7 + app 3 + router 1 tests green; workspace green) |
+| T11 | M7 frontend (annotation store + SSE consume branches + `remarkConceptHighlight` + `<ConceptHighlight>` + pipeline specs) | T10 | COMPLETE (44 Jest green; live browser chat E2E 8/8) |
+| T12 | v2 generation-protocol adapter (start ticket + `stream/:id` + `status/:conversationId` + roles + endpointType fallback) | - | COMPLETE (router 20 green; browser chat boot-to-badge E2E green) |
+| T13 | M4 tutor orchestration (ADR-003 policy + `get_dependencies` + `tool_progress` frames + `StubLlmClient` loop tests) | - | COMPLETE (workspace green) |
+| T14 | `tool_progress` UI consumer (`ToolActivity` mounted in chat messages) | T13 | COMPLETE (108 Jest green across knowledgeable + neighbors; tsc clean) |
+| T15 | M5 proposals + admission (schema repair, gates, atomic admit + audit, `ConceptRef` to domain) | - | COMPLETE (9 candidate + 3 tool-loop tests; workspace green) |
+| T16 | M6 observations + confidence (validation, apply txn + review sync, decay pass) | - | COMPLETE (6 observation + 2 decay tests; workspace green) |
+| T17 | Keyed-LLM validation (Gemini tool willingness, repair pivot, arg robustness) | - | COMPLETE (real-model turns green; 1 parser bug + key hygiene fixed) |
+| T18 | M3 providers (truthful models, per-turn dispatch, Ollama base URL, BYOK apiKey) | - | COMPLETE (plan unit + router tests; workspace green; live-Ollama gate open) |
+| T19 | Keyed browser session (real Gemini turn → tools → weak badge + activity) | - | COMPLETE (6/6 CDP checks; retired-model default fixed to gemini-2.5-flash-lite) |
+| T20 | M8 Personal Wiki (migration + WikiService + endpoint + drawer + click wiring) | - | COMPLETE (domain 3 + service 5 + router 1 + 59 Jest; 8/8 browser E2E) |
+| T21 | M10 packaging (scripts/dev, static dist serving, prod build, concurrency + shutdown) | - | COMPLETE (27 api tests; prod build green; 25-way concurrency clean; SIGTERM clean) |
+| T22 | Graph explorer search (`GET /api/concepts/search` + panel search UI) | - | COMPLETE (router 1 + 64 Jest green) |
+| T25 | Highlight click path + known-only chat highlights | - | COMPLETE (65 Jest; live keyed check: only known badges) |
 
 ## Next Steps
-- T9 (READY): Graph Visualizer frontend — neighborhood view consuming `/v1/graph/neighborhood` (semantic vs dependency distinction, confidence visibility, review/weak view; chat remains primary).
+- T23 (READY→IN PROGRESS): graph tab rehaul — SVG canvas (`graphLayout` + `GraphCanvas`) integrated into the explorer (root-anchored, review-aware), lists kept as fallback. Code + 74 Jest green, tsc clean. Live check pending a running stack.
+- T24 (FUTURE): LibreChat feature audit — inventory every bundled feature against the product vision, then trim/disable all legacy extras.
+- Fixed post-T21: unknown `/api/*` + `/v1/*` paths stay JSON 404 under a mounted web build (the SPA fallback served 200 HTML and crashed boot parsing). Covered by regression test.
+- User-path E2E (canonical stack: `./start.sh` + seeded DB + keyed backend): keyed turn with 3 tool-activity items, weak badge (Factor · 30%), graph neighborhood renders — 6/6 green.
+- Beta prep: commit hygiene (large uncommitted worktree needs a scoped commit series), keyed structured-generation proof (wiki gen vs live Gemini), Ollama-offline gate if a server is available.
