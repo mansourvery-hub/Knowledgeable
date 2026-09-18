@@ -384,7 +384,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// unknown roles 404 instead of silently hiding UI.
 /// Phase 2 baseline: this locks the EXACT granted set, because several
 /// `useSideNavLinks` entries gate on these permissions alone — so shrinking
-/// this set is what will hide the removed surfaces centrally.
+/// this set is what hides the removed surfaces centrally.
+/// Step 1: MEMORIES revoked (policy §9.6) — the Memories panel, its settings
+/// toggle, and chat-input memory affordances now read as denied.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -397,7 +399,6 @@ async fn roles_grant_user_everything_and_404_unknown() {
         "PROMPTS",
         "BOOKMARKS",
         "AGENTS",
-        "MEMORIES",
         "MULTI_CONVO",
         "TEMPORARY_CHAT",
         "RUN_CODE",

@@ -101,7 +101,10 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     "PROMPTS",
     "BOOKMARKS",
     "AGENTS",
-    "MEMORIES",
+    // No "MEMORIES": generic LibreChat memory competes with the authoritative
+    // learner graph (policy §9.6). Absent grants read as denied client-side
+    // (`useHasAccess` strict `=== true`), hiding the Memories panel, its
+    // settings toggle, and chat-input memory affordances centrally.
     "MULTI_CONVO",
     "TEMPORARY_CHAT",
     "RUN_CODE",
