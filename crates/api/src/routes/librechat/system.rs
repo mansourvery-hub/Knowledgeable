@@ -115,7 +115,11 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     // settings toggle, and chat-input memory affordances centrally.
     "MULTI_CONVO",
     "TEMPORARY_CHAT",
-    "RUN_CODE",
+    // No "RUN_CODE": executing code is a FUTURE/OPTIONAL capability while
+    // displaying code stays KEEP (policy §9.4). Verified safe: `canRunCode`
+    // feeds only `allowExecution` on `CodeBlock` — highlighting, copy,
+    // Mermaid, and math rendering are untouched; the badge-row toggle,
+    // tools-dropdown row, and code-workspace surfaces hide centrally.
     // No "WEB_SEARCH": external retrieval is a FUTURE/OPTIONAL capability,
     // never a hidden dependency of the core tutor (policy §9.4). The grant
     // pairs with agent capabilities at every consumer (`WebSearch.tsx`
