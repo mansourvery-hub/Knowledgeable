@@ -116,7 +116,10 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     "MARKETPLACE",
     "FILE_SEARCH",
     "FILE_CITATIONS",
-    "MCP_SERVERS",
+    // No "MCP_SERVERS": MCP UI is hidden for now while the future tutor-tool
+    // seam is preserved (policy §9.4). The client was built for this gate —
+    // `useAppStartup` suppresses all MCP queries without USE, and the side
+    // panel, tools-dropdown entry, and dialogs hide centrally.
     "REMOTE_AGENTS",
     "SKILLS",
     "SHARED_LINKS",

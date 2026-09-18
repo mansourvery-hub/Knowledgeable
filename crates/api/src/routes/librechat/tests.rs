@@ -390,6 +390,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// Step 2: PROMPTS revoked (prompt management removed, slash commands a
 /// disabled FUTURE) — Prompts panel, slash-command setting, and slash popover
 /// now read as denied.
+/// Step 3: MCP_SERVERS revoked (MCP UI hidden, future tutor-tool seam kept) —
+/// side-panel entry, tools-dropdown row, and dialogs hide, and `useAppStartup`
+/// suppresses all MCP queries without USE.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -409,7 +412,6 @@ async fn roles_grant_user_everything_and_404_unknown() {
         "MARKETPLACE",
         "FILE_SEARCH",
         "FILE_CITATIONS",
-        "MCP_SERVERS",
         "REMOTE_AGENTS",
         "SKILLS",
         "SHARED_LINKS",
