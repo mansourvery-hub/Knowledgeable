@@ -428,6 +428,10 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// path untouched (backend never returns `isTemporary`/`expiredAt`).
 /// Follow-up: `defaultTemporaryChat` settings toggle has no upstream `show`
 /// gate and stays visible pending its own small frontend seam.
+/// Step 15: PEOPLE_PICKER revoked (principal picking serves per-resource
+/// sharing dialogs with no backend; future minimal share is link-based so
+/// SHARED_LINKS stays held) — admin section hides; principal search was
+/// already denied via never-granted VIEW_* sub-permissions.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -436,7 +440,7 @@ async fn roles_grant_user_everything_and_404_unknown() {
     assert_eq!(response.status(), StatusCode::OK);
     let role = body_json(response).await;
     assert_eq!(role["name"], "USER");
-    let expected = ["BOOKMARKS", "PEOPLE_PICKER", "SHARED_LINKS"];
+    let expected = ["BOOKMARKS", "SHARED_LINKS"];
     let permissions = role["permissions"].as_object().unwrap();
     assert_eq!(permissions.len(), expected.len(), "exact permission set");
     for permission_type in expected {

@@ -134,7 +134,12 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     // pairs with agent capabilities at every consumer (`WebSearch.tsx`
     // returns null without it; tools-dropdown rows require
     // `canUseWebSearch && webSearchEnabled`) — so revocation hides centrally.
-    "PEOPLE_PICKER",
+    // No "PEOPLE_PICKER": principal picking serves per-resource sharing
+    // dialogs with no backend here (policy §9.3); the future minimal
+    // "share this conversation" is link-based (SHARED_LINKS held), not
+    // principal-based. Already half-denied today — our role never granted
+    // the VIEW_USERS/GROUPS/ROLES sub-permissions — so revoking the type
+    // entry only hides the admin section and keeps the set honest.
     // No "MARKETPLACE": the agent marketplace is outside the product surface
     // (policy §9.3). The client was built for this gate — `Marketplace.tsx`
     // renders null and redirects to `/c/new` without USE, and
