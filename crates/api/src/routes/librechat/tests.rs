@@ -406,6 +406,9 @@ async fn chat_stream_emits_concept_annotations_for_known_terms() {
 /// Step 7: REMOTE_AGENTS revoked (remote-agent sharing + generic agent API
 /// keys outside the product surface) — settings API-keys entry, admin
 /// permission editor, and footer share action now read as denied.
+/// Step 8: WEB_SEARCH revoked (external retrieval a FUTURE/OPTIONAL, never a
+/// core-tutor dependency) — badge-row toggle and tools-dropdown row hide via
+/// the grant && capability pairing at every consumer.
 #[tokio::test]
 async fn roles_grant_user_everything_and_404_unknown() {
     let (app, _pool) = setup().await;
@@ -419,7 +422,6 @@ async fn roles_grant_user_everything_and_404_unknown() {
         "MULTI_CONVO",
         "TEMPORARY_CHAT",
         "RUN_CODE",
-        "WEB_SEARCH",
         "PEOPLE_PICKER",
         "FILE_SEARCH",
         "FILE_CITATIONS",

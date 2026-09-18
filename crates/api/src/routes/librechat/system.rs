@@ -116,7 +116,11 @@ const LOCAL_PERMISSION_TYPES: &[&str] = &[
     "MULTI_CONVO",
     "TEMPORARY_CHAT",
     "RUN_CODE",
-    "WEB_SEARCH",
+    // No "WEB_SEARCH": external retrieval is a FUTURE/OPTIONAL capability,
+    // never a hidden dependency of the core tutor (policy §9.4). The grant
+    // pairs with agent capabilities at every consumer (`WebSearch.tsx`
+    // returns null without it; tools-dropdown rows require
+    // `canUseWebSearch && webSearchEnabled`) — so revocation hides centrally.
     "PEOPLE_PICKER",
     // No "MARKETPLACE": the agent marketplace is outside the product surface
     // (policy §9.3). The client was built for this gate — `Marketplace.tsx`
