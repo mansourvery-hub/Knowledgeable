@@ -107,6 +107,15 @@ the app routes to `/c/new` with a visible composer. The
 first box stays open: boot logs handled Axios 404/405 probes (no uncaught
 exceptions), inventoried below._
 
+_Settle analysis 2026-09-19: the probe noise is boot-only, not perpetual.
+`useActiveJobs` has `retry: false` and polls only when jobs are listed;
+MCP/Tools queries set `refetchInterval: false`; code-env status needs a
+workspace id; schedules poll only from the hidden panel (zero `/api/schedules`
+hits observed). A 90s idle CDP capture shows the boot burst only. So M1 box 1
+is a product call, not a bug hunt: either accept documented handled noise, or
+schedule per-surface query suppression (each its own divergence tradeoff). Box
+left open pending that call._
+
 ---
 
 ### M2: Conversation Persistence & Real-Time SSE Streaming
