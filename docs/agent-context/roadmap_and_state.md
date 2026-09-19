@@ -293,10 +293,17 @@ yet exercised live)._
 
 **Exit Gate**:
 ```text
-[ ] User can toggle the Graph Explorer from the main navigation.
-[ ] Displays local graph neighborhood centered on the active topic.
+[x] User can toggle the Graph Explorer from the main navigation.
+[x] Displays local graph neighborhood centered on the active topic.
 [ ] Clicking a node opens its wiki page or starts a review conversation.
 ```
+_Browser proof 2026-09-19 (CDP): "Knowledge Graph" nav entry opens the panel
+(search/depth/limit controls render); searching "prime" lists backend concepts;
+loading Prime Number renders "3 concepts · 2 links · 2 need review" with legend
+(—▶ dependency vs ┄ semantic), confidence badges (Factor 30% review,
+Divisibility 85% review, Prime Number 98% healthy), and edges. Caveat: clicking
+a search result did not populate the UUID field (needed direct UUID entry) —
+result→load wiring needs a look before the node-click box can be attempted._
 
 ---
 
