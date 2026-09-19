@@ -121,7 +121,7 @@ exceptions), inventoried below._
 **Exit Gate**:
 ```text
 [ ] User sends a message in the UI; response streams in real time with smooth rendering.
-[ ] Reloading the browser preserves full conversation history from SQLite.
+[x] Reloading the browser preserves full conversation history from SQLite.
 [ ] New conversations appear in the left sidebar and can be switched/deleted.
 ```
 
@@ -134,6 +134,16 @@ _Live protocol proof 2026-09-19 (backend :3000, no keys, `local-tutor`):
 went 5 → 6; `GET /api/messages/:id` returns the user + assistant pair. So
 streaming, persistence, and history round-trip hold server-side; the remaining
 browser click-path (type → see stream → reload → sidebar ops) is still open._
+
+_Browser proof 2026-09-19 (CDP, real keyed model turn via UI submit): question
+sent from the composer created `/c/6d0aa213`, server turn completed
+(`error: false`, reply `15`); after `Page.reload` the DOM renders both the
+user bubble and the assistant reply in message containers
+(`DIV.text-message > DIV.markdown.prose.message-content > P`). Sidebar
+switch/delete ops still open. Note: the first send attempt "failed" only on a
+wrong harness marker (expected a local-tutor skeleton string, got a real model
+reply) — product worked; also fixed a response-id capture bug in the throwaway
+harness (`/tmp/cdp-*.js`, not committed)._
 
 ---
 
