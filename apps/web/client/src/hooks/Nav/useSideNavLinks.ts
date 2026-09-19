@@ -6,7 +6,6 @@ import {
   Network,
   NotebookPen,
   ScrollText,
-  CalendarClock,
   ArrowRightToLine,
   SlidersHorizontal,
 } from 'lucide-react';
@@ -31,7 +30,6 @@ import AgentPanelSwitch from '~/components/SidePanel/Agents/AgentPanelSwitch';
 import BookmarkPanel from '~/components/SidePanel/Bookmarks/BookmarkPanel';
 import GraphPanel from '~/knowledgeable/components/GraphPanel';
 import PanelSwitch from '~/components/SidePanel/Builder/PanelSwitch';
-import { SchedulePanel } from '~/components/SidePanel/Schedules';
 import Parameters from '~/components/SidePanel/Parameters/Panel';
 import FilesPanel from '~/components/SidePanel/Files/Panel';
 import { PromptsAccordion } from '~/components/Prompts';
@@ -84,10 +82,7 @@ export default function useSideNavLinks({
     permissionType: PermissionTypes.MCP_SERVERS,
     permission: Permissions.CREATE,
   });
-  const hasAccessToSchedules = useHasAccess({
-    permissionType: PermissionTypes.SCHEDULES,
-    permission: Permissions.USE,
-  });
+  // No Schedules: the panel directory was deleted with this change.
   const { availableMCPServers } = useMCPServerManager();
 
   const { agentsConfig } = useGetAgentsConfig({ endpointsConfig });
@@ -140,25 +135,8 @@ export default function useSideNavLinks({
       });
     }
 
-    // Scheduled chats are EXPERIMENTAL and default-OFF: the server enables them only
-    // when an admin opts in explicitly, so ABSENT config means disabled here too.
-    // Mirrors getLimits exactly — absent/null/`false` are all off, `true` is on, and the
-    // object form is on unless it sets `use: false`. Any mismatch would show an entry
-    // whose create/run operations the backend rejects.
-    const schedulesConfig = interfaceConfig.schedules;
-    const schedulesEnabled =
-      schedulesConfig != null &&
-      schedulesConfig !== false &&
-      !(typeof schedulesConfig === 'object' && schedulesConfig.use === false);
-    if (hasAccessToSchedules && schedulesEnabled) {
-      links.push({
-        title: 'com_ui_schedules',
-        label: '',
-        icon: CalendarClock,
-        id: 'schedules',
-        Component: SchedulePanel,
-      });
-    }
+    // Knowledgeable: scheduled chats were deleted with this change (policy
+    // §9.3) — no `/api/schedules*` backend exists.
 
     if (hasAccessToPrompts) {
       links.push({
@@ -247,8 +225,6 @@ export default function useSideNavLinks({
     hasAccessToPrompts,
     hasAccessToSkills,
     skillsEnabled,
-    hasAccessToSchedules,
-    interfaceConfig.schedules,
     interfaceConfig.parameters,
     endpointType,
     hasAccessToBookmarks,
