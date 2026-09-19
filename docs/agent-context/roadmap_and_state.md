@@ -101,7 +101,9 @@ keys): 465KB boot DOM contains composer, "New chat", history container, the
 `knowledgeable` endpoint, and the knowledge-graph nav entry — so the
 silent-refresh → user → roles → chat boot chain works end to end, served only
 by the Rust adapter + Vite. Zero removed-surface strings (Marketplace,
-Memories, Skills, Schedules, Parameters, Prompts) in the static DOM. The
+Memories, Skills, Schedules, Parameters, Prompts) in the static DOM. A live
+CDP probe (raw WebSocket harness, `/tmp/cdp-boot.js`) additionally confirmed
+the app routes to `/c/new` with a visible composer. The
 first box stays open: boot logs handled Axios 404/405 probes (no uncaught
 exceptions), inventoried below._
 
