@@ -533,6 +533,32 @@ task: bookmarks, pin, archive, conversation search, fork/branch, minimal
 sharing, attachments, document search/RAG, speech, MCP, BYOK, accounts/sync,
 token usage, billing, prompt slash commands, voice mode.
 
+### Phase 5a — Personal Wiki browser (planned, not started)
+
+**Problem**: the wiki exists only as a popup drawer reachable from chat badges
+and graph nodes. There is no place to *browse* what you've mastered; testers
+expect a wiki tab and report its absence as "wiki broken" (feedback F8).
+
+**Scope** (drawer stays exactly as is):
+- Side-nav entry (next to Knowledge Graph) opening a full wiki browser view.
+- Lists mastered concepts (learner_confidence ≥ 0.70) with confidence badges,
+  sorted weakest-first; text search over names.
+- Clicking a concept opens the existing drawer (reuse `openWiki`), or a full
+  reading view later — drawer reuse first.
+- Stale pages show the existing "may be outdated" marker; no new staleness
+  semantics.
+
+**Backend contracts required** (none exist yet — part of the project, not the
+cleanup):
+- `W1`: list query for mastered concepts (bounded, sorted, confidence
+  included) — new endpoint or `searchConcepts` extension; no new tables.
+- `W2`: reuse `GET /api/concepts/:id/wiki` unchanged for page content.
+
+**Verification**: browser pass — entry visible, list matches graph mastery,
+click opens the real page, empty state when nothing mastered yet. Explicitly
+out of scope: editing pages, public sharing, full-text search across page
+bodies.
+
 ### Phase 6 — Upstream synchronization discipline
 
 - [ ] 6.1 Upstream changes review cleanly against a mostly recognizable tree.
