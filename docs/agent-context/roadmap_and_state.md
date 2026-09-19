@@ -474,6 +474,9 @@ nothing deleted — each row needs its own isolation+browser brick per 3.5):
     Residuals deliberately left: `MemoryToggle` settings entry (already hidden
     via revoked OPT_OUT), `utils/memory.ts` + data-provider Memories queries
     (shared with chat artifacts/SSE — constraint 10).
+  - [x] Schedules panel deleted 2026-09-19 (17 files + central gate entry,
+    single importer, no dynamic imports; zero references after; tsc pinned
+    at 25; only spec mention is a comment).
 - SEMI-ISOLATED: `components/Projects` (11; routes dynamic + `ProjectsSection`
   sidebar shell — shell must go in the same brick).
 - ENTANGLED (do not delete wholesale): `components/Skills` (45; also used by
