@@ -188,11 +188,11 @@ open. The client settings UI for key entry is likewise open (backend honors
 
 _Live failure proof 2026-09-19: keyless `gpt-4o-mini` turn returns an explicit
 400 (`validation_failed`, "set OPENAI_API_KEY or provide apiKey") — never a
-silent wrong provider. Wart found: the failed turn still persists an empty,
-message-less conversation shell (`resolve_conversation` runs before key
-validation; test shell removed via the delete path after). Follow-up: validate
-credentials before creating the conversation, or roll back the shell on
-turn-setup failure._
+silent wrong provider. Wart found and fixed same day: failed turns persisted
+an empty shell (`resolve_conversation` ran before key validation) — credential
+resolution now precedes any database write, covered by
+`chat_rejected_turn_persists_no_conversation`, live-proven (count unchanged
+across the probe; normal turns unaffected)._
 
 _BYOK UI gap scoped 2026-09-19: no working key-entry path exists for the
 `knowledgeable` endpoint. `useRequiresKey` needs a `userProvide` flag our
