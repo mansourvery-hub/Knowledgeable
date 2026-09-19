@@ -466,6 +466,9 @@ nothing deleted — each row needs its own isolation+browser brick per 3.5):
 - ISOLATED candidates: `components/Insights` (7 files; only `routes/index.tsx`
   dynamic import), `components/SidePanel/Memories` (13; only `useSideNavLinks`),
   `components/SidePanel/Schedules` (17; only `useSideNavLinks`).
+  - [x] Insights deleted 2026-09-19 (dir + route→redirect, tsc pinned at 25,
+    `/insights` → `/c/new` browser-proven; data-provider access queries left
+    dormant behind the absent flag).
 - SEMI-ISOLATED: `components/Projects` (11; routes dynamic + `ProjectsSection`
   sidebar shell — shell must go in the same brick).
 - ENTANGLED (do not delete wholesale): `components/Skills` (45; also used by
