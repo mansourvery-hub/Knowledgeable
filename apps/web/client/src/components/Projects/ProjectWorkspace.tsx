@@ -2,7 +2,7 @@ import { useCallback, useId, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import * as Ariakit from '@ariakit/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { Constants, QueryKeys } from 'librechat-data-provider';
 import { ArrowLeft, ArrowUpDown, Check, Folder, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button, Spinner, DropdownPopup, TooltipAnchor, useMediaQuery } from '@librechat/client';
@@ -115,6 +115,14 @@ export default function ProjectWorkspace() {
     navigate(`/c/${Constants.NEW_CONVO}?projectId=${encodeURIComponent(activeProjectId)}`);
     newConversation({ template: { chatProjectId: activeProjectId } });
   }, [activeProjectId, conversation?.conversationId, navigate, newConversation, queryClient]);
+
+  // Knowledgeable: chat projects are outside the product surface and no
+  // `/api/projects*` backend exists — redirect to chat instead of rendering a
+  // dead workspace. Central and reversible: flip this constant to restore.
+  const projectsDisabled = true;
+  if (projectsDisabled) {
+    return <Navigate to="/c/new" replace />;
+  }
 
   if (isProjectLoading) {
     return (

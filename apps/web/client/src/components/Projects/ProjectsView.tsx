@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useId, useMemo, useState } from 'react';
 import * as Ariakit from '@ariakit/react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { Input, Button, Skeleton, DropdownPopup } from '@librechat/client';
 import {
   ArrowUpDown,
@@ -250,6 +250,14 @@ export default function ProjectsView() {
       setSearchParams(nextParams, { replace: true });
     }
   };
+
+  // Knowledgeable: chat projects are outside the product surface and no
+  // `/api/projects*` backend exists — redirect to chat instead of rendering a
+  // dead workspace. Central and reversible: flip this constant to restore.
+  const projectsDisabled = true;
+  if (projectsDisabled) {
+    return <Navigate to="/c/new" replace />;
+  }
 
   return (
     <main className="flex h-full min-h-0 flex-col overflow-auto bg-presentation text-text-primary">
