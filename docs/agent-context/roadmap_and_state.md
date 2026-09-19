@@ -93,9 +93,17 @@ The following items from the initial Flutter/Drift architecture are formally dep
 **Exit Gate**:
 ```text
 [ ] Running apps/web boots LibreChat UI in browser without console errors.
-[ ] Client automatically authenticates via Axum adapter and reaches the new chat view.
-[ ] No Node.js Express server or MongoDB instance running.
+[x] Client automatically authenticates via Axum adapter and reaches the new chat view.
+[x] No Node.js Express server or MongoDB instance running.
 ```
+_Browser proof 2026-09-19 (headless Chrome, backend :3000 + Vite :3090, no
+keys): 465KB boot DOM contains composer, "New chat", history container, the
+`knowledgeable` endpoint, and the knowledge-graph nav entry — so the
+silent-refresh → user → roles → chat boot chain works end to end, served only
+by the Rust adapter + Vite. Zero removed-surface strings (Marketplace,
+Memories, Skills, Schedules, Parameters, Prompts) in the static DOM. The
+first box stays open: boot logs handled Axios 404/405 probes (no uncaught
+exceptions), inventoried below._
 
 ---
 
@@ -355,6 +363,18 @@ surface is entangled — `AttachFileChat` in `ChatForm`, drag-drop providers,
 paste-as-file, upload modals, `ManageFiles` settings — with no `/api/files/*`
 backend behind any of it. Hiding only the panel would leave dead upload
 buttons; gate the whole upload path as one browser-verified project instead.
+
+Boot probe inventory (headless Chrome 2026-09-19, 45 dead-backend hits, all
+handled rejections, zero uncaught): `/api/projects*`, `/api/tags`,
+`/api/search/enable`, `/api/files*`, `/api/files/config`,
+`/api/files/speech/config/get`, `/api/balance`, `/api/banner`,
+`/api/keys?name=knowledgeable`, `/api/user/settings/{favorites,pinned-order}`,
+`/api/agents/tools/web_search/auth` (404s), plus `GET /api/agents/chat/active`
+(405 — matches our `POST /api/agents/chat/:endpoint` pattern with the wrong
+method; agent run-poll with no runs behind it). Every URL maps to a
+removed/future surface or benign generic probe; none touches the chat turn
+path. Follow-ups (not this phase): suppress the web-search auth probe and the
+`chat/active` poll noise if they prove perpetual rather than boot-only.
 
 ### Phase 3 — Remove clearly unwanted product surfaces
 
