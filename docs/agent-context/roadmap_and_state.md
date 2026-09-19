@@ -295,7 +295,7 @@ yet exercised live)._
 ```text
 [x] User can toggle the Graph Explorer from the main navigation.
 [x] Displays local graph neighborhood centered on the active topic.
-[ ] Clicking a node opens its wiki page or starts a review conversation.
+[x] Clicking a node opens its wiki page or starts a review conversation.
 ```
 _Browser proof 2026-09-19 (CDP): "Knowledge Graph" nav entry opens the panel
 (search/depth/limit controls render); searching "prime" lists backend concepts;
@@ -307,6 +307,11 @@ clicking the "Factor" node re-centers to its 1-concept neighborhood. Earlier
 of `button[data-testid="graph-search-result"]`; `handlePickResult` loads
 directly by design). Precise gap for the node-click box: node selection drills
 only — no node→wiki link exists yet (wiki opens from chat badges, M8 proven)._
+M9 fully closed 2026-09-19: the new per-node "Wiki" button (same `openWiki`
+store action as chat badges, jest-covered) opens the drawer live with the real
+personalized page — "Prime Numbers: A Fresh Start", Confidence 98%,
+prerequisite-anchored summary, prereqs Factor 30% / Divisibility 85%, fresh
+(not stale). M9 browser exit gate fully closed._
 
 ---
 
