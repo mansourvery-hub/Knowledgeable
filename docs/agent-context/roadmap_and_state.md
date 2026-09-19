@@ -126,6 +126,13 @@ exceptions), inventoried below._
 _Backend contract verified by adapter tests (`cargo test -p api`); the browser
 exit gate requires a manual `apps/web` dev-server run._
 
+_Live protocol proof 2026-09-19 (backend :3000, no keys, `local-tutor`):
+`POST /api/agents/chat/knowledgeable` streamed 37 SSE frames
+(`created` → deltas → `final`) for a fresh conversation; `GET /api/convos`
+went 5 → 6; `GET /api/messages/:id` returns the user + assistant pair. So
+streaming, persistence, and history round-trip hold server-side; the remaining
+browser click-path (type → see stream → reload → sidebar ops) is still open._
+
 ---
 
 ### M3: Multi-Provider / BYOK Configuration & Model Selection
