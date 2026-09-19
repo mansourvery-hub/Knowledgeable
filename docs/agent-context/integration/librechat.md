@@ -220,7 +220,8 @@ Visual Output
 - Can be triggered:
   - By clicking any highlighted concept in the chat conversation.
   - By clicking a concept node in the Graph Explorer.
-  - By opening the "Personal Wiki" navigation sidebar item to browse all mastered concepts.
+  - (Planned, not built: a "Personal Wiki" navigation entry to browse all
+    mastered concepts — see roadmap feedback F8.)
 - Content renders using LibreChat's native Markdown/LaTeX/Code rendering components.
 
 ---

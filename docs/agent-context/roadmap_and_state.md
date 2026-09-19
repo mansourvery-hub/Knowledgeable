@@ -563,3 +563,17 @@ token usage, billing, prompt slash commands, voice mode.
 - [ ] F5 `log_observation` tool-arg parse failure (`invalid character: found
   't' at 0`) seen once in a live keyed turn — model emitted non-JSON args.
   Robustness gap: harden argument parsing/repair vs failing the call.
+- [ ] F6 Badge-vs-bold confusion (tester report 2026-09-19, reproduced): the
+  tutor writes `**factor**` markdown bold around concept words; testers read
+  bold as the known-concept badge and expect a click → wiki. But bold has no
+  handler, and Factor (0.30, weak) is correctly badge-filtered. Candidates:
+  prompt tweak (don't bold bare concept names), or visual disambiguation.
+- [ ] F7 Badges vanish on reload (reproduced: reloaded convo renders ZERO
+  `concept-highlight` nodes) — annotations live only in the in-memory SSE
+  store. Project: persist annotations per message (or re-derive on history
+  load) so badges + wiki work on history, not just fresh turns.
+- [ ] F8 No Personal Wiki browser entry exists (only drawer via badge clicks +
+  graph node buttons) — the integration doc's "Personal Wiki navigation
+  sidebar item" over-claims; doc corrected with this entry, browser filed as
+  Phase 5 idea. Tooltip behavior (sticky? percentages as noise?) is a product
+  call: hover-only today; debug-toggle or removal per tester suggestion.
