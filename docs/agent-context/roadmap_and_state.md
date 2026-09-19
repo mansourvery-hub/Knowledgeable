@@ -338,6 +338,17 @@ gate on permissions only).
 - [ ] 2.4 Knowledgeable Graph/Wiki navigation remains intact.
 - [ ] 2.5 Changes are centralized and upstream-friendly.
 
+Contract 2.2 audit (code-read, browser proof still pending): self-guarding by
+upstream design — `/agents` (redirects to `/c/new` without MARKETPLACE.USE),
+`/skills*` (`<Navigate to="/c/new">` without SKILLS.USE, revoked),
+`/prompts/:promptId` (same guard, PROMPTS.USE revoked), `/insights`
+(redirects, `insightsEnabled` flag absent from our config). Gap: `/projects*`
+has no gate — `useProjectsInfiniteQuery`/`useProjectQuery` hit unimplemented
+`/api/projects*` and render an empty state (no crash, mild dead-end). Future
+brick: add a `<Navigate to="/c/new">` guard to `ProjectsView`/`ProjectWorkspace`
+like Skills/Prompts have. `/search` and `/share/:shareId` are KEEP-direction
+seams with documented backend gaps (Phase 5), not removal targets.
+
 Scoped sub-project (do NOT hide piecemeal): file attachments/uploads. The
 `FilesPanel` side-panel entry is pushed unconditionally, but the attach
 surface is entangled — `AttachFileChat` in `ChatForm`, drag-drop providers,
