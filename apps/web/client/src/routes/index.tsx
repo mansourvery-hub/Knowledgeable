@@ -41,10 +41,15 @@ const loadSkillsView = () =>
     Component: m.default,
   }));
 
+// Knowledgeable: agent insights are outside the product surface and no
+// `/api/insights*` backend exists — the route redirects to chat instead of
+// loading the removed view. `components/Insights/` was deleted with this
+// change; data-provider access queries stay dormant behind the absent
+// `insightsEnabled` flag.
 const loadInsightsView = () =>
-  import('~/components/Insights').then((m) => ({
-    Component: m.default,
-  }));
+  Promise.resolve({
+    Component: () => <Navigate to="/c/new" replace={true} />,
+  });
 
 const loadProjectsView = () =>
   import('~/components/Projects').then((m) => ({
