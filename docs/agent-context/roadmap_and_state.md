@@ -122,7 +122,7 @@ exceptions), inventoried below._
 ```text
 [x] User sends a message in the UI; response streams in real time with smooth rendering.
 [x] Reloading the browser preserves full conversation history from SQLite.
-[ ] New conversations appear in the left sidebar and can be switched/deleted.
+[x] New conversations appear in the left sidebar and can be switched/deleted.
 ```
 
 _Streaming evidence 2026-09-19: two UI-submitted turns completed and rendered
@@ -151,6 +151,12 @@ switch/delete ops still open. Note: the first send attempt "failed" only on a
 wrong harness marker (expected a local-tutor skeleton string, got a real model
 reply) — product worked; also fixed a response-id capture bug in the throwaway
 harness (`/tmp/cdp-*.js`, not committed)._
+
+_Sidebar proof 2026-09-19 (CDP, desktop viewport): sidebar lists derived titles;
+clicking a row switched to `/c/6d0aa213` with its messages; row menu →
+Delete → "Delete chat?" confirm removed it (row gone, app back at `/c/new`);
+backend confirms the cascade (`GET /api/convos/:id` 404, messages `[]`,
+reconciled count 11 − 1 = 10). M2 browser exit gate fully closed._
 
 ---
 
