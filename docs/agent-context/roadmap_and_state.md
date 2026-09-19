@@ -338,6 +338,13 @@ gate on permissions only).
 - [ ] 2.4 Knowledgeable Graph/Wiki navigation remains intact.
 - [ ] 2.5 Changes are centralized and upstream-friendly.
 
+Scoped sub-project (do NOT hide piecemeal): file attachments/uploads. The
+`FilesPanel` side-panel entry is pushed unconditionally, but the attach
+surface is entangled — `AttachFileChat` in `ChatForm`, drag-drop providers,
+paste-as-file, upload modals, `ManageFiles` settings — with no `/api/files/*`
+backend behind any of it. Hiding only the panel would leave dead upload
+buttons; gate the whole upload path as one browser-verified project instead.
+
 ### Phase 3 — Remove clearly unwanted product surfaces
 
 Agents, agent marketplace/builder, assistant builder, skills, projects, prompt
