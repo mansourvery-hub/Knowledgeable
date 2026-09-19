@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import GraphCanvas from './GraphCanvas';
+import { openWiki } from '../store/wikiDrawer';
 import type { Neighborhood } from '../graphTypes';
 import {
   confidenceStatus,
@@ -177,6 +178,14 @@ export default function GraphExplorer({
                 ) : (
                   <strong>{name}</strong>
                 )}{' '}
+                <button
+                  type="button"
+                  data-testid={`graph-node-wiki-${node.concept.id}`}
+                  aria-label={`Open wiki for ${name}`}
+                  onClick={() => openWiki(node.concept.id)}
+                >
+                  Wiki
+                </button>{' '}
                 <span data-testid="graph-node-confidence">
                   {formatConfidence(node.learner_confidence)}
                 </span>{' '}

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import GraphExplorer from '../components/GraphExplorer';
+import { closeWiki, getOpenWikiConceptId } from '../store/wikiDrawer';
 import type { Neighborhood } from '../graphTypes';
 
 const A = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -113,6 +114,14 @@ describe('GraphExplorer', () => {
     render(<GraphExplorer neighborhood={fixture()} onSelectConcept={onSelectConcept} />);
     fireEvent.click(screen.getByTestId(`graph-node-select-${B}`));
     expect(onSelectConcept).toHaveBeenCalledWith(B);
+  });
+
+  it('opens the wiki drawer when a node wiki button is activated', () => {
+    closeWiki();
+    render(<GraphExplorer neighborhood={fixture()} onSelectConcept={jest.fn()} />);
+    fireEvent.click(screen.getByTestId(`graph-node-wiki-${B}`));
+    expect(getOpenWikiConceptId()).toBe(B);
+    closeWiki();
   });
 
   it('renders loading, error+retry, and empty states accessibly', () => {
