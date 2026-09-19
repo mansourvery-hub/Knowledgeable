@@ -378,6 +378,15 @@ gate on permissions only).
 - [ ] 2.4 Knowledgeable Graph/Wiki navigation remains intact.
 - [ ] 2.5 Changes are centralized and upstream-friendly.
 
+Contract 2.1 browser evidence (CDP, desktop viewport, labeled-button census):
+side panel offers only Bookmarks (KEEP), Knowledge Graph (ours), Attach Files
+(known scoped gap) — agent/assistant builder, Skills, Schedules, Prompts,
+Memories, Parameters, and MCP builder are all absent; model picker works
+(`gemini-3.1-flash-lite` default). Remaining visible gaps, all recorded, none
+blocking: "All projects" nav entry (covered by the projects-guard brick),
+"Attach File Options" (attachments project), "Use microphone" (speech surfaces
+need their own gating brick: STT/TTS/voice-mode toggles).
+
 Contract 2.2 audit (code-read, browser proof still pending): self-guarding by
 upstream design — `/agents` (redirects to `/c/new` without MARKETPLACE.USE),
 `/skills*` (`<Navigate to="/c/new">` without SKILLS.USE, revoked),
