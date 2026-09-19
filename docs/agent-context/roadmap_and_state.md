@@ -541,3 +541,25 @@ token usage, billing, prompt slash commands, voice mode.
 - [ ] 6.4 Minimal unrelated diff noise.
 - [ ] 6.5 Focused tests verify chat, streaming, conversations, message
   rendering, model selection, Graph/Wiki, and navigation after an update.
+
+---
+
+## 5. Beta feedback log (manual testing, 2026-09-19)
+
+- [x] F1 Core chat functional (send/stream/reload/sidebar) — confirmed by tester.
+- [ ] F2 Wiki "empty/error" report — NOT reproduced: badge render, badge→drawer,
+  cached page, and live generation-on-miss (Divisibility page generated during
+  diagnosis) all verified working; error envelopes sane (404/503 + Retry).
+  Suspects: transient generation hiccup, or a weak-concept node Wiki button
+  (correctly "not ready" by design). Needs the exact word/error text to close.
+- [ ] F3 Concept-badge display complaint ("shown all the time") — T25 known-only
+  filtering confirmed live in the remark plugin; tooltip is hover-only by
+  design. Needs the exact symptom (stuck tooltip? amber/blue badges visible?
+  percentages inline?) to close.
+- [ ] F4 Graph tab visual rehaul — CONFIRMED by screenshot: data layer correct
+  (counts/confidence/edges), presentation weak (tiny canvas, cramped form,
+  list-as-text-dump). Scoped project: canvas sizing/labels/edges + form
+  layout; study notion/logseq/obsidian patterns. Data contracts unchanged.
+- [ ] F5 `log_observation` tool-arg parse failure (`invalid character: found
+  't' at 0`) seen once in a live keyed turn — model emitted non-JSON args.
+  Robustness gap: harden argument parsing/repair vs failing the call.
