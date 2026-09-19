@@ -477,6 +477,10 @@ nothing deleted — each row needs its own isolation+browser brick per 3.5):
   - [x] Schedules panel deleted 2026-09-19 (17 files + central gate entry,
     single importer, no dynamic imports; zero references after; tsc pinned
     at 25; only spec mention is a comment).
+  - Post-deletion boot proof 2026-09-19 (CDP, exception listener attached):
+    chat boots, zero removed-surface strings/panel labels in DOM, zero uncaught
+    exceptions. (Harness note: CDP nests `result.result.value` — a helper that
+    reads one level shallow silently yields `undefined`; fixed in `/tmp`.)
 - SEMI-ISOLATED: `components/Projects` (11; routes dynamic + `ProjectsSection`
   sidebar shell — shell must go in the same brick).
 - ENTANGLED (do not delete wholesale): `components/Skills` (45; also used by
