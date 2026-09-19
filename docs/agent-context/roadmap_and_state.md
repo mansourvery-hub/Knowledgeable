@@ -415,6 +415,14 @@ paste-as-file, upload modals, `ManageFiles` settings — with no `/api/files/*`
 backend behind any of it. Hiding only the panel would leave dead upload
 buttons; gate the whole upload path as one browser-verified project instead.
 
+Scoped sub-project (do NOT hide piecemeal): speech (STT/TTS/voice mode).
+The composer mic button renders because `store.speechToText` defaults on and
+`useSpeechSettingsInit` *enables* speech controls on a missing configuration
+response — which is exactly what our backend returns (no
+`/api/files/speech/config/*`). Gating means the recoil default, the init hook,
+the SPEECH settings tab (~15 entries), and the STT/TTS hooks as one
+browser-verified project, not a single toggle.
+
 Boot probe inventory (headless Chrome 2026-09-19, 45 dead-backend hits, all
 handled rejections, zero uncaught): `/api/projects*`, `/api/tags`,
 `/api/search/enable`, `/api/files*`, `/api/files/config`,
