@@ -186,6 +186,17 @@ no Ollama binary in this environment, so the offline-streaming gate stays
 open. The client settings UI for key entry is likewise open (backend honors
 `apiKey` today)._
 
+_BYOK UI gap scoped 2026-09-19: no working key-entry path exists for the
+`knowledgeable` endpoint. `useRequiresKey` needs a `userProvide` flag our
+endpoint config deliberately omits; the settings `providerApiKeys` entry hides
+(`hasUserProvidedEndpoints` false); `PUT/GET /api/keys` 404s (no backend); and
+nothing in the UI produces our turn-scoped `apiKey` field (backend honors it,
+router-proven). So the M3 "key in settings" tick holds at backend level only.
+Phase 5 BYOK options: (1) advertise `userProvide` to unlock upstream key UI —
+rejected without a real `/api/keys` store (half-working); (2) Knowledgeable-
+scoped entry (local key → turn-scoped `apiKey`, never stored) — the likely
+shape, with strong security boundaries per policy §9.4._
+
 ---
 
 ### M4: Proactive Tutor Graph Navigation & Frontier Orchestration
