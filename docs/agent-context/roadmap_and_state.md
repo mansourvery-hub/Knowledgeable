@@ -469,6 +469,11 @@ nothing deleted — each row needs its own isolation+browser brick per 3.5):
   - [x] Insights deleted 2026-09-19 (dir + route→redirect, tsc pinned at 25,
     `/insights` → `/c/new` browser-proven; data-provider access queries left
     dormant behind the absent flag).
+  - [x] Memories panel deleted 2026-09-19 (13 files + central gate entry;
+    single importer; zero references after; tsc pinned at 25; boot DOM clean).
+    Residuals deliberately left: `MemoryToggle` settings entry (already hidden
+    via revoked OPT_OUT), `utils/memory.ts` + data-provider Memories queries
+    (shared with chat artifacts/SSE — constraint 10).
 - SEMI-ISOLATED: `components/Projects` (11; routes dynamic + `ProjectsSection`
   sidebar shell — shell must go in the same brick).
 - ENTANGLED (do not delete wholesale): `components/Skills` (45; also used by
