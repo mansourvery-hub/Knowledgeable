@@ -340,6 +340,12 @@ _`./scripts/dev` for development; the Axum binary serves the built client
 for single-binary production. Offline path (`local-tutor`, no keys) verified
 throughout; Ollama-offline streaming still open (no local server here)._
 
+_Beta P0 proof 2026-09-19 (post-deletion tree): `npm run build` green, fresh
+`dist/` contains the cleanup code; Axum serves it single-origin (`/` → SPA,
+`/api/config` → JSON precedence, unknown `/api/*`+`/v1/*` → JSON 404); CDP
+boot straight against `:3000` (no Vite) reaches `/c/new` with composer and
+zero uncaught exceptions._
+
 ---
 
 ## 4. LibreChat Product-Surface Cleanup Roadmap (Canonical, Not Started)
