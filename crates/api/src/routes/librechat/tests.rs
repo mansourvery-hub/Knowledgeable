@@ -803,6 +803,48 @@ async fn chat_dispatches_on_model_and_byok() {
     }
 }
 
+/// A rejected turn (missing provider key) must not persist an empty
+/// conversation shell: credential validation precedes any database write.
+#[tokio::test]
+async fn chat_rejected_turn_persists_no_conversation() {
+    let gemini = std::env::var("GEMINI_API_KEY").ok();
+    let openai = std::env::var("OPENAI_API_KEY").ok();
+    std::env::remove_var("GEMINI_API_KEY");
+    std::env::remove_var("OPENAI_API_KEY");
+
+    let (app, pool) = setup().await;
+    let count = || async {
+        application::conversation_service::list_conversations(&pool).await.unwrap().len()
+    };
+    assert_eq!(count().await, 0);
+
+    let payload = serde_json::json!({
+        "conversationId": "new",
+        "text": "hello",
+        "model": "gemini-probe-123",
+    });
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/agents/chat/knowledgeable")
+                .header("content-type", "application/json")
+                .body(Body::from(payload.to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(count().await, 0);
+
+    if let Some(v) = gemini {
+        std::env::set_var("GEMINI_API_KEY", v);
+    }
+    if let Some(v) = openai {
+        std::env::set_var("OPENAI_API_KEY", v);
+    }
+}
+
 /// v2 status (T12a): running while the turn streams, complete after `final`,
 /// unknown conversations 404. This is what authorizes terminal teardown.
 #[tokio::test]

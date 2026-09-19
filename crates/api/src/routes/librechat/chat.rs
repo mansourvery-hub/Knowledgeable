@@ -365,6 +365,12 @@ pub async fn handle(
     }
 
     let pool = pool(&state).await?.clone();
+
+    // Validate credentials before touching the database: resolving the
+    // provider is pure, so a missing key 400s here without persisting an
+    // empty conversation shell.
+    let turn_llm = resolve_turn_llm(&payload.model, payload.api_key.as_deref(), &state)?;
+
     let conversation = resolve_conversation(&pool, payload.conversation_id.as_deref()).await?;
 
     let model = payload.model.clone();
@@ -391,7 +397,7 @@ pub async fn handle(
         pool.clone(),
         conversation.id,
         text,
-        resolve_turn_llm(&payload.model, payload.api_key.as_deref(), &state)?,
+        turn_llm,
         payload.model.clone(),
     )
     .await
