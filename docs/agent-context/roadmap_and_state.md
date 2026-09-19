@@ -301,9 +301,12 @@ _Browser proof 2026-09-19 (CDP): "Knowledge Graph" nav entry opens the panel
 (search/depth/limit controls render); searching "prime" lists backend concepts;
 loading Prime Number renders "3 concepts · 2 links · 2 need review" with legend
 (—▶ dependency vs ┄ semantic), confidence badges (Factor 30% review,
-Divisibility 85% review, Prime Number 98% healthy), and edges. Caveat: clicking
-a search result did not populate the UUID field (needed direct UUID entry) —
-result→load wiring needs a look before the node-click box can be attempted._
+Divisibility 85% review, Prime Number 98% healthy), and edges. Drill proven:
+clicking the "Factor" node re-centers to its 1-concept neighborhood. Earlier
+"result-click" caveat retracted — harness artifact (clicked the `<li>` instead
+of `button[data-testid="graph-search-result"]`; `handlePickResult` loads
+directly by design). Precise gap for the node-click box: node selection drills
+only — no node→wiki link exists yet (wiki opens from chat badges, M8 proven)._
 
 ---
 
