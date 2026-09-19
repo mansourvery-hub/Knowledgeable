@@ -461,6 +461,20 @@ do NOT immediately delete implementation files.
 - [ ] 3.4 Dependency analysis identifies genuinely dead implementation.
 - [ ] 3.5 Only genuinely isolated dead code is considered for deletion.
 
+Contract 3.4 ledger (static import scan 2026-09-19, `apps/web/client/src`;
+nothing deleted — each row needs its own isolation+browser brick per 3.5):
+- ISOLATED candidates: `components/Insights` (7 files; only `routes/index.tsx`
+  dynamic import), `components/SidePanel/Memories` (13; only `useSideNavLinks`),
+  `components/SidePanel/Schedules` (17; only `useSideNavLinks`).
+- SEMI-ISOLATED: `components/Projects` (11; routes dynamic + `ProjectsSection`
+  sidebar shell — shell must go in the same brick).
+- ENTANGLED (do not delete wholesale): `components/Skills` (45; also used by
+  agent-tools `SkillsDialog`), `components/MCPBuilder` (25; also used by agent
+  `AddMcpServerDialog`), `components/Prompts` (53; provider
+  `PromptGroupsContext`, input `PromptsCommand`, agent tools),
+  `components/Agents` (routes + `Chat/Landing`), `components/SidePanel/Agents`
+  (132 files, 5 external importers — never wholesale).
+
 ### Phase 4 — Keep/future features: preserve clean seams
 
 Bookmarks, pin, archive, fork/branch, conversation search, minimal share, file
