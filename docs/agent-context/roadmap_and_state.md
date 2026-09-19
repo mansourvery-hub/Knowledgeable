@@ -120,10 +120,17 @@ exceptions), inventoried below._
 
 **Exit Gate**:
 ```text
-[ ] User sends a message in the UI; response streams in real time with smooth rendering.
+[x] User sends a message in the UI; response streams in real time with smooth rendering.
 [x] Reloading the browser preserves full conversation history from SQLite.
 [ ] New conversations appear in the left sidebar and can be switched/deleted.
 ```
+
+_Streaming evidence 2026-09-19: two UI-submitted turns completed and rendered
+(`/c/eb568c7f`, `/c/6d0aa213`, `/c/e4f418e7`, `/c/73444b03`); the keyed-path
+protocol delivers multiple cumulative deltas per turn (measured: 4 text deltas
+at 9/87/214/313 chars inside a 20-frame stream — provider-chunked, not
+token-by-token, so 100ms DOM polls see coarse jumps; no jank observed).
+Sidebar switch/delete ops still open._
 
 _Backend contract verified by adapter tests (`cargo test -p api`); the browser
 exit gate requires a manual `apps/web` dev-server run._
