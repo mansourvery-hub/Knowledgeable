@@ -7,6 +7,8 @@
  * itself; the server generates lazily on miss.
  */
 
+import type { ConceptAnnotation } from '../types';
+
 export interface WikiPrerequisite {
   concept_id: string;
   name: string;
@@ -33,6 +35,9 @@ export interface WikiPage {
   is_stale: boolean;
   created_at: string;
   updated_at: string;
+  /** Live-derived annotations for the rendered content (F7 render parity);
+   * absent when nothing matched or derivation degraded. */
+  concept_annotations?: ConceptAnnotation[];
 }
 
 export class WikiValidationError extends Error {

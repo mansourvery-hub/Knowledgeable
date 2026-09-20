@@ -7,6 +7,7 @@ import {
   clearMessageAnnotations,
   getMessageAnnotations,
   handleConceptAnnotationsEvent,
+  sanitizeAnnotations,
   setMessageAnnotations,
   useMessageAnnotations,
 } from '../store/annotations';
@@ -168,6 +169,17 @@ describe('annotation store', () => {
       clearMessageAnnotations();
       const idle = renderHook(() => useMessageAnnotations(M2), { wrapper });
       expect(idle.result.current).toEqual([]);
+    });
+
+    it('sanitizes raw payloads for render consumers', () => {
+      expect(
+        sanitizeAnnotations([
+          { concept_id: 'a', name: 'Alpha', learner_confidence: 0.5, status: 'known' },
+          { nope: true },
+        ]),
+      ).toMatchObject([{ name: 'Alpha', status: 'known' }]);
+      expect(sanitizeAnnotations('nope')).toEqual([]);
+      expect(sanitizeAnnotations(undefined)).toEqual([]);
     });
   });
 });

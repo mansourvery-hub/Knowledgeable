@@ -23,7 +23,7 @@ pub async fn handle_get_wiki(
     State(state): State<AppState>,
     Path(concept_id_raw): Path<String>,
     Query(query): Query<WikiQuery>,
-) -> Result<Json<domain::ConceptWikiPage>, crate::error::AppError> {
+) -> Result<Json<serde_json::Value>, crate::error::AppError> {
     let concept_id_str = concept_id_raw.trim();
     if concept_id_str.is_empty() {
         return Err(crate::error::AppError::Validation("concept id is required".into()));
@@ -56,7 +56,34 @@ pub async fn handle_get_wiki(
     let wiki =
         application::wiki_service::WikiService::new(std::sync::Arc::new(pool.clone()), llm, model);
     match wiki.get_wiki(learner_id, concept_id).await {
-        Ok(page) => Ok(Json(page)),
+        // Render consistency (chats = wiki): the drawer runs the same
+        // markdown pipeline as chat, so the page carries live-derived
+        // annotations for exactly the rendered string. Failures/empties
+        // degrade to a missing field, mirroring history behavior.
+        Ok(page) => {
+            let mut value = serde_json::to_value(&page).map_err(|e| {
+                crate::error::AppError::ServiceUnavailable(format!("wiki encode failed: {e}"))
+            })?;
+            if !page.personalized_content.trim().is_empty() {
+                let graph = application::graph_service::GraphService::new(std::sync::Arc::new(
+                    pool.clone(),
+                ));
+                match graph.annotate_turn(learner_id, &page.personalized_content, None).await {
+                    Ok(annotations) if !annotations.is_empty() => {
+                        if let serde_json::Value::Object(ref mut map) = value {
+                            map.insert(
+                                "concept_annotations".into(),
+                                serde_json::to_value(&annotations)
+                                    .unwrap_or(serde_json::Value::Null),
+                            );
+                        }
+                    }
+                    Ok(_) => {}
+                    Err(e) => tracing::warn!(error = %e, "wiki annotation failed"),
+                }
+            }
+            Ok(Json(value))
+        }
         Err(application::wiki_service::WikiError::ConceptNotFound) => {
             Err(crate::error::AppError::NotFound("concept not found".into()))
         }

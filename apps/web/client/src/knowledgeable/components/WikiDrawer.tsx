@@ -7,6 +7,7 @@
  * generation happens server-side on miss, never from this component.
  */
 import { useCallback, useEffect, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import MarkdownBlocks from '~/components/Chat/Messages/Content/MarkdownBlocks';
 import { getMarkdownComponents, getRehypePlugins, getRemarkPlugins } from '~/components/Chat/Messages/Content/markdownConfig';
 import {
@@ -15,7 +16,9 @@ import {
   fetchWikiPage,
   type WikiPage,
 } from '../api/wikiClient';
+import { sanitizeAnnotations } from '../store/annotations';
 import { closeWiki, useOpenWikiConceptId } from '../store/wikiDrawer';
+import store from '~/store';
 
 export interface WikiDrawerProps {
   conceptId?: string | null;
@@ -36,6 +39,11 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
   const storeId = useOpenWikiConceptId();
   const id = conceptId !== undefined ? conceptId : storeId;
   const handleClose = onClose ?? closeWiki;
+  // Render parity with chat (F7): same LaTeX setting, same badge pipeline
+  // fed with the page's live-derived annotations (validated, never stored —
+  // the drawer is not a message). Percentages follow the debug toggle.
+  const LaTeXParsing = useRecoilValue(store.LaTeXParsing);
+  const showConfidence = useRecoilValue(store.showConfidenceDebug);
   const [page, setPage] = useState<WikiPage | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -132,19 +140,24 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
           {page.is_stale && (
             <p data-testid="wiki-stale">May be outdated — refreshes on next view.</p>
           )}
-          <div data-testid="wiki-confidence">
-            Confidence {Math.round(page.learner_confidence_at_generation * 100)}%
-            <div
-              aria-hidden="true"
-              data-testid="wiki-confidence-bar"
-              style={{ width: `${Math.round(page.learner_confidence_at_generation * 100)}%` }}
-            />
-          </div>
+          {showConfidence && (
+            <div data-testid="wiki-confidence">
+              Confidence {Math.round(page.learner_confidence_at_generation * 100)}%
+              <div
+                aria-hidden="true"
+                data-testid="wiki-confidence-bar"
+                style={{ width: `${Math.round(page.learner_confidence_at_generation * 100)}%` }}
+              />
+            </div>
+          )}
           <p data-testid="wiki-summary">{page.summary}</p>
           <div data-testid="wiki-content">
             <MarkdownBlocks
               content={page.personalized_content}
-              remarkPlugins={getRemarkPlugins(true, [])}
+              remarkPlugins={getRemarkPlugins(
+                LaTeXParsing,
+                sanitizeAnnotations(page.concept_annotations),
+              )}
               rehypePlugins={getRehypePlugins()}
               components={getMarkdownComponents()}
               animate={false}
@@ -155,7 +168,8 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
             <ul data-testid="wiki-prereqs" aria-label="Prerequisites">
               {page.known_prerequisites.map((prereq) => (
                 <li key={prereq.concept_id} data-testid="wiki-prereq">
-                  {prereq.name} · {Math.round(prereq.learner_confidence * 100)}%
+                  {prereq.name}
+                  {showConfidence && <> · {Math.round(prereq.learner_confidence * 100)}%</>}
                 </li>
               ))}
             </ul>

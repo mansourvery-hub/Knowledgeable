@@ -1,12 +1,27 @@
+import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { RecoilRoot } from 'recoil';
 import WikiDrawer from '../components/WikiDrawer';
+import store from '~/store';
 
+const mockMarkdownRender = jest.fn();
 jest.mock('~/components/Chat/Messages/Content/MarkdownBlocks', () => ({
   __esModule: true,
-  default: ({ content }: { content: string }) => (
-    <div data-testid="wiki-markdown-stub">{content}</div>
-  ),
+  default: (props: { content: string; remarkPlugins?: unknown[] }) => {
+    mockMarkdownRender(props);
+    return <div data-testid="wiki-markdown-stub">{props.content}</div>;
+  },
 }));
+
+/* F7 render parity: the drawer reads persisted atoms now, so every render
+ * carries an explicit debug value (percentages default off). */
+function renderDrawer(ui: ReactElement, debug = false) {
+  return render(
+    <RecoilRoot initializeState={({ set }) => set(store.showConfidenceDebug, debug)}>
+      {ui}
+    </RecoilRoot>,
+  );
+}
 
 const CONCEPT = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
@@ -49,7 +64,7 @@ describe('WikiDrawer', () => {
   });
 
   it('renders nothing without a concept', () => {
-    render(<WikiDrawer conceptId={null} />);
+    renderDrawer(<WikiDrawer conceptId={null} />);
     expect(screen.queryByTestId('wiki-drawer')).not.toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
   });
@@ -57,7 +72,7 @@ describe('WikiDrawer', () => {
   it('loads and renders the cached page with anchors and gauge', async () => {
     const onClose = jest.fn();
     stubFetch(200, pagePayload());
-    render(<WikiDrawer conceptId={CONCEPT} onClose={onClose} />);
+    renderDrawer(<WikiDrawer conceptId={CONCEPT} onClose={onClose} />, true);
 
     expect(screen.getByTestId('wiki-loading')).toBeInTheDocument();
     await waitFor(() => {
@@ -78,7 +93,7 @@ describe('WikiDrawer', () => {
 
   it('flags stale pages and explains not-ready with retry', async () => {
     stubFetch(200, pagePayload({ is_stale: true }));
-    const { unmount } = render(<WikiDrawer conceptId={CONCEPT} />);
+    const { unmount } = renderDrawer(<WikiDrawer conceptId={CONCEPT} />);
     await waitFor(() => {
       expect(screen.getByTestId('wiki-stale')).toBeInTheDocument();
     });
@@ -86,7 +101,7 @@ describe('WikiDrawer', () => {
 
     (global.fetch as jest.Mock).mockReset();
     stubFetch(404, { code: 'wiki_not_ready', message: 'keep learning' });
-    render(<WikiDrawer conceptId={CONCEPT} />);
+    renderDrawer(<WikiDrawer conceptId={CONCEPT} />);
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('keep learning');
     });
@@ -97,5 +112,39 @@ describe('WikiDrawer', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent("Couldn't load");
     });
+  });
+
+  it('hides percentages by default and feeds badges to the shared pipeline', async () => {
+    stubFetch(
+      200,
+      pagePayload({
+        personalized_content: 'Alpha builds on Beta ideas.',
+        concept_annotations: [
+          { concept_id: 'b', name: 'Beta', learner_confidence: 0.85, status: 'known' },
+        ],
+      }),
+    );
+    renderDrawer(<WikiDrawer conceptId={CONCEPT} />);
+    await waitFor(() => {
+      expect(screen.getByTestId('wiki-title')).toHaveTextContent('Prime Number');
+    });
+    // Debug toggle off: gauge, bar, and prereq percentages all hidden.
+    expect(screen.queryByTestId('wiki-confidence')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('wiki-confidence-bar')).not.toBeInTheDocument();
+    expect(screen.getByTestId('wiki-prereq')).toHaveTextContent('Factor');
+    expect(screen.getByTestId('wiki-prereq')).not.toHaveTextContent('98%');
+    // Same markdown pipeline as chat, fed with the page annotations.
+    const calls = mockMarkdownRender.mock.calls;
+    const props = calls[calls.length - 1][0] as {
+      remarkPlugins?: unknown[];
+    };
+    const highlight = (props.remarkPlugins ?? []).find(
+      (entry): entry is [unknown, { annotations: { name: string }[] }] =>
+        Array.isArray(entry) &&
+        typeof entry[1] === 'object' &&
+        entry[1] !== null &&
+        'annotations' in entry[1],
+    );
+    expect(highlight?.[1].annotations).toMatchObject([{ name: 'Beta' }]);
   });
 });

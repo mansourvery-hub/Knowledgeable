@@ -695,6 +695,15 @@ bodies.
   across 3 suites, capped flags), tsc pinned at 25 with zero in touched
   files. Open: CDP browser pass (reload shows live badges, toggle reveals
   percentages).
+  Render parity DONE 2026-09-20 (user directive: chats = wiki via shared
+  code): wiki pages carry live-derived `concept_annotations` (same matcher,
+  omit-on-empty/failure); drawer feeds them to the shared markdown
+  pipeline, respects the user LaTeX setting (was hardcoded on), and gates
+  gauge + prereq percentages behind the debug toggle. No store involvement
+  (drawer passes the array straight to the plugin). Locked by wiki router
+  test + drawer/pipeline specs (workspace 117 green), tsc pinned at 25.
+  Open: drawer gauge still shows at-generation confidence (snapshot
+  semantics — product question, untouched).
 - [ ] F8 No Personal Wiki browser entry exists (only drawer via badge clicks +
   graph node buttons) — the integration doc's "Personal Wiki navigation
   sidebar item" over-claims; doc corrected with this entry, browser filed as

@@ -1190,6 +1190,79 @@ async fn wiki_serves_cached_page_and_readiness_states() {
     assert_eq!(page["version"], 1);
     assert_eq!(page["is_stale"], false);
 }
+
+/// Render parity (chats = wiki): cached pages carry live-derived
+/// `concept_annotations` for the rendered content; unmatched content omits
+/// the field instead of failing.
+#[tokio::test]
+async fn wiki_page_carries_live_annotations() {
+    let (app, pool) = setup().await;
+    let learner = application::conversation_service::ensure_default_learner(&pool).await.unwrap();
+
+    async fn seed(
+        pool: &sqlx::SqlitePool,
+        learner: uuid::Uuid,
+        name: &str,
+        conf: f32,
+        content: Option<&str>,
+    ) -> String {
+        let id = uuid::Uuid::new_v4();
+        let node = domain::ConceptNode {
+            id,
+            canonical_name: name.into(),
+            canonical_statement: format!("{name} statement."),
+            learner_statement: None,
+            world_confidence: 1.0,
+            status: domain::ConceptStatus::Active,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        };
+        infrastructure::graph_repo::create_concept(pool, &node).await.unwrap();
+        sqlx::query(
+            "INSERT INTO learner_concept_states (learner_id, concept_id, learner_confidence) VALUES (?, ?, ?)",
+        )
+        .bind(learner.to_string())
+        .bind(id.to_string())
+        .bind(conf)
+        .execute(pool)
+        .await
+        .unwrap();
+        if let Some(body) = content {
+            sqlx::query(
+                "INSERT INTO concept_wiki_pages (id, learner_id, concept_id, title, summary, personalized_content, known_prerequisites, related_concepts, learner_confidence_at_generation, version, is_stale)
+                 VALUES (?, ?, ?, ?, 'S.', ?, '[]', '[]', 0.9, 1, 0)",
+            )
+            .bind(uuid::Uuid::new_v4().to_string())
+            .bind(learner.to_string())
+            .bind(id.to_string())
+            .bind(name)
+            .bind(body)
+            .execute(pool)
+            .await
+            .unwrap();
+        }
+        id.to_string()
+    }
+
+    seed(&pool, learner, "Prime Number", 0.98, None).await;
+    let beta =
+        seed(&pool, learner, "Beta Page", 0.90, Some("Beta builds on Prime Number ideas.")).await;
+    let plain = seed(&pool, learner, "Plain Page", 0.91, Some("Nothing matchable here.")).await;
+
+    let response = app.clone().oneshot(get(&format!("/api/concepts/{beta}/wiki"))).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let page = body_json(response).await;
+    assert_eq!(page["title"], "Beta Page");
+    let annot = &page["concept_annotations"];
+    assert!(annot.is_array(), "annotations must ride the page");
+    assert_eq!(annot[0]["name"], "Prime Number");
+    let conf = annot[0]["learner_confidence"].as_f64().unwrap();
+    assert!((conf - 0.98).abs() < 1e-6, "live confidence, got {conf}");
+
+    let response = app.oneshot(get(&format!("/api/concepts/{plain}/wiki"))).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(body_json(response).await.get("concept_annotations").is_none());
+}
 /// M4/B3: tool execution surfaces `tool_progress` start/finish frames around
 /// the call so the client can render tutor activity without breaking text.
 #[tokio::test]

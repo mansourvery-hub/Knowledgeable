@@ -147,6 +147,27 @@ function sanitizeAnnotation(value: unknown): ConceptAnnotation | null {
 }
 
 /**
+ * Validate a raw annotations payload into clean entries (capped).
+ *
+ * Shared by the SSE frame path and render-consistency consumers (wiki
+ * drawer) so malformed server data degrades to unbadged text instead of
+ * crashing render. Never throws.
+ */
+export function sanitizeAnnotations(value: unknown): ConceptAnnotation[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const clean: ConceptAnnotation[] = [];
+  for (const entry of value) {
+    const annotation = sanitizeAnnotation(entry);
+    if (annotation && clean.length < MAX_STORED_PER_MESSAGE) {
+      clean.push(annotation);
+    }
+  }
+  return clean;
+}
+
+/**
  * Validate + store one `concept_annotations` SSE frame.
  *
  * Returns true when the envelope was well-formed and consumed (even when it
@@ -164,13 +185,6 @@ export function handleConceptAnnotationsEvent(data: unknown): boolean {
   if (!Array.isArray(concept_annotations)) {
     return false;
   }
-  const clean: ConceptAnnotation[] = [];
-  for (const entry of concept_annotations) {
-    const annotation = sanitizeAnnotation(entry);
-    if (annotation && clean.length < MAX_STORED_PER_MESSAGE) {
-      clean.push(annotation);
-    }
-  }
-  setMessageAnnotations(messageId, clean);
+  setMessageAnnotations(messageId, sanitizeAnnotations(concept_annotations));
   return true;
 }
