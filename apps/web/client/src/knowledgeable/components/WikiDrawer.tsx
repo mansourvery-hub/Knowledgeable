@@ -151,7 +151,13 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
             </div>
           )}
           <p data-testid="wiki-summary">{page.summary}</p>
-          <div data-testid="wiki-content">
+          {/* Same content-typography container as chat assistant messages
+            (MessageContent): identical type scale, spacing, and dark-mode
+            inversion for the same rendered elements. */}
+          <div
+            data-testid="wiki-content"
+            className="markdown prose message-content dark:prose-invert light w-full break-words"
+          >
             <MarkdownBlocks
               content={page.personalized_content}
               remarkPlugins={getRemarkPlugins(

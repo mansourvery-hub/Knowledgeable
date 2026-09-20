@@ -133,6 +133,8 @@ describe('WikiDrawer', () => {
     expect(screen.queryByTestId('wiki-confidence-bar')).not.toBeInTheDocument();
     expect(screen.getByTestId('wiki-prereq')).toHaveTextContent('Factor');
     expect(screen.getByTestId('wiki-prereq')).not.toHaveTextContent('98%');
+    // Same content-typography container as chat assistant messages.
+    expect(screen.getByTestId('wiki-content')).toHaveClass('markdown', 'prose', 'message-content');
     // Same markdown pipeline as chat, fed with the page annotations.
     const calls = mockMarkdownRender.mock.calls;
     const props = calls[calls.length - 1][0] as {
