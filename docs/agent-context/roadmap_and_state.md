@@ -595,9 +595,18 @@ bodies.
   `personal-wiki` side-nav entry beside the graph (locale key
   `com_ui_personal_wiki`, en only per convention); rows call existing
   `openWiki`, drawer untouched; client via `fetchMasteredConcepts` in
-  `wikiClient.ts` (shape guard + typed errors). Locked by 6 `WikiBrowser`
+  `wikiClient.ts` (shape guard + typed errors).   Locked by 6 `WikiBrowser`
   specs + 2 `wikiClient` specs (13/13 green, fetch-stubbed, ~3s), tsc
   pinned at 25 with zero in touched files.
+  Browser pass DONE 2026-09-20 (CDP vs scratch backend, harnesses in
+  `/tmp/cdp-*.js` uncommitted): entry renders (`nav-panel-personal-wiki`),
+  3 seeded rows weakest-first (Alpha 72% → Gamma 85% + stale mark →
+  Beta 98%), below-threshold Weak excluded, Beta row opens the real cached
+  page (no stale flag), Gamma row shows the stale flag, Alpha row
+  generated live ("Introduction to Alpha" — keyed generation proof),
+  filter narrows to one row, wiped states render the empty state with zero
+  rows. 19/19 main + 4/4 empty green. User DB untouched (scratch
+  `/tmp/wiki-browse.db`); servers stopped after the pass.
 
 ### Phase 6 — Upstream synchronization discipline
 
