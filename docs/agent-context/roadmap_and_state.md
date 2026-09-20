@@ -704,6 +704,11 @@ bodies.
   test + drawer/pipeline specs (workspace 117 green), tsc pinned at 25.
   Open: drawer gauge still shows at-generation confidence (snapshot
   semantics — product question, untouched).
+  Wiki voice DONE 2026-09-20 (user report: pages read like tutor dialogue):
+  generation prompt now demands a concise third-person reference article and
+  bans Socratic patter + reader questions outright (dialogue belongs in
+  chat). Locked by prompt invariant test (workspace 118 green). Note:
+  already-cached pages keep old voice until staleness regenerates them.
 - [ ] F8 No Personal Wiki browser entry exists (only drawer via badge clicks +
   graph node buttons) — the integration doc's "Personal Wiki navigation
   sidebar item" over-claims; doc corrected with this entry, browser filed as

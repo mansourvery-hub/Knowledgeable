@@ -199,16 +199,59 @@ fn wiki_prompt(
         related.iter().map(|r| format!("- {}", r.name)).collect::<Vec<_>>().join("\n")
     };
     format!(
-        "Write a personal wiki page for a learner studying \"{name}\" (their confidence: {confidence:.0}%).\n\
+        "Write a concise personal reference article for a learner studying \"{name}\" (their confidence: {confidence:.0}%).\n\
          Canonical truth (never contradict): {statement}\n\n\
          Prerequisites they know:\n{prereqs}\n\nRelated concepts: {related_list}\n\n\
          Return JSON with exactly: title (short), summary (one or two sentences), \
-         personalized_content (markdown: a Socratic-leaning explanation anchored in what they know, \
-         then one check-for-understanding question). Personalize the representation, not the truth.",
+         personalized_content (markdown reference article: third-person declarative definition, \
+         key facts, and where it fits, one worked example; anchor it in the known prerequisites \
+         by name). House rules: no second-person tutoring patter (never \"think back\", \
+         \"imagine you\", \"as you know\"), no questions to the reader, no check-for-understanding \
+         questions — dialogue belongs in chat, this page is the durable record. \
+         Personalize the representation, not the truth.",
         name = concept.canonical_name,
         confidence = confidence,
         statement = concept.canonical_statement,
         prereqs = prereqs,
         related_list = related_list,
     )
+}
+
+#[cfg(test)]
+mod prompt_tests {
+    use super::*;
+
+    fn sample_prompt() -> String {
+        let concept = domain::ConceptNode {
+            id: uuid::Uuid::new_v4(),
+            canonical_name: "Prime Number".into(),
+            canonical_statement: "A natural number greater than 1 with exactly two divisors."
+                .into(),
+            learner_statement: None,
+            world_confidence: 1.0,
+            status: domain::ConceptStatus::Active,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        };
+        wiki_prompt(&concept, 0.98, &[], &[])
+    }
+
+    /// Wiki pages are durable reference articles, not tutor dialogue: the
+    /// prompt must demand third-person declarative prose and ban Socratic
+    /// patter and reader questions outright.
+    #[test]
+    fn wiki_prompt_demands_reference_article_not_dialogue() {
+        let prompt = sample_prompt();
+        for required in [
+            "reference article",
+            "third-person declarative",
+            "no questions to the reader",
+            "dialogue belongs in chat",
+        ] {
+            assert!(prompt.contains(required), "prompt missing: {required}");
+        }
+        for banned in ["Socratic-leaning", "then one check-for-understanding question"] {
+            assert!(!prompt.contains(banned), "prompt still invites dialogue: {banned}");
+        }
+    }
 }
