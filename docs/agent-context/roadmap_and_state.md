@@ -453,6 +453,17 @@ surface is entangled — `AttachFileChat` in `ChatForm`, drag-drop providers,
 paste-as-file, upload modals, `ManageFiles` settings — with no `/api/files/*`
 backend behind any of it. Hiding only the panel would leave dead upload
 buttons; gate the whole upload path as one browser-verified project instead.
+  Brick 2026-09-20 (commit `79e7e55`): central `attachmentsDisabled = true`
+  flag in `~/knowledgeable/attachments.ts`, consumed at four gates — nav entry
+  (`useSideNavLinks`), composer button (`ChatForm` no longer mounts
+  `AttachFileChat`), paste/drag/modal (`useUploadOptions` forces
+  `uploadsDisabled`, which all three flows already honor with the upstream
+  disabled toast), settings (`manageFiles` registry `show`). No backend route
+  (adapter stays narrow); panel/dialogs stay vendored for Phase 5. Verified:
+  tsc pinned at 25 with zero in touched files; registry + useUploadOptions
+  specs 18/18 green. Open: heavy ChatForm upload suites not runnable on this
+  laptop (coverage-on defaults + 3 jsdom workers thrash it; use
+  `--coverage=false --maxWorkers=2`), and the CDP browser pass.
 
 Scoped sub-project (do NOT hide piecemeal): speech (STT/TTS/voice mode).
 The composer mic button renders because `store.speechToText` defaults on and
