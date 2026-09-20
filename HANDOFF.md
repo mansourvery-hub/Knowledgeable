@@ -108,3 +108,19 @@ knowledge graph and teaches at the learner's frontier. Product direction:
   self-guards (`<Navigate>`) as done for Skills/Prompts/Marketplace/Projects.
 - `apps/web/client/src/knowledgeable/` is our protected boundary; the Rust
   adapter stays narrow (no route without a product requirement).
+
+## 8. Agent context packing (repomix)
+
+Never run vanilla `repomix` — it packs the entire vendored LibreChat tree
+(tens of thousands of files) and thrashes this laptop. Scope with `--include`
+to exactly what the receiving agent needs. Example: wiki-research pack
+(52 files, ~72k tokens):
+
+```
+repomix --style markdown -o /tmp/wiki-research-pack.md --include "PRODUCT.md,MVP.md,ARCHITECTURE.md,IMPLEMENTATION_PLAN.md,QUALITY.md,TEST_STRATEGY.md,system_policy.txt,docs/agent-context/**,apps/web/client/src/knowledgeable/**,apps/web/client/src/hooks/Nav/useSideNavLinks.ts,crates/application/src/wiki_service.rs,crates/api/src/routes/librechat/wiki.rs,crates/api/src/routes/librechat/concepts.rs,migrations/**"
+```
+
+- Keep output in `/tmp/`, never in the repo (clean tree).
+- `--token-budget <N>` fails instead of melting when output exceeds N tokens.
+- `--token-count-tree` previews per-file cost before packing.
+- Security check runs by default; `.env`/`.db` are gitignored and excluded.
