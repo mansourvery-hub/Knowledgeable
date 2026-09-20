@@ -484,6 +484,16 @@ browser-verified project, not a single toggle.
   files; registry spec 15/15 green with `--coverage=false --maxWorkers=2`.
   Open: CDP browser pass (mic/speak/autoplay absent, SPEECH tab + search
   clean).
+  Browser passes DONE 2026-09-20 (attachments + speech, CDP vs scratch
+  backend, `/tmp/cdp-gates*.js` uncommitted): side panel offers only Chat
+  History/Bookmarks/Knowledge Graph/Personal Wiki (no Attach Files);
+  composer has no attach button and no mic; pasted file ends at the
+  upstream "File uploads are disabled for this endpoint" toast with zero
+  `/api/files` hits server-side; seeded conversation renders with no
+  read-aloud buttons; settings has no Speech tab, Data & Privacy holds no
+  Manage files, search "speech" matches nothing. (Seed note: message/page
+  row ids must be UUIDs — the repos `parse().unwrap()` row ids and panic
+  otherwise; harness-seed bug, not product.)
 
 Boot probe inventory (headless Chrome 2026-09-19, 45 dead-backend hits, all
 handled rejections, zero uncaught): `/api/projects*`, `/api/tags`,
