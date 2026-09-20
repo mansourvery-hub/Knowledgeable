@@ -2,6 +2,7 @@ import { createElement } from 'react';
 import { MessageSquare, Info } from 'lucide-react';
 import { SettingsTabValues } from 'librechat-data-provider';
 import { GearIcon, DataIcon, UserIcon, SpeechIcon } from '@librechat/client';
+import { speechDisabled } from '~/knowledgeable/speech';
 import type { ComponentType, ReactNode } from 'react';
 import type { TranslationKeys } from '~/hooks';
 
@@ -120,6 +121,10 @@ export const TABS: TabMeta[] = [
     id: SettingsTabValues.SPEECH,
     labelKey: 'com_nav_setting_speech',
     icon: createElement(SpeechIcon, { className: 'icon-sm' }),
+    // Knowledgeable: speech (STT/TTS/voice mode) is FUTURE (no
+    // speech-config backend). Entry-level `show` gates in the registry hide
+    // these from settings search as well.
+    show: () => !speechDisabled,
     sections: [
       { id: 'stt', labelKey: 'com_ui_settings_section_stt' },
       { id: 'tts', labelKey: 'com_ui_settings_section_tts' },

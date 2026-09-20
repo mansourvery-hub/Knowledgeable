@@ -472,6 +472,18 @@ response — which is exactly what our backend returns (no
 `/api/files/speech/config/*`). Gating means the recoil default, the init hook,
 the SPEECH settings tab (~15 entries), and the STT/TTS hooks as one
 browser-verified project, not a single toggle.
+  Brick 2026-09-20 (speech code, browser pass open): central
+  `speechDisabled = true` flag in `~/knowledgeable/speech.ts`, consumed at
+  five gates — composer mic + response auto-play (`ChatForm` no longer mounts
+  `AudioRecorder`/`AutoPlayAudio`), per-message speak button
+  (`HoverButtons`), the SPEECH tab (`types.ts` TABS `show`), and all 14
+  SPEECH registry entries (entry-level `show`, since settings search renders
+  components bypassing tab visibility). No backend route; components, hooks,
+  and recoil defaults stay vendored/untouched (render gates make stored
+  values unreachable). Verified: tsc pinned at 25 with zero in touched
+  files; registry spec 15/15 green with `--coverage=false --maxWorkers=2`.
+  Open: CDP browser pass (mic/speak/autoplay absent, SPEECH tab + search
+  clean).
 
 Boot probe inventory (headless Chrome 2026-09-19, 45 dead-backend hits, all
 handled rejections, zero uncaught): `/api/projects*`, `/api/tags`,

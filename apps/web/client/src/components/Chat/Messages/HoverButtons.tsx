@@ -19,6 +19,7 @@ import { revealedQueuedTurnFamily } from '~/store/steer';
 import { Fork } from '~/components/Conversations';
 import { hoverButtonClasses } from './styles';
 import MessageAudio from './MessageAudio';
+import { speechDisabled } from '~/knowledgeable/speech';
 import Feedback from './Feedback';
 import { cn } from '~/utils';
 import store from '~/store';
@@ -223,8 +224,9 @@ const HoverButtons = ({
 
   return (
     <div className="group visible flex justify-center gap-0.5 self-end focus-within:outline-none lg:justify-start">
-      {/* Text to Speech */}
-      {TextToSpeech && !error && !isActiveStreamingMessage && (
+      {/* Text to Speech (Knowledgeable: speech output is FUTURE — no
+        * speech-config backend, so the button would hit a dead TTS path). */}
+      {!speechDisabled && TextToSpeech && !error && !isActiveStreamingMessage && (
         <MessageAudio
           index={index}
           isLast={isLast}

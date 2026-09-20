@@ -123,4 +123,23 @@ describe('settings registry', () => {
       expect(entry?.show?.({ ...settingsContext })).toBe(false);
     });
   });
+
+  describe('speech visibility', () => {
+    it('hides the SPEECH tab while speech is disabled', () => {
+      /* Knowledgeable: speech (STT/TTS/voice mode) is FUTURE (no
+       * speech-config backend). */
+      const tab = TABS.find((t) => t.id === SettingsTabValues.SPEECH);
+      expect(tab?.show?.({ ...settingsContext })).toBe(false);
+    });
+
+    it('hides every SPEECH entry from settings search while speech is disabled', () => {
+      /* Search renders entry components directly, bypassing tab visibility,
+       * so each entry carries its own gate (upstream pattern). */
+      const entries = registry.filter((setting) => setting.tab === SettingsTabValues.SPEECH);
+      expect(entries.length).toBeGreaterThan(0);
+      for (const entry of entries) {
+        expect(entry.show?.({ ...settingsContext })).toBe(false);
+      }
+    });
+  });
 });

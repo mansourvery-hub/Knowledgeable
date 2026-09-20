@@ -36,6 +36,7 @@ import { ForkSettings } from '../SettingsTabs/Chat/ForkSettings';
 import ChatDirection from '../SettingsTabs/Chat/ChatDirection';
 import { DeleteCache } from '../SettingsTabs/Data/DeleteCache';
 import { ManageFiles } from '../SettingsTabs/Data/ManageFiles';
+import { speechDisabled } from '~/knowledgeable/speech';
 import { attachmentsDisabled } from '~/knowledgeable/attachments';
 import { smoothStreamingAtom } from '~/store/smoothStreaming';
 import { RevokeKeys } from '../SettingsTabs/Data/RevokeKeys';
@@ -496,6 +497,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'stt',
     labelKey: 'com_nav_speech_to_text',
+    show: () => !speechDisabled,
     Component: SpeechToTextSwitch,
   },
   {
@@ -503,6 +505,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'stt',
     labelKey: 'com_ui_settings_label_engine_stt',
+    show: () => !speechDisabled,
     Component: EngineSTTSetting,
   },
   {
@@ -510,6 +513,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'stt',
     labelKey: 'com_ui_settings_label_language_stt',
+    show: () => !speechDisabled,
     Component: LanguageSTTDropdown,
   },
   {
@@ -517,6 +521,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'stt',
     labelKey: 'com_nav_auto_transcribe_audio',
+    show: () => !speechDisabled,
     Component: AutoTranscribeAudioSwitch,
   },
   {
@@ -524,6 +529,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'stt',
     labelKey: 'com_ui_settings_label_decibel',
+    show: () => !speechDisabled,
     Component: DecibelSelector,
   },
   {
@@ -531,6 +537,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'stt',
     labelKey: 'com_nav_auto_send_text',
+    show: () => !speechDisabled,
     Component: AutoSendTextSelector,
   },
   // Speech · Text-to-speech
@@ -539,6 +546,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'tts',
     labelKey: 'com_nav_text_to_speech',
+    show: () => !speechDisabled,
     Component: TextToSpeechSwitch,
   },
   {
@@ -546,6 +554,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'tts',
     labelKey: 'com_ui_settings_label_engine_tts',
+    show: () => !speechDisabled,
     Component: EngineTTSSetting,
   },
   {
@@ -553,6 +562,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'tts',
     labelKey: 'com_ui_settings_label_voice',
+    show: () => !speechDisabled,
     Component: VoiceDropdown,
   },
   {
@@ -560,6 +570,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'tts',
     labelKey: 'com_ui_settings_label_conversation_mode',
+    show: () => !speechDisabled,
     Component: ConversationModeSwitch,
   },
   {
@@ -567,6 +578,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'tts',
     labelKey: 'com_nav_automatic_playback',
+    show: () => !speechDisabled,
     Component: AutomaticPlaybackSwitch,
   },
   {
@@ -574,7 +586,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'tts',
     labelKey: 'com_nav_enable_cloud_browser_voice',
-    show: (ctx) => ctx.engineTTS === TTSEndpoints.browser,
+    show: (ctx) => !speechDisabled && ctx.engineTTS === TTSEndpoints.browser,
     Component: CloudBrowserVoicesSwitch,
   },
   {
@@ -582,6 +594,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'tts',
     labelKey: 'com_ui_settings_label_playback_rate',
+    show: () => !speechDisabled,
     Component: PlaybackRate,
   },
   {
@@ -589,6 +602,7 @@ export const registry: SettingEntry[] = [
     tab: SPEECH,
     section: 'tts',
     labelKey: 'com_nav_enable_cache_tts',
+    show: () => !speechDisabled,
     Component: CacheTTSSwitch,
   },
 

@@ -49,6 +49,7 @@ import { useGetStartupConfig } from '~/data-provider';
 import { mainTextareaId, BadgeItem } from '~/common';
 import PendingSteerChips from './PendingSteerChips';
 import PendingQuoteChips from './PendingQuoteChips';
+import { speechDisabled } from '~/knowledgeable/speech';
 import { attachmentsDisabled } from '~/knowledgeable/attachments';
 import AttachFileChat from './Files/AttachFileChat';
 import CodeWorkspaceMenu from './CodeWorkspaceMenu';
@@ -882,7 +883,9 @@ const ChatForm = memo(function ChatForm({
                 )}
                 <div className="grow" />
                 <TokenUsage index={index} conversation={conversation} isSubmitting={isSubmitting} />
-                {SpeechToText && (
+                {/* Knowledgeable: speech input is FUTURE (no speech-config
+                  * backend) — the mic would record into a dead upload path. */}
+                {!speechDisabled && SpeechToText && (
                   <AudioRecorder
                     methods={methods}
                     ask={submitComposerText}
@@ -924,7 +927,11 @@ const ChatForm = memo(function ChatForm({
                       )}
                 </div>
               </div>
-              {TextToSpeech && automaticPlayback && <AutoPlayAudio index={index} />}
+              {/* Knowledgeable: speech output is FUTURE (no speech-config
+                * backend) — auto-play would fetch from a dead TTS path. */}
+              {!speechDisabled && TextToSpeech && automaticPlayback && (
+                <AutoPlayAudio index={index} />
+              )}
             </div>
           </div>
         </div>
