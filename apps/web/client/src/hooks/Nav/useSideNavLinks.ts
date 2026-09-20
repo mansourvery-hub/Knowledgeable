@@ -32,6 +32,7 @@ import GraphPanel from '~/knowledgeable/components/GraphPanel';
 import PanelSwitch from '~/components/SidePanel/Builder/PanelSwitch';
 import Parameters from '~/components/SidePanel/Parameters/Panel';
 import FilesPanel from '~/components/SidePanel/Files/Panel';
+import { attachmentsDisabled } from '~/knowledgeable/attachments';
 import { PromptsAccordion } from '~/components/Prompts';
 import { SkillsAccordion } from '~/components/Skills';
 
@@ -169,13 +170,17 @@ export default function useSideNavLinks({
       Component: GraphPanel,
     });
 
-    links.push({
-      title: 'com_sidepanel_attach_files',
-      label: '',
-      icon: AttachmentIcon,
-      id: 'files',
-      Component: FilesPanel,
-    });
+    // Knowledgeable: file attachments are FUTURE (no `/api/files/*` backend),
+    // so the Files panel would list nothing and offer dead uploads.
+    if (!attachmentsDisabled) {
+      links.push({
+        title: 'com_sidepanel_attach_files',
+        label: '',
+        icon: AttachmentIcon,
+        id: 'files',
+        Component: FilesPanel,
+      });
+    }
 
     if (
       interfaceConfig.parameters === true &&

@@ -36,6 +36,7 @@ import { ForkSettings } from '../SettingsTabs/Chat/ForkSettings';
 import ChatDirection from '../SettingsTabs/Chat/ChatDirection';
 import { DeleteCache } from '../SettingsTabs/Data/DeleteCache';
 import { ManageFiles } from '../SettingsTabs/Data/ManageFiles';
+import { attachmentsDisabled } from '~/knowledgeable/attachments';
 import { smoothStreamingAtom } from '~/store/smoothStreaming';
 import { RevokeKeys } from '../SettingsTabs/Data/RevokeKeys';
 import { ClearChats } from '../SettingsTabs/Data/ClearChats';
@@ -641,6 +642,8 @@ export const registry: SettingEntry[] = [
     section: 'data',
     labelKey: 'com_ui_settings_label_manage_files',
     keywords: ['file', 'files', 'upload', 'uploads', 'storage', 'attachments'],
+    // Knowledgeable: file attachments are FUTURE (no `/api/files/*` backend).
+    show: () => !attachmentsDisabled,
     Component: ManageFiles,
   },
   {

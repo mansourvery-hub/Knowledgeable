@@ -83,4 +83,13 @@ describe('useUploadOptions endpoint resolution', () => {
 
     expect(result.current.isConfigResolved).toBe(true);
   });
+
+  it('forces uploads disabled while attachments are gated', () => {
+    /* Knowledgeable: file attachments are FUTURE (no `/api/files/*` backend).
+     * The mocked file config above enables uploads, so this locks the product
+     * gate rather than the endpoint config. */
+    const { result } = render();
+
+    expect(result.current.uploadsDisabled).toBe(true);
+  });
 });

@@ -49,6 +49,7 @@ import { useGetStartupConfig } from '~/data-provider';
 import { mainTextareaId, BadgeItem } from '~/common';
 import PendingSteerChips from './PendingSteerChips';
 import PendingQuoteChips from './PendingQuoteChips';
+import { attachmentsDisabled } from '~/knowledgeable/attachments';
 import AttachFileChat from './Files/AttachFileChat';
 import CodeWorkspaceMenu from './CodeWorkspaceMenu';
 import useSteering from '~/hooks/Chat/useSteering';
@@ -843,13 +844,17 @@ const ChatForm = memo(function ChatForm({
                 )}
               >
                 <div className="shrink-0">
-                  <AttachFileChat
-                    conversation={conversation}
-                    disableInputs={disableInputs}
-                    files={files}
-                    setFiles={setFiles}
-                    setFilesLoading={setFilesLoading}
-                  />
+                  {/* Knowledgeable: file attachments are FUTURE (no `/api/files/*`
+                    * backend) — the button would open a dead upload chooser. */}
+                  {!attachmentsDisabled && (
+                    <AttachFileChat
+                      conversation={conversation}
+                      disableInputs={disableInputs}
+                      files={files}
+                      setFiles={setFiles}
+                      setFilesLoading={setFilesLoading}
+                    />
+                  )}
                 </div>
                 <BadgeRow
                   showEphemeralBadges={

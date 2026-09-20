@@ -113,4 +113,14 @@ describe('settings registry', () => {
       expect(entry?.show?.({ ...settingsContext, hasTemporaryChat: false })).toBe(false);
     });
   });
+
+  describe('manage files visibility', () => {
+    const entry = registry.find((setting) => setting.id === 'manageFiles');
+
+    it('hides the entry while attachments are disabled', () => {
+      /* Knowledgeable: file attachments are FUTURE (no `/api/files/*`
+       * backend), so the entry would open a dead file manager. */
+      expect(entry?.show?.({ ...settingsContext })).toBe(false);
+    });
+  });
 });

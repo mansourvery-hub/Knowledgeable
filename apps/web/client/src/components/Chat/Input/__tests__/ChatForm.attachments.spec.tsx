@@ -18,6 +18,10 @@ import store from '~/store';
 
 const mockUpload = jest.fn();
 
+/* Product gate off: this spec covers the upstream enabled-upload flows that
+ * Knowledgeable disables via `attachmentsDisabled`. */
+jest.mock('~/knowledgeable/attachments', () => ({ attachmentsDisabled: false }));
+
 jest.mock('librechat-data-provider', () => {
   const actual = jest.requireActual('librechat-data-provider');
   return {

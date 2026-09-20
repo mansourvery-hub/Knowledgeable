@@ -16,6 +16,7 @@ import useGetAgentsConfig from '~/hooks/Agents/useGetAgentsConfig';
 import { useGetFileConfig } from '~/data-provider';
 import { ephemeralAgentByConvoId } from '~/store';
 import { useDragDropContext } from '~/Providers';
+import { attachmentsDisabled } from '~/knowledgeable/attachments';
 import { isEphemeralAgent } from '~/common';
 
 /**
@@ -64,7 +65,10 @@ export default function useUploadOptions() {
     endpoint: fileConfigEndpoint,
     endpointType,
   });
-  const uploadsDisabled = endpointFileConfig.disabled === true;
+  // Knowledgeable: file attachments are FUTURE (no `/api/files/*` backend),
+  // so uploads stay disabled regardless of endpoint config. The paste, drag,
+  // and modal flows already honor this flag with the upstream disabled toast.
+  const uploadsDisabled = attachmentsDisabled || endpointFileConfig.disabled === true;
   const isConfigResolved = isFileConfigLoaded && !awaitingAgentProvider;
   const isUnifiedMode = isUnifiedUploadMode(endpointFileConfig, isConfigResolved);
   const endpointSupportedMimeTypes = endpointFileConfig.supportedMimeTypes;
