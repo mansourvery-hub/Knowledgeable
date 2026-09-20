@@ -74,8 +74,8 @@ mod tests {
     #[tokio::test]
     async fn weakest_first_with_name_tiebreak() {
         let (pool, learner) = setup().await;
-        seed(&pool, learner, "Beta", 0.75).await;
-        seed(&pool, learner, "Alpha", 0.75).await;
+        seed(&pool, learner, "Beta", 0.85).await;
+        seed(&pool, learner, "Alpha", 0.85).await;
         seed(&pool, learner, "Gamma", 0.98).await;
 
         let list = svc(pool).list_mastered_concepts(learner, 200).await.unwrap();
@@ -87,8 +87,10 @@ mod tests {
     #[tokio::test]
     async fn threshold_boundary_is_inclusive_and_unseen_excluded() {
         let (pool, learner) = setup().await;
-        seed(&pool, learner, "Edge", domain::WIKI_MASTERY_THRESHOLD).await;
-        seed(&pool, learner, "Under", 0.69).await;
+        // Browser bar is the known threshold (matching chat badges), not the
+        // lower generation threshold.
+        seed(&pool, learner, "Edge", domain::ANNOTATION_KNOWN_THRESHOLD).await;
+        seed(&pool, learner, "Under", 0.79).await;
         let unseen = node("Unseen");
         infrastructure::graph_repo::create_concept(&pool, &unseen).await.unwrap();
 
@@ -100,9 +102,9 @@ mod tests {
     #[tokio::test]
     async fn cap_truncates_and_reports() {
         let (pool, learner) = setup().await;
-        seed(&pool, learner, "A", 0.71).await;
-        seed(&pool, learner, "B", 0.72).await;
-        seed(&pool, learner, "C", 0.73).await;
+        seed(&pool, learner, "A", 0.81).await;
+        seed(&pool, learner, "B", 0.82).await;
+        seed(&pool, learner, "C", 0.83).await;
 
         let list = svc(pool.clone()).list_mastered_concepts(learner, 2).await.unwrap();
         assert_eq!(names(&list), vec!["A", "B"]);

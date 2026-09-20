@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { openWiki } from '../store/wikiDrawer';
+import { useRecoilValue } from 'recoil';
+import { BookOpen } from 'lucide-react';
+import { openWiki, useOpenWikiConceptId } from '../store/wikiDrawer';
 import {
   fetchMasteredConcepts,
   WikiUnavailableError,
@@ -7,6 +9,7 @@ import {
   type MasteredConceptItem,
 } from '../api/wikiClient';
 import { formatConfidence } from '../graphUtils';
+import store from '~/store';
 
 function toDisplayError(err: unknown): string {
   if (err instanceof WikiUnavailableError) {
@@ -37,6 +40,11 @@ export default function WikiBrowser() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
   const abortRef = useRef<AbortController | null>(null);
+  // F7/F8 product call: row percentages render only with the debug toggle.
+  const showConfidence = useRecoilValue(store.showConfidenceDebug);
+  // Active-row highlight follows the open drawer, like the chat history
+  // marks the open conversation.
+  const openConceptId = useOpenWikiConceptId();
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -111,22 +119,54 @@ export default function WikiBrowser() {
 
       {!loading && !error && visible.length > 0 && (
         <ul data-testid="wiki-list" aria-label="Mastered concepts">
-          {visible.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                data-testid="wiki-row"
-                data-concept-id={item.id}
-                onClick={() => openWiki(item.id)}
-              >
-                {item.name}{' '}
-                <span data-testid="wiki-confidence">{formatConfidence(item.confidence)}</span>
-                {item.wiki_status === 'stale' && (
-                  <span data-testid="wiki-stale-mark">May be outdated</span>
-                )}
-              </button>
-            </li>
-          ))}
+          {visible.map((item) => {
+            const isOpen = openConceptId === item.id;
+            return (
+              <li key={item.id}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  data-testid="wiki-row"
+                  data-concept-id={item.id}
+                  onClick={() => openWiki(item.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      openWiki(item.id);
+                    }
+                  }}
+                  className={`group relative flex h-12 w-full items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text-primary ${
+                    isOpen
+                      ? 'bg-surface-active-alt before:absolute before:bottom-1 before:left-0 before:top-1 before:w-0.5 before:rounded-full before:bg-text-primary'
+                      : 'hover:bg-surface-active-alt'
+                  }`}
+                >
+                  <div className="flex w-full min-w-0 grow cursor-pointer items-center gap-2 overflow-hidden rounded-lg px-2 text-left">
+                    <BookOpen className="icon-sm shrink-0 text-text-secondary" aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate" title={item.name}>
+                      {item.name}
+                    </span>
+                    {item.wiki_status === 'stale' && (
+                      <span
+                        data-testid="wiki-stale-mark"
+                        className="shrink-0 text-xs text-text-secondary"
+                      >
+                        May be outdated
+                      </span>
+                    )}
+                    {showConfidence && (
+                      <span
+                        data-testid="wiki-confidence"
+                        className="shrink-0 text-xs text-text-secondary"
+                      >
+                        {formatConfidence(item.confidence)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
 

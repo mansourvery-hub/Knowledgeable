@@ -409,7 +409,7 @@ async fn mastered_empty_and_truncated() {
     assert_eq!(body["truncated"], false);
 
     let learner = application::conversation_service::ensure_default_learner(&pool).await.unwrap();
-    for (name, conf) in [("A", 0.71), ("B", 0.72)] {
+    for (name, conf) in [("A", 0.81), ("B", 0.82)] {
         let node = domain::ConceptNode {
             id: uuid::Uuid::new_v4(),
             canonical_name: name.into(),

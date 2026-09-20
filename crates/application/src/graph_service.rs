@@ -301,7 +301,8 @@ impl GraphService {
     }
 
     /// Mastered concepts for the wiki browser (Phase 5a, W1): active
-    /// concepts at or above the shared wiki mastery threshold, weakest-first.
+    /// concepts at or above the shared known threshold (the wiki lists what
+    /// counts as known, matching chat badges), weakest-first.
     /// Fetches one extra row to set `truncated` without a second query.
     pub async fn list_mastered_concepts(
         &self,
@@ -312,7 +313,7 @@ impl GraphService {
         let rows = graph_repo::list_mastered_concepts(
             &self.pool,
             learner_id,
-            domain::WIKI_MASTERY_THRESHOLD,
+            domain::ANNOTATION_KNOWN_THRESHOLD,
             limit + 1,
         )
         .await?;

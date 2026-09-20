@@ -587,11 +587,12 @@ cleanup):
   included) — new endpoint or `searchConcepts` extension; no new tables.
   DONE 2026-09-20: `GET /api/concepts/mastered` (`concepts.rs` thin
   controller over `GraphService::list_mastered_concepts` →
-  `graph_repo::list_mastered_concepts`: active concepts at shared
-  `WIKI_MASTERY_THRESHOLD`, confidence/name/id order, limit clamp 1–200,
-  limit+1 truncation flag, `wiki_status` ready/stale/none via LEFT JOIN;
-  existing confidence index reused, no migration). Locked by 5 service
-  tests + 2 router tests (workspace 115 green).
+  `graph_repo::list_mastered_concepts`: active concepts at the shared known
+  threshold (≥0.80, matching badges; raised from mastery 0.70 per user
+  report 2026-09-20 — the wiki lists known concepts), confidence/name/id
+  order, limit clamp 1–200, limit+1 truncation flag, `wiki_status`
+  ready/stale/none via LEFT JOIN; existing confidence index reused, no
+  migration). Locked by 5 service tests + 2 router tests (workspace 115 green).
 - `W2`: reuse `GET /api/concepts/:id/wiki` unchanged for page content.
 
 **Verification**: browser pass — entry visible, list matches graph mastery,
@@ -709,6 +710,16 @@ bodies.
   bans Socratic patter + reader questions outright (dialogue belongs in
   chat). Locked by prompt invariant test (workspace 118 green). Note:
   already-cached pages keep old voice until staleness regenerates them.
+  Browser rows DONE 2026-09-20 (user report: run-together "95%May be
+  outdated", percentages don't belong, sub-known rows listed): rows reuse
+  the chat-history row language (container/hover/active bar, truncated
+  title, BookOpen icon, keyboard operable, active row follows the open
+  drawer); percentages render only with the debug toggle (default: clean
+  names + stale marks); W1 bar raised to the shared known threshold
+  (≥0.80, matching badges — generation stays at 0.70, pages surface once
+  known). Path `/api/concepts/mastered` kept (no contract churn). Locked
+  by updated service/router/client specs (workspace 118 green), tsc pinned
+  at 25.
 - [ ] F8 No Personal Wiki browser entry exists (only drawer via badge clicks +
   graph node buttons) — the integration doc's "Personal Wiki navigation
   sidebar item" over-claims; doc corrected with this entry, browser filed as

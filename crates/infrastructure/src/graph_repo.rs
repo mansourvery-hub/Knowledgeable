@@ -148,10 +148,12 @@ pub async fn list_annotatable_concepts(
 
 /// Mastered concepts for the wiki browser (Phase 5a, W1).
 ///
-/// Active concepts at or above the wiki mastery threshold, weakest-first
-/// (confidence ASC, then name, then id as a stable tie-break), each paired
-/// with learner confidence and wiki page state (`None` = no page yet).
-/// Bounded and read-only; callers fetch one extra row to detect truncation.
+/// Active concepts at or above the known threshold (the browser lists what
+/// counts as known, matching chat badges — not the lower generation
+/// threshold), weakest-first (confidence ASC, then name, then id as a stable
+/// tie-break), each paired with learner confidence and wiki page state
+/// (`None` = no page yet). Bounded and read-only; callers fetch one extra
+/// row to detect truncation.
 pub async fn list_mastered_concepts(
     pool: &SqlitePool,
     learner_id: Uuid,
