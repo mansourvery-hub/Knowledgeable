@@ -412,6 +412,7 @@ GET  /api/agents/chat/stream/:stream_id
 GET  /api/agents/chat/status/:conversationId
 GET  /api/concepts/:id/wiki
 GET  /api/concepts/search
+GET  /api/concepts/mastered          (Phase 5a W1: mastered concepts, weakest-first + wiki_status + truncated)
 GET  /api/graph/neighborhood          (alias of canonical /v1/graph/neighborhood)
 ```
 

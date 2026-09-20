@@ -146,6 +146,64 @@ pub async fn list_annotatable_concepts(
         .collect())
 }
 
+/// Mastered concepts for the wiki browser (Phase 5a, W1).
+///
+/// Active concepts at or above the wiki mastery threshold, weakest-first
+/// (confidence ASC, then name, then id as a stable tie-break), each paired
+/// with learner confidence and wiki page state (`None` = no page yet).
+/// Bounded and read-only; callers fetch one extra row to detect truncation.
+pub async fn list_mastered_concepts(
+    pool: &SqlitePool,
+    learner_id: Uuid,
+    threshold: f32,
+    limit: i64,
+) -> Result<Vec<(ConceptNode, f32, Option<bool>)>, sqlx::Error> {
+    let rows = sqlx::query_as::<
+        _,
+        (String, String, String, Option<String>, f32, String, String, String, f32, Option<i64>),
+    >(
+        "SELECT n.id, n.canonical_name, n.canonical_statement, n.learner_statement, \
+                n.world_confidence, n.status, n.created_at, n.updated_at, \
+                s.learner_confidence, w.is_stale \
+         FROM learner_concept_states s \
+         JOIN concept_nodes n ON n.id = s.concept_id \
+         LEFT JOIN concept_wiki_pages w \
+           ON w.learner_id = s.learner_id AND w.concept_id = s.concept_id \
+         WHERE s.learner_id = ? AND s.learner_confidence >= ? AND n.status = 'active' \
+         ORDER BY s.learner_confidence ASC, n.canonical_name ASC, n.id ASC \
+         LIMIT ?",
+    )
+    .bind(learner_id.to_string())
+    .bind(threshold)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, stmt, l_stmt, conf, status, created, updated, learner_conf, stale)| {
+            (
+                ConceptNode {
+                    id: id.parse().unwrap(),
+                    canonical_name: name,
+                    canonical_statement: stmt,
+                    learner_statement: l_stmt,
+                    world_confidence: conf,
+                    status: if status == "active" {
+                        ConceptStatus::Active
+                    } else {
+                        ConceptStatus::Archived
+                    },
+                    created_at: parse_dt(&created),
+                    updated_at: parse_dt(&updated),
+                },
+                learner_conf,
+                stale.map(|s| s != 0),
+            )
+        })
+        .collect())
+}
+
 pub async fn get_weak_dependencies(
     pool: &SqlitePool,
     concept_id: Uuid,

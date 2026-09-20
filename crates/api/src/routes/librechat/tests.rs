@@ -318,6 +318,129 @@ async fn graph_neighborhood_api_alias_matches_v1() {
     }
 }
 
+/// Phase 5a/W1: `GET /api/concepts/mastered` lists mastered concepts
+/// weakest-first with wiki page state. Below-threshold and unseen concepts
+/// stay out; the envelope carries a truncation flag for the client fallback.
+#[tokio::test]
+async fn mastered_lists_weakest_first_with_wiki_state() {
+    let (app, pool) = setup().await;
+    let learner = application::conversation_service::ensure_default_learner(&pool).await.unwrap();
+
+    async fn seed(
+        pool: &sqlx::SqlitePool,
+        learner: uuid::Uuid,
+        name: &str,
+        conf: f32,
+    ) -> uuid::Uuid {
+        let node = domain::ConceptNode {
+            id: uuid::Uuid::new_v4(),
+            canonical_name: name.into(),
+            canonical_statement: format!("{name} statement."),
+            learner_statement: None,
+            world_confidence: 1.0,
+            status: domain::ConceptStatus::Active,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        };
+        infrastructure::graph_repo::create_concept(pool, &node).await.unwrap();
+        sqlx::query(
+            "INSERT INTO learner_concept_states (learner_id, concept_id, learner_confidence) VALUES (?, ?, ?)",
+        )
+        .bind(learner.to_string())
+        .bind(node.id.to_string())
+        .bind(conf)
+        .execute(pool)
+        .await
+        .unwrap();
+        node.id
+    }
+
+    let fresh = seed(&pool, learner, "Fresh", 0.80).await;
+    let stale = seed(&pool, learner, "Stale", 0.85).await;
+    seed(&pool, learner, "Weak", 0.30).await;
+    for (concept, is_stale) in [(fresh, false), (stale, false)] {
+        infrastructure::wiki_repo::save_page(
+            &pool,
+            &domain::ConceptWikiPage {
+                id: uuid::Uuid::new_v4(),
+                learner_id: learner,
+                concept_id: concept,
+                title: "T".into(),
+                summary: "S".into(),
+                personalized_content: "C".into(),
+                known_prerequisites: Vec::new(),
+                related_concepts: Vec::new(),
+                learner_confidence_at_generation: 0.8,
+                version: 1,
+                is_stale,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            },
+        )
+        .await
+        .unwrap();
+    }
+    infrastructure::wiki_repo::mark_stale(&pool, learner, stale).await.unwrap();
+
+    let response = app.oneshot(get("/api/concepts/mastered")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = body_json(response).await;
+
+    let names: Vec<&str> =
+        body["items"].as_array().unwrap().iter().map(|i| i["name"].as_str().unwrap()).collect();
+    assert_eq!(names, vec!["Fresh", "Stale"], "weakest-first, Weak filtered out");
+    assert_eq!(body["items"][0]["confidence"], 0.80);
+    assert_eq!(body["items"][0]["wiki_status"], "ready");
+    assert_eq!(body["items"][1]["wiki_status"], "stale");
+    assert!(body["items"][0]["id"].as_str().unwrap().len() > 10);
+    assert_eq!(body["truncated"], false);
+}
+
+/// Phase 5a/W1: empty graph yields an empty untruncated list, and a limit
+/// below the row count truncates with the flag set.
+#[tokio::test]
+async fn mastered_empty_and_truncated() {
+    let (app, pool) = setup().await;
+
+    let response = app.clone().oneshot(get("/api/concepts/mastered")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = body_json(response).await;
+    assert_eq!(body["items"].as_array().unwrap().len(), 0);
+    assert_eq!(body["truncated"], false);
+
+    let learner = application::conversation_service::ensure_default_learner(&pool).await.unwrap();
+    for (name, conf) in [("A", 0.71), ("B", 0.72)] {
+        let node = domain::ConceptNode {
+            id: uuid::Uuid::new_v4(),
+            canonical_name: name.into(),
+            canonical_statement: format!("{name} statement."),
+            learner_statement: None,
+            world_confidence: 1.0,
+            status: domain::ConceptStatus::Active,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        };
+        infrastructure::graph_repo::create_concept(&pool, &node).await.unwrap();
+        sqlx::query(
+            "INSERT INTO learner_concept_states (learner_id, concept_id, learner_confidence) VALUES (?, ?, ?)",
+        )
+        .bind(learner.to_string())
+        .bind(node.id.to_string())
+        .bind(conf)
+        .execute(&pool)
+        .await
+        .unwrap();
+    }
+
+    let response = app.oneshot(get("/api/concepts/mastered?limit=1")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = body_json(response).await;
+    assert_eq!(body["items"].as_array().unwrap().len(), 1);
+    assert_eq!(body["items"][0]["name"], "A");
+    assert_eq!(body["items"][0]["wiki_status"], "none");
+    assert_eq!(body["truncated"], true);
+}
+
 /// M7/A3: a completed turn emits a `concept_annotations` frame for graph
 /// terms in the assistant reply, shaped for the TS `ConceptAnnotation`
 /// contract. The frame carries no `text`/`final` keys so legacy clients

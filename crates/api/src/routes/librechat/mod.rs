@@ -55,6 +55,10 @@ pub fn routes() -> Router<AppState> {
         .route("/api/concepts/:id/wiki", get(wiki::handle_get_wiki))
         // Concept search for pickers (graph explorer): bounded, read-only.
         .route("/api/concepts/search", get(concepts::handle_search_concepts))
+        // Mastered concepts for the wiki browser (Phase 5a, W1): bounded,
+        // weakest-first, with wiki page state. Static segment, so it cannot
+        // collide with `/api/concepts/:id/wiki` (same as `/search` above).
+        .route("/api/concepts/mastered", get(concepts::handle_list_mastered))
         // v2 generation protocol: the start ticket from the POST above
         // attaches to its live SSE here (resumes converge via snapshot),
         // and terminal teardown is authorized through the status read.

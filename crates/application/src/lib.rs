@@ -13,6 +13,8 @@ pub mod graph_service;
 pub mod health;
 pub mod llm_dispatch;
 #[cfg(test)]
+mod mastered_test;
+#[cfg(test)]
 mod neighborhood_test;
 #[cfg(test)]
 mod observation_test;

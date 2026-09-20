@@ -25,6 +25,28 @@ pub struct Neighborhood {
     pub edges: Vec<ConceptRelation>,
 }
 
+/// Mastered concept for the wiki browser (Phase 5a, W1).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MasteredConcept {
+    pub concept: ConceptNode,
+    pub learner_confidence: f32,
+    /// Wiki page state: `None` = no page yet, `Some(true)` = stale,
+    /// `Some(false)` = fresh. The route maps this to `none`/`stale`/`ready`.
+    pub wiki_stale: Option<bool>,
+}
+
+/// Bounded mastered-concepts list with a truncation flag.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MasteredList {
+    pub items: Vec<MasteredConcept>,
+    pub truncated: bool,
+}
+
+/// Hard cap for the wiki browser list (Phase 5a, W1). The client filters
+/// names locally and falls back to concept search when truncated, so the
+/// backend stays a single bounded query.
+pub const MAX_MASTERED_LIST_LIMIT: i64 = 200;
+
 pub struct GraphService {
     pool: Arc<SqlitePool>,
 }
@@ -276,6 +298,35 @@ impl GraphService {
     /// mode). Ensures the row exists so candidate FKs never dangle.
     pub async fn ensure_learner(&self) -> Result<Uuid, anyhow::Error> {
         Ok(crate::conversation_service::ensure_default_learner(&self.pool).await?)
+    }
+
+    /// Mastered concepts for the wiki browser (Phase 5a, W1): active
+    /// concepts at or above the shared wiki mastery threshold, weakest-first.
+    /// Fetches one extra row to set `truncated` without a second query.
+    pub async fn list_mastered_concepts(
+        &self,
+        learner_id: Uuid,
+        limit: i64,
+    ) -> Result<MasteredList, anyhow::Error> {
+        let limit = limit.clamp(1, MAX_MASTERED_LIST_LIMIT);
+        let rows = graph_repo::list_mastered_concepts(
+            &self.pool,
+            learner_id,
+            domain::WIKI_MASTERY_THRESHOLD,
+            limit + 1,
+        )
+        .await?;
+        let truncated = rows.len() as i64 > limit;
+        let items = rows
+            .into_iter()
+            .take(limit as usize)
+            .map(|(concept, learner_confidence, wiki_stale)| MasteredConcept {
+                concept,
+                learner_confidence,
+                wiki_stale,
+            })
+            .collect();
+        Ok(MasteredList { items, truncated })
     }
 
     /// Admit a pending concept candidate: authoritative node + accepted

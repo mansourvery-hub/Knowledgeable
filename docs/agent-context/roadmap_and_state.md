@@ -575,6 +575,13 @@ expect a wiki tab and report its absence as "wiki broken" (feedback F8).
 cleanup):
 - `W1`: list query for mastered concepts (bounded, sorted, confidence
   included) — new endpoint or `searchConcepts` extension; no new tables.
+  DONE 2026-09-20: `GET /api/concepts/mastered` (`concepts.rs` thin
+  controller over `GraphService::list_mastered_concepts` →
+  `graph_repo::list_mastered_concepts`: active concepts at shared
+  `WIKI_MASTERY_THRESHOLD`, confidence/name/id order, limit clamp 1–200,
+  limit+1 truncation flag, `wiki_status` ready/stale/none via LEFT JOIN;
+  existing confidence index reused, no migration). Locked by 5 service
+  tests + 2 router tests (workspace 115 green).
 - `W2`: reuse `GET /api/concepts/:id/wiki` unchanged for page content.
 
 **Verification**: browser pass — entry visible, list matches graph mastery,
