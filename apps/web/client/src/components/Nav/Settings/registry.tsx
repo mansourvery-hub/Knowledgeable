@@ -403,6 +403,19 @@ export const registry: SettingEntry[] = [
       switchId: 'autoExpandTools',
     }),
   },
+  {
+    // Knowledgeable F7/F8: confidence percentages are a debug aid, off by
+    // default. No `show` gate: the toggle itself is harmless without badges.
+    id: 'showConfidenceDebug',
+    tab: CHAT,
+    section: 'messages',
+    labelKey: 'com_nav_show_confidence_debug',
+    Component: toggleControl({
+      stateAtom: store.showConfidenceDebug,
+      localizationKey: 'com_nav_show_confidence_debug',
+      switchId: 'showConfidenceDebug',
+    }),
+  },
   // Chat · Conversations
   {
     id: 'newChatSwitchToHistory',

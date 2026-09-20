@@ -12,9 +12,11 @@
  * Wiki-drawer click wiring lands with M8.
  */
 import type { ReactNode } from 'react';
+import { useRecoilValue } from 'recoil';
 import type { ConceptAnnotationStatus } from '../types';
 import { formatConfidence } from '../graphUtils';
 import { openWiki } from '../store/wikiDrawer';
+import store from '~/store';
 
 export interface ConceptHighlightProps {
   conceptId?: string;
@@ -50,11 +52,20 @@ export default function ConceptHighlight({
   if (!isStatus(status)) {
     return <>{children}</>;
   }
+  // F7/F8 product call: confidence percentages are a debug aid, off by
+  // default. The tooltip shows title + status; the percentage renders (and
+  // is announced) only with the debug toggle on.
+  const showConfidence = useRecoilValue(store.showConfidenceDebug);
   const label = typeof name === 'string' && name ? name : 'Concept';
   const confidenceText = formatConfidence(
     typeof confidence === 'number' ? confidence : null,
   );
   const clickable = typeof conceptId === 'string' && conceptId !== '';
+  const accessibleLabel = showConfidence
+    ? `${label}, ${STATUS_LABEL[status]}, confidence ${confidenceText}${
+        clickable ? ', open wiki' : ''
+      }`
+    : `${label}, ${STATUS_LABEL[status]}${clickable ? ', open wiki' : ''}`;
   return (
     <span
       data-testid="concept-highlight"
@@ -62,9 +73,7 @@ export default function ConceptHighlight({
       data-concept-id={conceptId ?? ''}
       tabIndex={0}
       role={clickable ? 'button' : undefined}
-      aria-label={`${label}, ${STATUS_LABEL[status]}, confidence ${confidenceText}${
-        clickable ? ', open wiki' : ''
-      }`}
+      aria-label={accessibleLabel}
       className={`group relative ${STATUS_CLASS[status]}${clickable ? ' cursor-pointer' : ''}`}
       onClick={clickable ? () => openWiki(conceptId as string) : undefined}
       onKeyDown={
@@ -85,7 +94,9 @@ export default function ConceptHighlight({
         className="invisible absolute bottom-full left-0 z-10 mb-1 w-max max-w-60 rounded bg-surface-primary p-2 text-xs shadow-lg group-hover:visible group-focus-within:visible"
       >
         <strong>{label}</strong>
-        <span data-testid="concept-highlight-confidence"> · {confidenceText}</span>
+        {showConfidence && (
+          <span data-testid="concept-highlight-confidence"> · {confidenceText}</span>
+        )}
         <br />
         <span>{STATUS_LABEL[status]}</span>
       </span>

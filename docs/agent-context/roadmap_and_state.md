@@ -685,6 +685,16 @@ bodies.
   absent for user + unmatched text, and the SAME history re-reports 0.30/
   weak after a confidence drop (workspace 116 green). Open: client
   hydration on history load + percentages debug toggle.
+  Brick 2 DONE 2026-09-20 (client): `useMessageAnnotations` hydrates each
+  rendered message from the cached history query (prefix scan, validated
+  through the SSE path, live frames win, idempotent effect — zero upstream
+  hook rewiring, Markdown untouched); percentages gated behind persisted
+  `showConfidenceDebug` atom (default OFF) in tooltip + aria-label, with a
+  Chat/messages settings toggle. Locked by hydration specs + rewritten
+  ConceptHighlight specs (default-off/on) + registry validity (28/28 green
+  across 3 suites, capped flags), tsc pinned at 25 with zero in touched
+  files. Open: CDP browser pass (reload shows live badges, toggle reveals
+  percentages).
 - [ ] F8 No Personal Wiki browser entry exists (only drawer via badge clicks +
   graph node buttons) — the integration doc's "Personal Wiki navigation
   sidebar item" over-claims; doc corrected with this entry, browser filed as

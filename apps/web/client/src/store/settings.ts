@@ -107,6 +107,12 @@ const localStorageAtoms = {
   // Beta features settings
   modularChat: atomWithLocalStorage('modularChat', true),
   LaTeXParsing: atomWithLocalStorage('LaTeXParsing', true),
+  /**
+   * Knowledgeable: concept-badge confidence percentages are a debug aid, not
+   * a learning surface (F7/F8 product call). Off by default; the tooltip
+   * shows title + status, and the percentage line renders only when on.
+   */
+  showConfidenceDebug: atomWithLocalStorage('showConfidenceDebug', false),
   centerFormOnLanding: atomWithLocalStorage('centerFormOnLanding', true),
   /**
    * Whether the mobile drawer stops short of the edge, leaving a strip of the

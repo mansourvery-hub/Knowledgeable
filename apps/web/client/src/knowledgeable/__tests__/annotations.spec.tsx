@@ -1,4 +1,7 @@
-import { act, renderHook } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryKeys } from 'librechat-data-provider';
 import {
   MAX_STORED_PER_MESSAGE,
   clearMessageAnnotations,
@@ -88,7 +91,11 @@ describe('annotation store', () => {
   });
 
   it('notifies hook subscribers and supports targeted/all clears', () => {
-    const { result } = renderHook(() => useMessageAnnotations(M1));
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useMessageAnnotations(M1), { wrapper });
     expect(result.current).toEqual([]);
     act(() => {
       setMessageAnnotations(M1, [
@@ -105,5 +112,62 @@ describe('annotation store', () => {
       clearMessageAnnotations(M1);
     });
     expect(result.current).toEqual([]);
+  });
+
+  describe('history hydration (F7 Brick 2)', () => {
+    const M2 = '22222222-2222-2222-2222-222222222222';
+    let queryClient: QueryClient;
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    beforeEach(() => {
+      queryClient = new QueryClient();
+    });
+
+    function seedHistory(messages: unknown[]) {
+      queryClient.setQueryData([QueryKeys.messages, 'c1'], messages);
+    }
+
+    it('adopts embedded annotations for unstored ids', async () => {
+      seedHistory([
+        {
+          messageId: M2,
+          concept_annotations: [
+            { concept_id: 'a', name: 'Alpha', learner_confidence: 0.9, status: 'known' },
+          ],
+        },
+      ]);
+      const { result } = renderHook(() => useMessageAnnotations(M2), { wrapper });
+      await waitFor(() => expect(result.current).toHaveLength(1));
+      expect(result.current[0]).toMatchObject({ name: 'Alpha', status: 'known' });
+    });
+
+    it('prefers live store entries over history', () => {
+      setMessageAnnotations(M2, [
+        { concept_id: 'b', name: 'Beta', learner_confidence: null, status: 'new' },
+      ]);
+      seedHistory([
+        {
+          messageId: M2,
+          concept_annotations: [
+            { concept_id: 'a', name: 'Alpha', learner_confidence: 0.9, status: 'known' },
+          ],
+        },
+      ]);
+      const { result } = renderHook(() => useMessageAnnotations(M2), { wrapper });
+      expect(result.current).toHaveLength(1);
+      expect(result.current[0]).toMatchObject({ name: 'Beta' });
+    });
+
+    it('ignores malformed embedded payloads and empty caches', async () => {
+      seedHistory([{ messageId: M2, concept_annotations: [{ nope: true }] }]);
+      const { result } = renderHook(() => useMessageAnnotations(M2), { wrapper });
+      expect(result.current).toEqual([]);
+
+      clearMessageAnnotations();
+      const idle = renderHook(() => useMessageAnnotations(M2), { wrapper });
+      expect(idle.result.current).toEqual([]);
+    });
   });
 });
