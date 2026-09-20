@@ -156,6 +156,12 @@ pub async fn delete(
 ///
 /// The schema stores messages linearly; the adapter synthesizes the
 /// `parentMessageId` chain LibreChat's message tree expects.
+///
+/// F7: highlighting is a function of the CURRENT graph, so assistant
+/// messages carry live-derived `concept_annotations` (same matcher as the
+/// turn-end SSE frame). History badges therefore track mastery instead of
+/// going stale. Derivation never breaks history: failures degrade to a
+/// missing field, exactly like a missing live frame.
 pub async fn list_messages(
     State(state): State<AppState>,
     Path(conversation_id): Path<String>,
@@ -167,10 +173,40 @@ pub async fn list_messages(
         .await
         .map_err(|e| AppError::Internal(e.to_string()))?;
 
+    // One learner + one graph handle for the whole history: the matcher
+    // itself is per-message but bounded, and local SQLite keeps this cheap.
+    // A missing learner (fresh DB) simply yields unannotated history.
+    let graph = application::conversation_service::ensure_default_learner(pool).await.ok().map(
+        |learner_id| {
+            (
+                learner_id,
+                application::graph_service::GraphService::new(std::sync::Arc::new(pool.clone())),
+            )
+        },
+    );
+
     let mut parent = NO_PARENT.to_string();
     let mut out: Vec<Value> = Vec::with_capacity(messages.len());
     for message in &messages {
-        out.push(msg_json(message, &parent, None));
+        let mut value = msg_json(message, &parent, None);
+        if let Some((learner_id, graph)) = &graph {
+            let is_assistant = matches!(message.role, domain::MessageRole::Assistant);
+            if is_assistant && !message.content.trim().is_empty() {
+                match graph.annotate_turn(*learner_id, &message.content, None).await {
+                    Ok(annotations) if !annotations.is_empty() => {
+                        if let Value::Object(ref mut map) = value {
+                            map.insert(
+                                "concept_annotations".into(),
+                                serde_json::to_value(&annotations).unwrap_or(Value::Null),
+                            );
+                        }
+                    }
+                    Ok(_) => {}
+                    Err(e) => tracing::warn!(error = %e, "history annotation failed"),
+                }
+            }
+        }
+        out.push(value);
         parent = message.id.to_string();
     }
 

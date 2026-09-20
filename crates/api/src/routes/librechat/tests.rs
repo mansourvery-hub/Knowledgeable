@@ -441,6 +441,95 @@ async fn mastered_empty_and_truncated() {
     assert_eq!(body["truncated"], true);
 }
 
+/// F7/Brick 1: history carries live-derived `concept_annotations` on
+/// assistant messages, so reloaded turns badge against CURRENT mastery.
+/// User messages stay untouched; unmatched assistant text yields no field.
+#[tokio::test]
+async fn messages_carry_live_derived_annotations() {
+    let (app, pool) = setup().await;
+    let learner = application::conversation_service::ensure_default_learner(&pool).await.unwrap();
+    let node = domain::ConceptNode {
+        id: uuid::Uuid::new_v4(),
+        canonical_name: "Prime Number".into(),
+        canonical_statement: "Prime Number statement.".into(),
+        learner_statement: None,
+        world_confidence: 1.0,
+        status: domain::ConceptStatus::Active,
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
+    };
+    infrastructure::graph_repo::create_concept(&pool, &node).await.unwrap();
+    sqlx::query(
+        "INSERT INTO learner_concept_states (learner_id, concept_id, learner_confidence) VALUES (?, ?, ?)",
+    )
+    .bind(learner.to_string())
+    .bind(node.id.to_string())
+    .bind(0.98)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let conv =
+        application::conversation_service::create_conversation(&pool, Some("f7")).await.unwrap();
+    infrastructure::conversation_repo::create_message(
+        &pool,
+        conv.id,
+        domain::MessageRole::User,
+        "What is a Prime Number?",
+    )
+    .await
+    .unwrap();
+    infrastructure::conversation_repo::create_message(
+        &pool,
+        conv.id,
+        domain::MessageRole::Assistant,
+        "A Prime Number has exactly two divisors.",
+    )
+    .await
+    .unwrap();
+    infrastructure::conversation_repo::create_message(
+        &pool,
+        conv.id,
+        domain::MessageRole::Assistant,
+        "Nothing matchable here at all.",
+    )
+    .await
+    .unwrap();
+
+    let response = app.clone().oneshot(get(&format!("/api/messages/{}", conv.id))).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = body_json(response).await;
+    let messages = body.as_array().unwrap();
+    assert_eq!(messages.len(), 3);
+
+    // User message: no annotation field.
+    assert!(messages[0].get("concept_annotations").is_none());
+    // Assistant mention at 0.98 mastery: live known badge.
+    let annot = &messages[1]["concept_annotations"];
+    assert_eq!(annot[0]["name"], "Prime Number");
+    let conf = annot[0]["learner_confidence"].as_f64().unwrap();
+    assert!((conf - 0.98).abs() < 1e-6, "live confidence, got {conf}");
+    assert_eq!(annot[0]["status"], "known");
+    // Unmatched assistant text: no field, history intact.
+    assert!(messages[2].get("concept_annotations").is_none());
+
+    // Mastery drops to 0.30: the SAME history now reports live confidence.
+    sqlx::query(
+        "UPDATE learner_concept_states SET learner_confidence = 0.30 WHERE learner_id = ? AND concept_id = ?",
+    )
+    .bind(learner.to_string())
+    .bind(node.id.to_string())
+    .execute(&pool)
+    .await
+    .unwrap();
+    let response = app.oneshot(get(&format!("/api/messages/{}", conv.id))).await.unwrap();
+    let body = body_json(response).await;
+    let annot = &body.as_array().unwrap()[1]["concept_annotations"];
+    let conf = annot[0]["learner_confidence"].as_f64().unwrap();
+    assert!((conf - 0.30).abs() < 1e-6, "re-derived confidence, got {conf}");
+    assert_eq!(annot[0]["status"], "weak");
+}
+
 /// M7/A3: a completed turn emits a `concept_annotations` frame for graph
 /// terms in the assistant reply, shaped for the TS `ConceptAnnotation`
 /// contract. The frame carries no `text`/`final` keys so legacy clients

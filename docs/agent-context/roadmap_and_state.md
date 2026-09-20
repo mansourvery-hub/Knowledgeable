@@ -677,6 +677,14 @@ bodies.
   kept only as an opt-in debug toggle (OFF by default), always resolved
   live, never stored. Builder direction: derivation pass on history load
   (bounded matcher, capped) + debug toggle for percentages.
+  Brick 1 DONE 2026-09-20 (backend): `GET /api/messages/:id` derives
+  `concept_annotations` per assistant message with the live matcher (same
+  code path as the turn-end frame; failures degrade to a missing field,
+  user messages untouched, no signature churn on `msg_json`). Locked by
+  `messages_carry_live_derived_annotations`: badges present at 0.98/known,
+  absent for user + unmatched text, and the SAME history re-reports 0.30/
+  weak after a confidence drop (workspace 116 green). Open: client
+  hydration on history load + percentages debug toggle.
 - [ ] F8 No Personal Wiki browser entry exists (only drawer via badge clicks +
   graph node buttons) — the integration doc's "Personal Wiki navigation
   sidebar item" over-claims; doc corrected with this entry, browser filed as
