@@ -670,10 +670,16 @@ bodies.
   to confirm the model obeys).
 - [ ] F7 Badges vanish on reload (reproduced: reloaded convo renders ZERO
   `concept-highlight` nodes) — annotations live only in the in-memory SSE
-  store. Project: persist annotations per message (or re-derive on history
-  load) so badges + wiki work on history, not just fresh turns.
+  store. DECIDED 2026-09-20 (user): highlighting is a pure function of the
+  CURRENT graph — revisiting old chats must dynamically badge newly-learned
+  words. So re-derive on history load against live graph state; NO
+  persisted annotation rows, no snapshots. Percentages are a bad feature:
+  kept only as an opt-in debug toggle (OFF by default), always resolved
+  live, never stored. Builder direction: derivation pass on history load
+  (bounded matcher, capped) + debug toggle for percentages.
 - [ ] F8 No Personal Wiki browser entry exists (only drawer via badge clicks +
   graph node buttons) — the integration doc's "Personal Wiki navigation
   sidebar item" over-claims; doc corrected with this entry, browser filed as
-  Phase 5 idea. Tooltip behavior (sticky? percentages as noise?) is a product
-  call: hover-only today; debug-toggle or removal per tester suggestion.
+  Phase 5 idea. Tooltip percentages DECIDED 2026-09-20 (user): debug-toggle,
+  OFF by default (see F7). Remaining tooltip questions (sticky behavior)
+  stay open for the visual overhaul.
