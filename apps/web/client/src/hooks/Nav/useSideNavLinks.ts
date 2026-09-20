@@ -3,6 +3,7 @@ import { MCPIcon, AttachmentIcon, OpenAIMinimalIcon } from '@librechat/client';
 import {
   Bot,
   Bookmark,
+  BookOpen,
   Network,
   NotebookPen,
   ScrollText,
@@ -29,6 +30,7 @@ import MCPBuilderPanel from '~/components/SidePanel/MCPBuilder/MCPBuilderPanel';
 import AgentPanelSwitch from '~/components/SidePanel/Agents/AgentPanelSwitch';
 import BookmarkPanel from '~/components/SidePanel/Bookmarks/BookmarkPanel';
 import GraphPanel from '~/knowledgeable/components/GraphPanel';
+import WikiBrowser from '~/knowledgeable/components/WikiBrowser';
 import PanelSwitch from '~/components/SidePanel/Builder/PanelSwitch';
 import Parameters from '~/components/SidePanel/Parameters/Panel';
 import FilesPanel from '~/components/SidePanel/Files/Panel';
@@ -168,6 +170,17 @@ export default function useSideNavLinks({
       icon: Network,
       id: 'knowledge-graph',
       Component: GraphPanel,
+    });
+
+    // Knowledgeable wiki browser (Phase 5a): read-only list of mastered
+    // concepts beside chat. Rows open the existing drawer; nothing here
+    // edits, shares, or searches page bodies.
+    links.push({
+      title: 'com_ui_personal_wiki',
+      label: '',
+      icon: BookOpen,
+      id: 'personal-wiki',
+      Component: WikiBrowser,
     });
 
     // Knowledgeable: file attachments are FUTURE (no `/api/files/*` backend),

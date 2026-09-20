@@ -6,7 +6,9 @@ import {
   WikiValidationError,
   WikiError,
   buildWikiUrl,
+  fetchMasteredConcepts,
   fetchWikiPage,
+  parseMasteredList,
   parseWikiPage,
 } from '../api/wikiClient';
 import {
@@ -113,5 +115,34 @@ describe('wikiClient', () => {
     stubFetch(() => ({ status: 200, payload: { nope: true } }));
     await expect(fetchWikiPage(CONCEPT)).rejects.toBeInstanceOf(WikiError);
     expect(parseWikiPage(pagePayload())).toMatchObject({ title: 'Prime Number' });
+  });
+
+  it('fetches the mastered list against the W1 contract', async () => {
+    stubFetch(() => ({
+      status: 200,
+      payload: {
+        items: [{ id: CONCEPT, name: 'Prime Number', confidence: 0.98, wiki_status: 'ready' }],
+        truncated: false,
+      },
+    }));
+    const list = await fetchMasteredConcepts();
+    expect(list.items).toHaveLength(1);
+    expect(list.items[0]).toMatchObject({ name: 'Prime Number', wiki_status: 'ready' });
+    expect(list.truncated).toBe(false);
+    const url = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+    expect(url).toBe('/api/concepts/mastered?limit=200');
+  });
+
+  it('rejects malformed mastered payloads and maps 503 to unavailable', async () => {
+    stubFetch(() => ({ status: 200, payload: { items: [{ id: CONCEPT }] } }));
+    await expect(fetchMasteredConcepts()).rejects.toBeInstanceOf(WikiError);
+
+    (global.fetch as jest.Mock).mockReset();
+    stubFetch(() => ({ status: 503, payload: { message: 'down' } }));
+    await expect(fetchMasteredConcepts()).rejects.toBeInstanceOf(WikiUnavailableError);
+
+    expect(
+      parseMasteredList({ items: [], truncated: true }),
+    ).toMatchObject({ items: [], truncated: true });
   });
 });

@@ -1904,6 +1904,7 @@
   "com_ui_people_picker_allow_view_groups": "Allow viewing groups",
   "com_ui_people_picker_allow_view_roles": "Allow viewing roles",
   "com_ui_people_picker_allow_view_users": "Allow viewing users",
+  "com_ui_personal_wiki": "Personal Wiki",
   "com_ui_permissions_failed_load": "Failed to load permissions. Please try again.",
   "com_ui_permissions_failed_update": "Failed to update permissions. Please try again.",
   "com_ui_permissions_updated_success": "Permissions updated successfully",

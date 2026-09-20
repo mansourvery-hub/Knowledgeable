@@ -588,6 +588,16 @@ cleanup):
 click opens the real page, empty state when nothing mastered yet. Explicitly
 out of scope: editing pages, public sharing, full-text search across page
 bodies.
+  View DONE 2026-09-20 (browser pass still open): `WikiBrowser.tsx`
+  self-sufficient panel (loads once, server order preserved, local name
+  filter, confidence badges via shared `formatConfidence`, stale marks
+  matching drawer wording, empty/error/retry/truncated states) mounted as a
+  `personal-wiki` side-nav entry beside the graph (locale key
+  `com_ui_personal_wiki`, en only per convention); rows call existing
+  `openWiki`, drawer untouched; client via `fetchMasteredConcepts` in
+  `wikiClient.ts` (shape guard + typed errors). Locked by 6 `WikiBrowser`
+  specs + 2 `wikiClient` specs (13/13 green, fetch-stubbed, ~3s), tsc
+  pinned at 25 with zero in touched files.
 
 ### Phase 6 — Upstream synchronization discipline
 
