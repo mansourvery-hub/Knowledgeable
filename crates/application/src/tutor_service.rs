@@ -11,7 +11,16 @@ async fn execute_tool(
     name: &str,
     arguments: &str,
 ) -> Result<serde_json::Value, anyhow::Error> {
-    let args: serde_json::Value = serde_json::from_str(arguments)?;
+    let args: serde_json::Value = serde_json::from_str(arguments).map_err(|e| {
+        anyhow::anyhow!(
+            "tool arguments were not valid JSON ({e}); retry {name} with a single JSON object"
+        )
+    })?;
+    if !args.is_object() {
+        return Err(anyhow::anyhow!(
+            "tool arguments must be a JSON object; retry {name} with a single JSON object"
+        ));
+    }
     match name {
         "find_concept" => {
             let query = args.get("query").and_then(|v| v.as_str()).unwrap_or("");
@@ -163,17 +172,27 @@ async fn execute_tool(
 /// re-sends the complete arguments across chunks, which naive concatenation
 /// turns into `A+A`. Prefer the whole payload; fall back to the longest
 /// valid JSON prefix (first complete value), which recovers the single copy.
-/// Total garbage stays a string so downstream validation still rejects it
-/// with a clear error instead of panicking.
+/// Models also wrap payloads in markdown fences or prose despite the schema;
+/// strip fences and try the outermost `{...}` span before giving up.
+/// Total garbage stays a string so the object gate in `execute_tool` rejects
+/// it with a retry hint instead of panicking.
 pub(crate) fn parse_tool_arguments(raw: &str) -> serde_json::Value {
-    if let Ok(value) = serde_json::from_str(raw) {
+    let text = llm::structured::strip_code_fences(raw.trim());
+    if let Ok(value) = serde_json::from_str(text) {
         return value;
     }
-    let mut stream = serde_json::Deserializer::from_str(raw).into_iter::<serde_json::Value>();
-    match stream.next() {
-        Some(Ok(value)) => value,
-        _ => serde_json::json!(raw),
+    let mut stream = serde_json::Deserializer::from_str(text).into_iter::<serde_json::Value>();
+    if let Some(Ok(value)) = stream.next() {
+        return value;
     }
+    if let (Some(start), Some(end)) = (text.find('{'), text.rfind('}')) {
+        if start < end {
+            if let Ok(value) = serde_json::from_str(&text[start..=end]) {
+                return value;
+            }
+        }
+    }
+    serde_json::json!(text)
 }
 
 fn get_graph_tools() -> Vec<ToolDefinition> {
@@ -597,4 +616,79 @@ pub fn default_llm() -> std::sync::Arc<dyn LlmClient> {
     }
     tracing::info!("initializing fake LLM client (no API keys set)");
     std::sync::Arc::new(FakeLlmClient::new("fake-tutor-1"))
+}
+
+#[cfg(test)]
+mod tool_arg_tests {
+    use super::{execute_tool, parse_tool_arguments};
+
+    #[test]
+    fn fenced_json_recovers_object() {
+        let v = parse_tool_arguments(
+            "```json\n{\"observation_type\": \"confusion\", \"evidence\": \"mixed up terms\"}\n```",
+        );
+        assert_eq!(v.get("observation_type").and_then(|v| v.as_str()), Some("confusion"));
+    }
+
+    #[test]
+    fn prose_wrapped_json_recovers_object() {
+        let v = parse_tool_arguments(
+            "here are the args: {\"observation_type\": \"confusion\", \"evidence\": \"mixed up terms\"} hope this helps",
+        );
+        assert_eq!(v.get("observation_type").and_then(|v| v.as_str()), Some("confusion"));
+    }
+
+    #[test]
+    fn gemini_double_send_recovers_first_object() {
+        let one = "{\"observation_type\": \"confusion\", \"evidence\": \"mixed up terms\"}";
+        let v = parse_tool_arguments(&format!("{one}{one}"));
+        assert_eq!(v.get("observation_type").and_then(|v| v.as_str()), Some("confusion"));
+    }
+
+    #[test]
+    fn total_garbage_stays_string_without_panic() {
+        // Filed F5 symptom: the model emitted non-JSON starting with 't'.
+        // The parser must not panic; the object gate in `execute_tool`
+        // rejects it with a retry hint instead.
+        let v = parse_tool_arguments("tell me about factors please");
+        assert!(v.is_string(), "garbage must stay a string, got: {v}");
+    }
+
+    async fn mem_service() -> crate::graph_service::GraphService {
+        let pool = sqlx::SqlitePool::connect("sqlite::memory:").await.unwrap();
+        sqlx::migrate!("../../migrations").run(&pool).await.unwrap();
+        crate::graph_service::GraphService::new(std::sync::Arc::new(pool))
+    }
+
+    #[tokio::test]
+    async fn malformed_json_args_rejected_with_retry_hint() {
+        // Exact filed input shape: raw non-JSON starting with 't'. Used to
+        // surface serde's `invalid character: found 't' at 0` to the model.
+        let svc = mem_service().await;
+        let err =
+            execute_tool(&svc, uuid::Uuid::new_v4(), "log_observation", "tell me about factors")
+                .await
+                .unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("single JSON object"), "must hint the retry shape, got: {msg}");
+        assert!(!msg.contains("invalid character"), "must not leak raw serde text, got: {msg}");
+    }
+
+    #[tokio::test]
+    async fn non_object_args_rejected_with_retry_hint() {
+        // What `parse_tool_arguments` produces for total garbage, after the
+        // `Value::to_string` round-trip: a JSON string, not an object.
+        // Must fail with a retry hint, not a confusing field error.
+        let svc = mem_service().await;
+        let err = execute_tool(
+            &svc,
+            uuid::Uuid::new_v4(),
+            "log_observation",
+            "\"tell me about factors\"",
+        )
+        .await
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("must be a JSON object"), "must name the problem, got: {msg}");
+    }
 }

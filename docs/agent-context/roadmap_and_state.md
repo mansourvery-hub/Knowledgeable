@@ -589,6 +589,15 @@ bodies.
 - [ ] F5 `log_observation` tool-arg parse failure (`invalid character: found
   't' at 0`) seen once in a live keyed turn — model emitted non-JSON args.
   Robustness gap: harden argument parsing/repair vs failing the call.
+  Brick 2026-09-20 (`tutor_service.rs` only): `parse_tool_arguments` now
+  strips code fences (via `llm::structured::strip_code_fences`) and recovers
+  prose-wrapped payloads via outermost-`{...}` extraction (Gemini A+A
+  first-value recovery kept); `execute_tool` maps serde failures to
+  "retry {tool} with a single JSON object" and rejects non-object args at an
+  object gate instead of leaking raw serde text or confusing field errors.
+  Locked by 6 `tool_arg_tests` (application 48/48, workspace fully green,
+  no new warnings). Live keyed recurrence still open (needs a real-model
+  non-JSON emission to confirm self-repair).
 - [ ] F6 Badge-vs-bold confusion (tester report 2026-09-19, reproduced): the
   tutor writes `**factor**` markdown bold around concept words; testers read
   bold as the known-concept badge and expect a click → wiki. But bold has no
