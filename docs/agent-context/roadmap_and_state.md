@@ -594,6 +594,12 @@ bodies.
   bold as the known-concept badge and expect a click → wiki. But bold has no
   handler, and Factor (0.30, weak) is correctly badge-filtered. Candidates:
   prompt tweak (don't bold bare concept names), or visual disambiguation.
+  Brick 2026-09-20: prompt tweak applied (`system_policy.txt` + `prompts.rs`
+  fallback: "Write concept names as plain text — never wrap them in bold or
+  italic; badges are the sole emphasis"), locked by
+  `system_policy_keeps_concept_names_plain_text` (tutor 4/4, application 42/42
+  green). Live keyed compliance still open (probabilistic — needs a keyed turn
+  to confirm the model obeys).
 - [ ] F7 Badges vanish on reload (reproduced: reloaded convo renders ZERO
   `concept-highlight` nodes) — annotations live only in the in-memory SSE
   store. Project: persist annotations per message (or re-derive on history
