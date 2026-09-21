@@ -8,6 +8,8 @@ export interface ConceptRowProps {
   sub?: string;
   onSelect?: () => void;
   testId?: string;
+  pctTestId?: string;
+  subTestId?: string;
 }
 
 export default function ConceptRow({
@@ -17,6 +19,8 @@ export default function ConceptRow({
   sub,
   onSelect,
   testId,
+  pctTestId,
+  subTestId,
 }: ConceptRowProps) {
   return (
     <li>
@@ -32,12 +36,12 @@ export default function ConceptRow({
         {sub ? (
           <span className="k-row__body">
             <span className="k-row__name">{name}</span>
-            <span className="k-row__sub">{sub}</span>
+            <span className="k-row__sub" data-testid={subTestId}>{sub}</span>
           </span>
         ) : (
           <span className="k-row__name">{name}</span>
         )}
-        <span className="k-row__pct">{formatConfidence(value)}</span>
+        <span className="k-row__pct" data-testid={pctTestId}>{formatConfidence(value)}</span>
       </button>
     </li>
   );

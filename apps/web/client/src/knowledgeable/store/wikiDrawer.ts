@@ -11,6 +11,9 @@ import { useSyncExternalStore } from 'react';
 let openConceptId: string | null = null;
 const listeners = new Set<() => void>();
 
+/** Previously open pages for the reader Back button; cleared by `closeWiki`. */
+let history: string[] = [];
+
 function emit(): void {
   listeners.forEach((listener) => listener());
 }
@@ -37,14 +40,33 @@ export function openWiki(conceptId: string): void {
   if (openConceptId === conceptId) {
     return;
   }
+  if (openConceptId !== null) {
+    history.push(openConceptId);
+  }
   openConceptId = conceptId;
   emit();
 }
 
+/** Step back to the previously open page (chip navigation); `null` when at the start. */
+export function goBackWiki(): string | null {
+  const previous = history.pop() ?? null;
+  if (previous === null) {
+    return null;
+  }
+  openConceptId = previous;
+  emit();
+  return previous;
+}
+
+export function useWikiCanGoBack(): boolean {
+  return useSyncExternalStore(subscribeWikiDrawer, () => history.length > 0, () => false);
+}
+
 export function closeWiki(): void {
-  if (openConceptId === null) {
+  if (openConceptId === null && history.length === 0) {
     return;
   }
   openConceptId = null;
+  history = [];
   emit();
 }
