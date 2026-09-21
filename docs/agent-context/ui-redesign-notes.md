@@ -201,3 +201,24 @@ that file's unrelated T24 phase numbering.
 - **Screenshots**: headless-Chrome harness as in Phase 2 (deleted after).
   The badge tooltips needed the upstream stylesheets in the harness to
   hide — production-real, since `main.jsx` loads them before `k.css`.
+
+## 12. Phase 4 decisions (SPEC silent details, conservative options)
+
+- **No `brand.css`**: the verify notes proved inline-variable theming, so
+  SPEC 8.2 option 2 applies directly — palette travels as `themeDefinition`.
+- **`themeDefinition`, not `themeRGB`**: `fromLegacyTheme` pins one palette
+  to both modes; only a per-mode definition carries light + dark values.
+  `resolveTheme` merges the seven roles over the upstream bases, so all
+  other tokens (submit greens, destructive reds, syntax, series) are
+  untouched. Appearance-mode switching (incl. the mode-only selector) keeps
+  working; no custom-color UI exists to conflict with.
+- **Env-theme spread kept as-is** in `App.jsx`: the provider prefers a valid
+  definition, so the seam is one import + one prop with zero re-plumbing.
+- **Tooltip keeps positioning/visibility utilities** (`invisible absolute …
+  group-hover:visible …`); only the cosmetic ones `k-tip` owns were
+  dropped. Structure, testids, and hover/focus behaviour unchanged.
+- **Contrast locked in CI** (`brandTheme.spec.ts` computes all 18
+  text/surface pairs): light min 4.76, dark min 4.57.
+- **Screenshots**: swatch before/after per mode proves the seam end to end
+  (`brand-swatch-*-{before,after}.png`); `reader-badges-light.png` proves
+  the `k-concept` badge identity in real markdown. Harness deleted after.
