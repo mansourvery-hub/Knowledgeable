@@ -42,12 +42,18 @@ export default function MapCanvas({ rootId, nodes, edges, selectedId, onSelectCo
       );
     };
     measure();
-    if (typeof ResizeObserver === 'undefined') {
+    // jsdom ships a ResizeObserver stub without observe(); guard the method,
+    // not just the global, so tests and old browsers skip live measuring.
+    try {
+      const observer = new ResizeObserver(measure);
+      if (typeof observer.observe !== 'function') {
+        return;
+      }
+      observer.observe(el);
+      return () => observer.disconnect();
+    } catch {
       return;
     }
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
   }, []);
 
   const confidenceById = useMemo(() => new Map(nodes.map((n) => [n.concept.id, n.learner_confidence])), [nodes]);

@@ -143,3 +143,37 @@ that file's unrelated T24 phase numbering.
 - **Forbidden-pattern check (§11.7)**: new `ui/` files are clean (no palette
   classes, no hex). Remaining hits are pre-existing `GraphCanvas.tsx` /
   `ConceptHighlight.tsx` usages, removed as part of Phases 2/4 per SPEC 1.2.
+
+## 10. Phase 2 decisions (SPEC silent details, conservative options)
+
+- **GraphExplorer folded into GraphPanel** (SPEC 10 allows fold or wrapper):
+  `GraphExplorer.tsx` deleted; filtering/sorting/wiki-button assertions
+  ported into `GraphPanel.spec.tsx` (weakest-first order, Segmented filter,
+  `Open notes` via `openWiki`). `GraphCanvas.tsx`, `graphLayout.ts` and all
+  three old specs deleted in the same wiring commit per SPEC 6.4.
+- **mapSelection**: plain module variable, no subscription; the panel reads
+  it once on mount for the default state.
+- **Mastered-list failure degrades to the empty state** (search stays
+  available); no error is shown for the background boot fetch.
+- **Search results use plain `k-row` name buttons**, not `ConceptRow`:
+  search hits carry no confidence, so a ring/percent would be invented data.
+- **Malformed-UUID client message reuses the not-found copy**
+  ("We couldn't find that concept.") to keep `UUID` out of visible panel
+  text (§11.6; the dev form itself stays inside exempt `.k-dev`).
+- **Layout extras**: focus `+20` applied before the 220 clamp; compact lower
+  bound 64 (spec pins only the 140 max); truncation `slice(0, 27) + '…'`
+  mirroring the old `shortLabel` pattern (`shortLabel` not kept); different-
+  rank semantic edges draw as straight centre-clipped lines (spec pins only
+  same-rank arcs); `minSize` 4th param floors the stage on the measured
+  container ("never smaller than the container"), defaulting to zero.
+- **MapCanvas**: measures the scroll container with `ResizeObserver`,
+  guarded on the `observe` method (jsdom ships a stub without it); initial
+  scroll centres focus via `scrollLeft`/`scrollTop` assignment (jsdom-safe).
+  Enter activates natively; Space is manual with `preventDefault` (no
+  double-fire). Node `aria-label`s use lowercase words ("Name, solid");
+  visible copy keeps `confidenceWords`.
+- **Screenshots**: desktop browser unavailable, so proof shots were taken
+  with headless Chrome against a temporary fetch-stubbed harness (deleted
+  after; three-node case at 372px, both themes, stored under
+  `docs/ui-proof/map-panel-372-*.png`). The collapsed `Developer controls`
+  row in the shots is dev-only (`import.meta.env.DEV`, hidden in prod).

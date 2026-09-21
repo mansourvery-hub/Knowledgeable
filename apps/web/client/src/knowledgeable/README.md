@@ -10,8 +10,10 @@ Planned contents (by milestone):
 - `graphTypes.ts` — neighborhood payload types mirroring `GraphService` (T9, present).
 - `graphUtils.ts` — pure confidence/filter/sort helpers, no React deps (T9, present).
 - `api/graphClient.ts` — typed `fetchNeighborhood` for `/api/graph/neighborhood` (T9, present).
-- `components/GraphExplorer.tsx` — graph neighborhood panel (T9/M9, present).
-- `components/GraphPanel.tsx` — self-sufficient side-panel container (T9, present).
+- `components/GraphPanel.tsx` — Map panel: search, focus summary, layered canvas, filter, rows (Phase 2).
+- `mapLayout.ts` — deterministic layered pill layout, pure (Phase 2).
+- `components/MapCanvas.tsx` — HTML pill canvas with arrowhead dependency edges (Phase 2).
+- `store/mapSelection.ts` — session map selection for the default state (Phase 2).
 - `store/annotations.ts` — per-message concept annotation store + SSE handler (T11/M7, present).
 - `store/toolProgress.ts` — per-message tool activity store + SSE handler (T14/M4, present).
 - `__tests__/` — Jest specs for the above (present).
