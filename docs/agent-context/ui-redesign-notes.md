@@ -115,3 +115,31 @@ Reference: `docs/design/ui-redesign/knowledgeable-ui-handoff/SPEC.md` Section 2
 - **NPM Package**: `@fontsource-variable/literata` confirmed exists on npm (latest version 5.3.0).
 - **CSS Font Family Registered**: `@font-face { font-family: 'Literata Variable'; ... }` with weights `200 900`.
 - **Alignment**: Exactly matches `--k-font-read: 'Literata Variable', 'Literata', Georgia, 'Times New Roman', serif;` in `k.css`.
+
+## 9. Phase 1 decisions (SPEC silent details, conservative options)
+
+Recorded here rather than `roadmap_and_state.md` to avoid colliding with
+that file's unrelated T24 phase numbering.
+
+- **SearchField**: icon button placed before the input inside `label.k-field`
+  (single icon; the button IS the icon). Button `data-testid` derived from
+  the input prop by stripping a trailing `-input`
+  (`graph-search-input` -> `graph-search`) so Phase 2 wiring keeps existing
+  suites green with one prop. Renders the label only, no `<form>`; the
+  parent keeps the form wrapper and `graph-search-form` testid in Phase 2.
+  Enter (input `onKeyDown`) and icon click both call `onSubmit`.
+- **Button**: `variant` defaults to plain `k-btn`; `primary`/`ghost` add the
+  modifier class. `type` defaults to `button`.
+- **Segmented**: generic `allCount`/`reviewCount`/`selected`/`onSelect` props;
+  default group `aria-label` is `Filter` per `markup-reference.html`.
+- **ConceptRow**: no `k-row__body` wrapper when `sub` is absent (exact markup
+  contract); wrapper present only with `sub`. Percent always rendered via
+  `formatConfidence` (unseen renders as `unseen`). `title` carries the full
+  name for truncated labels. No `aria-label` on the row button; the
+  accessible name comes from visible name + percent text.
+- **ErrorState**: retry button `data-testid` via explicit `retryTestId` prop
+  (Phase 2/3 pass `graph-retry`/`wiki-retry` through); default retry label
+  `Try again`. `role="alert"` on the `k-error` container.
+- **Forbidden-pattern check (§11.7)**: new `ui/` files are clean (no palette
+  classes, no hex). Remaining hits are pre-existing `GraphCanvas.tsx` /
+  `ConceptHighlight.tsx` usages, removed as part of Phases 2/4 per SPEC 1.2.
