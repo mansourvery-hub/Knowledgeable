@@ -10,7 +10,6 @@ import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
 import { getIconEndpoint, getEntity, getModelSpec } from '~/utils';
 import { useLocalize, useAuthContext, useGreeting } from '~/hooks';
 import AgentContact from '~/components/Agents/AgentContact';
-import ConvoIcon from '~/components/Endpoints/ConvoIcon';
 import temporaryStore from '~/store/temporary';
 
 const containerClassName =
@@ -148,15 +147,11 @@ export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: 
                 <HatGlasses className="h-2/3 w-2/3 text-text-primary" aria-hidden="true" />
               </div>
             ) : (
-              <ConvoIcon
-                agentsMap={agentsMap}
-                assistantMap={assistantMap}
-                conversation={conversation}
-                endpointsConfig={endpointsConfig}
-                containerClassName={containerClassName}
-                context="landing"
-                className="h-2/3 w-2/3 text-text-primary"
-                size={41}
+              <img
+                src="assets/logo.svg"
+                className="h-2/3 w-2/3"
+                alt=""
+                aria-hidden="true"
               />
             )}
             {startupConfig?.showBirthdayIcon && (

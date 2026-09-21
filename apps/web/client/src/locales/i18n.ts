@@ -2,6 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import translationEn from './en/translation.json';
+import { knowledgeableOverrides } from '~/knowledgeable/i18n/overrides';
 
 export const defaultNS = 'translation';
 
@@ -53,7 +54,8 @@ export type SupportedLocale = (typeof supportedLocales)[number];
 export type TranslationResource = Record<string, string>;
 
 export const resources = {
-  en: { translation: translationEn },
+  // Knowledgeable product copy wins over the bundled strings (Phase 5).
+  en: { translation: { ...translationEn, ...knowledgeableOverrides } },
 } as const;
 
 const localeLoaders: Record<
@@ -242,6 +244,8 @@ export async function ensureLocale(locale?: string | null): Promise<SupportedLoc
     loadingLocales[normalized] = loader()
       .then((module) => {
         i18n.addResourceBundle(normalized, defaultNS, module.default, true, true);
+        // Knowledgeable product copy wins in every loaded locale (Phase 5).
+        i18n.addResourceBundle(normalized, defaultNS, knowledgeableOverrides, true, true);
         loadedLocales.add(normalized);
         return normalized;
       })

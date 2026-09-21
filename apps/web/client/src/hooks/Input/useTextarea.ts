@@ -196,6 +196,12 @@ export default function useTextarea({
           ? getEntityName({ name: entityName, isAgent, localize })
           : getSender(conversation as TEndpointOption);
 
+      // Knowledgeable voice (Phase 5): the single tutor endpoint always
+      // invites a learning question instead of naming the endpoint.
+      if (!isAssistant && !isAgent) {
+        return localize('com_ui_composer_placeholder');
+      }
+
       return `${localize('com_endpoint_message_new', {
         0: sender ? sender : localize('com_endpoint_ai'),
       })}`;
