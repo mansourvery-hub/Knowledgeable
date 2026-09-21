@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Knowledgeable: interface direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #F4F6F5; --rail: #EBEFED; --card: #FFFFFF; --line: #D5DDE0;
+  --text: #14212B; --text2: #4A5B68; --text3: #5A6B77;
+  --accent: #0F6E8C; --accent-ink: #FFFFFF; --accent-wash: rgba(15,110,140,.10);
+  --marker-line: #9A6200; --marker-fill: rgba(242,194,48,.45);
+  --unseen: #6B7C88; --grid: #DDE4E6; --shadow: 0 12px 40px rgba(20,33,43,.14);
+  --scrim: rgba(20,33,43,.10);
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --serif: 'Literata', Georgia, 'Times New Roman', serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111D27; --rail: #0D1720; --card: #182733; --line: #243746;
+    --text: #E6EDF2; --text2: #A3B4C2; --text3: #7C8FA0;
+    --accent: #79C7DE; --accent-ink: #0D1720; --accent-wash: rgba(121,199,222,.12);
+    --marker-line: #F2C94C; --marker-fill: rgba(242,201,76,.22);
+    --unseen: #7C8FA0; --grid: #1A2B38; --shadow: 0 12px 40px rgba(0,0,0,.45);
+    --scrim: rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111D27; --rail: #0D1720; --card: #182733; --line: #243746;
+  --text: #E6EDF2; --text2: #A3B4C2; --text3: #7C8FA0;
+  --accent: #79C7DE; --accent-ink: #0D1720; --accent-wash: rgba(121,199,222,.12);
+  --marker-line: #F2C94C; --marker-fill: rgba(242,201,76,.22);
+  --unseen: #7C8FA0; --grid: #1A2B38; --shadow: 0 12px 40px rgba(0,0,0,.45);
+  --scrim: rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font: 400 15px/1.55 var(--sans); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 72px; }
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-family: var(--serif); font-size: clamp(28px, 4vw, 40px); line-height: 1.15; }
+h2 { font-size: 20px; margin-bottom: 6px; }
+h3 { font-size: 15px; }
+p { margin: 0 0 12px; }
+.lede { color: var(--text2); max-width: 62ch; }
+section { margin-top: 64px; }
+.section-note { color: var(--text2); max-width: 66ch; margin-bottom: 24px; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+button { font: inherit; color: inherit; }
+.toggle { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.toggle:hover { border-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* mark + rings */
+.mark-row { display: flex; flex-wrap: wrap; gap: 40px; align-items: center; margin-top: 8px; }
+.wordmark { display: flex; align-items: center; gap: 14px; }
+.wordmark span { font-family: var(--serif); font-weight: 600; font-size: 34px; letter-spacing: -0.02em; }
+.ring-states { display: flex; flex-wrap: wrap; gap: 28px; }
+.ring-state { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); text-align: center; }
+.ring-state b { color: var(--text); font-weight: 500; }
+.ring { display: block; }
+.ring .track { stroke: var(--line); fill: none; }
+.ring .arc { fill: none; stroke-linecap: round; }
+.ring.solid .arc { stroke: var(--accent); }
+.ring.build .arc { stroke: var(--marker-line); }
+.ring.unseen .track { stroke: var(--unseen); stroke-dasharray: 2.2 3.2; }
+
+/* palette */
+.pal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.pal { border-radius: 14px; padding: 18px; }
+.pal.l { --p-bg:#F4F6F5; --p-card:#FFFFFF; --p-text:#14212B; --p-line:#D5DDE0; background: var(--p-bg); color: var(--p-text); border: 1px solid #D5DDE0; }
+.pal.d { --p-bg:#111D27; --p-card:#182733; --p-text:#E6EDF2; --p-line:#243746; background: var(--p-bg); color: var(--p-text); border: 1px solid #243746; }
+.pal h3 { margin-bottom: 12px; }
+.sw { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; padding: 7px 0; font-size: 13.5px; }
+.sw i { width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(128,128,128,.35); display: block; }
+.sw em { font-style: normal; opacity: .78; font-variant-numeric: tabular-nums; }
+.type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 16px; }
+.type-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.type-card .sample-read { font-family: var(--serif); font-size: 17px; line-height: 1.65; max-width: 56ch; }
+.type-card .sample-ui { font-size: 14px; color: var(--text2); }
+
+/* frames */
+.frame-scroll { overflow-x: auto; padding-bottom: 8px; }
+.frame { position: relative; width: 980px; height: 640px; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; box-shadow: var(--shadow); }
+.rail { width: 56px; background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 6px; flex: none; }
+.rail .ib { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: var(--text2); border: 0; background: transparent; }
+.rail .ib.on { background: var(--accent-wash); color: var(--accent); }
+.rail .sp { flex: 1; }
+.rail .me { width: 28px; height: 28px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; font-size: 11px; color: var(--text2); }
+.panel { width: 372px; flex: none; background: var(--bg); border-right: 1px solid var(--line); padding: 18px 16px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+.panel-head { font-size: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+.field { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; height: 40px; color: var(--text3); font-size: 14px; }
+.field svg { flex: none; }
+.focus-card { display: flex; align-items: center; gap: 12px; }
+.focus-card .nm { font-weight: 600; font-size: 16px; line-height: 1.25; }
+.focus-card .st { font-size: 13px; color: var(--text2); }
+.btn { border: 1px solid var(--line); background: var(--card); border-radius: 9px; height: 32px; padding: 0 12px; font-size: 13px; cursor: default; margin-left: auto; white-space: nowrap; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 500; }
+.canvas { position: relative; height: 262px; border: 1px solid var(--line); border-radius: 12px; background-color: var(--card); background-image: radial-gradient(var(--grid) 1px, transparent 1px); background-size: 18px 18px; flex: none; }
+.canvas svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; }
+.canvas .edge { fill: none; stroke: var(--text3); stroke-width: 1.5; }
+.node { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); font-size: 13.5px; white-space: nowrap; }
+.node.focus { height: 42px; font-size: 15px; font-weight: 600; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-wash); padding-right: 18px; }
+.legend { font-size: 12.5px; color: var(--text3); display: flex; gap: 8px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; padding: 3px; background: var(--card); align-self: flex-start; }
+.seg span { padding: 4px 12px; border-radius: 7px; font-size: 13px; color: var(--text2); }
+.seg span.on { background: var(--accent-wash); color: var(--text); font-weight: 500; }
+.rows { display: flex; flex-direction: column; margin: 0 -8px; }
+.row { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 8px; border-radius: 10px; font-size: 14.5px; }
+.row:hover, .row.hover { background: var(--accent-wash); }
+.row .pct { margin-left: auto; color: var(--text2); font-variant-numeric: tabular-nums; font-size: 13.5px; }
+.row .sub { color: var(--text3); font-size: 12.5px; }
+.main { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar { height: 52px; display: flex; align-items: center; padding: 0 18px; }
+.chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 5px 12px; font-size: 13px; color: var(--text2); }
+.hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding-bottom: 96px; text-align: center; }
+.hero h4 { margin: 0; font-family: var(--serif); font-weight: 600; font-size: 30px; letter-spacing: -0.015em; }
+.composer { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); width: min(560px, 86%); background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; color: var(--text3); font-size: 15px; }
+.composer .send { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.dim { opacity: .55; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); }
+.reader { position: absolute; top: 0; right: 0; bottom: 0; width: 456px; background: var(--bg); border-left: 1px solid var(--line); box-shadow: var(--shadow); padding: 22px 28px; overflow: hidden; display: flex; flex-direction: column; gap: 14px; }
+.reader .close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 8px; border: 0; background: transparent; color: var(--text2); display: grid; place-items: center; }
+.reader h5 { margin: 0; font-family: var(--serif); font-size: 27px; line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; padding-right: 30px; }
+.reader .meta { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--text2); }
+.reader .body { font-family: var(--serif); font-size: 16px; line-height: 1.68; color: var(--text); }
+.reader .body p { margin: 0 0 12px; }
+.reader .lede2 { font-family: var(--serif); font-size: 17.5px; line-height: 1.55; color: var(--text2); margin: 0; }
+.try { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; font-family: var(--serif); font-size: 15.5px; line-height: 1.6; }
+.try b { font-family: var(--sans); font-weight: 600; font-size: 13.5px; display: block; margin-bottom: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px 0 8px; border: 1px solid var(--line); border-radius: 999px; font-size: 13.5px; background: var(--card); }
+.reader .lbl { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+mark.hl { background: var(--marker-fill); color: var(--text); border-radius: 3px; padding: 0 2px; }
+u.known { text-decoration: underline dotted; text-decoration-color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 2px; }
+
+/* notes / tokens */
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 28px; }
+.note h3 { margin-bottom: 6px; }
+.note p { color: var(--text2); font-size: 14.5px; }
+pre { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; overflow-x: auto; font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 0; }
+.cap { font-size: 13.5px; color: var(--text2); margin-top: 12px; max-width: 72ch; }
+@media (prefers-reduced-motion: no-preference) { .toggle, .row { transition: background-color .15s, border-color .15s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top">
+  <div>
+    <h1>Knowledgeable, drawn as ink on paper</h1>
+    <p class="lede" style="margin-top:12px">A visual direction for the tutor and a proper redesign of the Map and Notebook panels, using the same three concepts as your screenshots: Prime Number, Divisibility, Factor. Switch themes to check both.</p>
+  </div>
+  <button class="toggle" id="themeBtn" type="button">Switch theme</button>
+</div>
+
+<section>
+  <h2>One idea: the frontier</h2>
+  <p class="section-note">The product's core is the edge between what a learner knows and what they don't. The mark is a ring that isn't quite closed, with a highlighter dot where it stops. The same ring then does real work in the interface: it is the confidence indicator everywhere, so the brand and the data are one shape.</p>
+  <div class="mark-row">
+    <div class="wordmark">
+      <svg width="56" height="56" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="14" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="68.5 100" transform="rotate(-90 24 24)"/><circle cx="10.2" cy="21.6" r="3.6" fill="var(--marker-line)"/></svg>
+      <span>knowledgeable</span>
+    </div>
+    <div class="ring-states" id="ringStates">
+      <div class="ring-state"><svg class="ring unseen" width="36" height="36" data-v="0" data-k="unseen"></svg><b>Not met yet</b>dashed</div>
+      <div class="ring-state"><svg class="ring build" width="36" height="36" data-v="0.30"></svg><b>Building</b>30%</div>
+      <div class="ring-state"><svg class="ring build" width="36" height="36" data-v="0.85"></svg><b>Nearly there</b>85%</div>
+      <div class="ring-state"><svg class="ring solid" width="36" height="36" data-v="0.98"></svg><b>Solid</b>98%</div>
+    </div>
+  </div>
+  <p class="cap">Arc length is the confidence value. Colour is a second signal, never the only one, so the state survives greyscale and colour-blindness. Your existing 0.95 cut-off still decides Solid; only the words change ("healthy" and "review" become "Solid" and "Building").</p>
+</section>
+
+<section>
+  <h2>Palette and type</h2>
+  <p class="section-note">Prussian ink for identity and "known", a highlighter yellow for attention, graphite for unseen. The dark theme is a deep blue-slate instead of LibreChat's neutral grey, so the app is recognisable at a glance. Ratios are WCAG contrast against the theme's own background.</p>
+  <div class="pal-grid">
+    <div class="pal l">
+      <h3>Paper (light)</h3>
+      <div class="sw"><i style="background:#F4F6F5"></i><span>Paper, canvas</span><em>#F4F6F5</em></div>
+      <div class="sw"><i style="background:#14212B"></i><span>Ink, text</span><em>#14212B, 15.1</em></div>
+      <div class="sw"><i style="background:#4A5B68"></i><span>Secondary text</span><em>#4A5B68, 6.5</em></div>
+      <div class="sw"><i style="background:#5A6B77"></i><span>Tertiary text</span><em>#5A6B77, 5.1</em></div>
+      <div class="sw"><i style="background:#0F6E8C"></i><span>Prussian, accent</span><em>#0F6E8C, 5.3</em></div>
+      <div class="sw"><i style="background:#F2C230"></i><span>Highlighter, fill behind ink text</span><em>#F2C230, 9.8 with ink</em></div>
+      <div class="sw"><i style="background:#9A6200"></i><span>Highlighter, lines and rings</span><em>#9A6200, 4.7</em></div>
+    </div>
+    <div class="pal d">
+      <h3>Night (dark)</h3>
+      <div class="sw"><i style="background:#111D27"></i><span>Night, canvas</span><em>#111D27</em></div>
+      <div class="sw"><i style="background:#E6EDF2"></i><span>Chalk, text</span><em>#E6EDF2, 14.5</em></div>
+      <div class="sw"><i style="background:#A3B4C2"></i><span>Secondary text</span><em>#A3B4C2, 8.0</em></div>
+      <div class="sw"><i style="background:#7C8FA0"></i><span>Tertiary text</span><em>#7C8FA0, 5.1</em></div>
+      <div class="sw"><i style="background:#79C7DE"></i><span>Prussian, accent</span><em>#79C7DE, 9.0</em></div>
+      <div class="sw"><i style="background:#F2C94C"></i><span>Highlighter</span><em>#F2C94C, 10.8</em></div>
+      <div class="sw"><i style="background:#0D1720"></i><span>Rail and sidebar</span><em>#0D1720</em></div>
+    </div>
+  </div>
+  <div class="type-grid">
+    <div class="type-card">
+      <h3>Literata for reading</h3>
+      <p class="sample-read" style="margin-top:10px">A prime is a number that refuses to split. Seven tiles will never form a rectangle more than one row high.</p>
+      <p class="sample-ui" style="margin-bottom:0">Used only for what the learner reads at length: tutor explanations, notebook pages, page titles. Designed for long-form screen reading.</p>
+    </div>
+    <div class="type-card">
+      <h3>Inter for the interface</h3>
+      <p style="margin-top:10px;font-size:15px">Find a concept. Only what needs review. Open notes.</p>
+      <p class="sample-ui" style="margin-bottom:0">Already in LibreChat, so controls, menus and dialogs need no change. Sentence case throughout, no all-caps labels.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Map, redesigned</h2>
+  <p class="section-note">Same data as your screenshot. The focused concept sits on top and what it builds on sits below it, with arrows that actually show. Names are the nodes, so they are readable. The UUID field, Depth and Limit are gone, and the list underneath puts the weakest concept first.</p>
+  <div class="frame-scroll"><div class="frame" id="frameMap">
+    <div class="rail" aria-hidden="true">
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+      <button class="ib on" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><circle cx="5.5" cy="18" r="2.5"/><circle cx="18.5" cy="18" r="2.5"/><path d="M11 7.3l-4.3 8.3M13 7.3l4.3 8.3"/></svg></button>
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg></button>
+      <div class="sp"></div><div class="me">LE</div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">Map</div>
+      <div class="field"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Find a concept</div>
+      <div class="focus-card">
+        <svg class="ring solid" width="34" height="34" data-v="0.98"></svg>
+        <div><div class="nm">Prime Number</div><div class="st">Solid, 98%</div></div>
+        <span class="btn">Open notes</span>
+      </div>
+      <div class="canvas">
+        <svg class="edges" viewBox="0 0 338 262" preserveAspectRatio="none" aria-hidden="true">
+          <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1.5L8.5 5L1 8.5" fill="none" stroke="var(--text3)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+          <path class="edge" d="M169 86 C169 130, 92 128, 92 176" marker-end="url(#ah)"/>
+          <path class="edge" d="M169 86 C169 130, 246 128, 246 176" marker-end="url(#ah)"/>
+        </svg>
+        <div class="node focus" style="left:169px;top:62px"><svg class="ring solid" width="22" height="22" data-v="0.98"></svg>Prime Number</div>
+        <div class="node" style="left:92px;top:200px"><svg class="ring build" width="20" height="20" data-v="0.85"></svg>Divisibility</div>
+        <div class="node" style="left:246px;top:200px"><svg class="ring build" width="20" height="20" data-v="0.30"></svg>Factor</div>
+      </div>
+      <div class="legend">Arrows point to what a concept builds on.</div>
+      <div class="seg" role="tablist"><span class="on">All 3</span><span>Needs review 2</span></div>
+      <div class="rows">
+        <div class="row"><svg class="ring build" width="22" height="22" data-v="0.30"></svg>Factor<span class="pct">30%</span></div>
+        <div class="row hover"><svg class="ring build" width="22" height="22" data-v="0.85"></svg>Divisibility<span class="pct">85%</span></div>
+        <div class="row"><svg class="ring solid" width="22" height="22" data-v="0.98"></svg>Prime Number<span class="pct">98%</span></div>
+      </div>
+    </div>
+    <div class="main dim">
+      <div class="topbar"><span class="chip">gemini-3.1-flash-lite</span></div>
+      <div class="hero"><h4>What do you want to understand?</h4></div>
+      <div class="composer">Ask about something you're learning<span class="send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span></div>
+    </div>
+  </div></div>
+  <div class="two">
+    <div class="note"><h3>Why the layout changed</h3><p>Dependencies have a direction, so the map uses it: foundations low, what you're working toward high. The old radial layout put Divisibility and Factor on opposite sides of Prime Number in an order that came from sorting IDs, which meant position carried no information.</p></div>
+    <div class="note"><h3>Why the arrows show now</h3><p>The old edges ran centre to centre, so each arrowhead sat under the node circle. Here edges stop at the pill's edge, and related (non-dependency) links are drawn dotted and only appear when a concept is selected.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Notebook and reading pane</h2>
+  <p class="section-note">The list rows look clickable because they are rows, with a ring, a name and a value. Selecting one opens a reading pane that floats above the chat instead of taking a slot in its layout. "Builds on" chips are real links, so a learner can walk down the prerequisite chain without going back to the list.</p>
+  <div class="frame-scroll"><div class="frame" id="frameNote">
+    <div class="rail" aria-hidden="true">
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><circle cx="5.5" cy="18" r="2.5"/><circle cx="18.5" cy="18" r="2.5"/><path d="M11 7.3l-4.3 8.3M13 7.3l4.3 8.3"/></svg></button>
+      <button class="ib on" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg></button>
+      <div class="sp"></div><div class="me">LE</div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">Notebook</div>
+      <div class="field"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Search your notes</div>
+      <div class="rows">
+        <div class="row"><svg class="ring build" width="22" height="22" data-v="0.85"></svg>Divisibility<span class="pct">85%</span></div>
+        <div class="row hover"><svg class="ring solid" width="22" height="22" data-v="0.98"></svg>Prime Number<span class="pct">98%</span></div>
+      </div>
+      <div class="legend" style="margin-top:4px">Pages appear here once a concept is well understood.</div>
+    </div>
+    <div class="main">
+      <div class="dim" style="height:100%">
+        <div class="topbar"><span class="chip">gemini-3.1-flash-lite</span></div>
+      </div>
+      <div class="scrim"></div>
+      <aside class="reader" aria-label="Notebook page: Prime numbers">
+        <button class="close" tabindex="-1" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <h5>Prime numbers</h5>
+        <div class="meta"><svg class="ring solid" width="22" height="22" data-v="0.98"></svg>Solid, 98%</div>
+        <p class="lede2">Building blocks that can't be broken into smaller whole-number factors.</p>
+        <div class="body">
+          <p>Think back to <u class="known">divisibility</u>: a number divides another if it splits evenly with nothing left over. Six breaks into 2 × 3, so 2 and 3 are factors of 6. A prime is the opposite, a <mark class="hl">stubborn</mark> number that refuses to split.</p>
+          <p>Picture seven tiles. You can't arrange them into a rectangle more than one row high, so 7 is prime.</p>
+        </div>
+        <div class="try"><b>Try this</b>Using what you know about divisibility, why isn't 9 prime?</div>
+        <div>
+          <div class="lbl">Builds on</div>
+          <div class="chips">
+            <span class="pill"><svg class="ring build" width="18" height="18" data-v="0.85"></svg>Divisibility</span>
+            <span class="pill"><svg class="ring build" width="18" height="18" data-v="0.30"></svg>Factor</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div></div>
+  <div class="two">
+    <div class="note"><h3>Same vocabulary as chat</h3><p>In tutor messages the existing badge states map onto the same system: known concepts get an ink dotted underline, weak ones get a highlighter mark (as above), new ones a faint ink wash. One visual language across chat, map and notebook.</p></div>
+    <div class="note"><h3>Reading first</h3><p>The pane is 456px wide with a serif body at 16px and about 60 characters per line. Your current drawer is 320px wide, which is too narrow to read generated explanations comfortably.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Chat landing, with less on it</h2>
+  <p class="section-note">Same LibreChat shell. The robot icon and time-of-day greeting give way to the ring mark and one question. The sliders icon and the footer line are hidden. Everything that survives is something a learner uses.</p>
+  <div class="frame-scroll"><div class="frame" id="frameLand">
+    <div class="rail" aria-hidden="true">
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><circle cx="5.5" cy="18" r="2.5"/><circle cx="18.5" cy="18" r="2.5"/><path d="M11 7.3l-4.3 8.3M13 7.3l4.3 8.3"/></svg></button>
+      <button class="ib" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg></button>
+      <div class="sp"></div><div class="me">LE</div>
+    </div>
+    <div class="main">
+      <div class="topbar"><span class="chip">gemini-3.1-flash-lite</span></div>
+      <div class="hero">
+        <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="14" fill="none" stroke="var(--accent)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="68.5 100" transform="rotate(-90 24 24)"/><circle cx="10.2" cy="21.6" r="3.4" fill="var(--marker-line)"/></svg>
+        <h4>What do you want to understand?</h4>
+      </div>
+      <div class="composer">Ask about something you're learning<span class="send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span></div>
+    </div>
+  </div></div>
+</section>
+
+<section>
+  <h2>Token starter</h2>
+  <p class="section-note">Values only. Upstream stores its colour roles as RGB channel triplets, so whoever implements this converts the hex and maps each role to the matching variable in <code>client/src/style.css</code>. Overriding these roles, rather than editing components, is what keeps the diff against upstream near zero.</p>
+<pre>role              light      dark
+surface-primary   #F4F6F5    #111D27     canvas
+surface-secondary #EBEFED    #0D1720     rail, sidebar
+surface-tertiary  #FFFFFF    #182733     inputs, cards
+border-light      #D5DDE0    #243746
+text-primary      #14212B    #E6EDF2
+text-secondary    #4A5B68    #A3B4C2
+text-tertiary     #5A6B77    #7C8FA0
+accent            #0F6E8C    #79C7DE     buttons, focus, "known"
+marker-line       #9A6200    #F2C94C     rings and lines in "building"
+marker-fill       #F2C230 @45%  #F2C94C @22%   highlight behind text
+unseen            #6B7C88    #7C8FA0
+
+radius   10px controls and rows, 16px composer, 999px pills
+type     Inter 400/500/600 for UI, Literata 400/600 for reading and titles
+motion   150ms colour changes only; rings never animate on their own</pre>
+</section>
+
+</div>
+
+<script>
+(function () {
+  var C = 2 * Math.PI;
+  function drawRing(svg) {
+    var v = parseFloat(svg.getAttribute('data-v')) || 0;
+    var size = parseFloat(svg.getAttribute('width')) || 24;
+    var sw = Math.max(2.2, size * 0.13);
+    var r = (size - sw) / 2, c = size / 2, len = C * r;
+    svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
+    svg.setAttribute('aria-hidden', 'true');
+    var html = '<circle class="track" cx="' + c + '" cy="' + c + '" r="' + r + '" stroke-width="' + sw + '"/>';
+    if (v > 0) {
+      html += '<circle class="arc" cx="' + c + '" cy="' + c + '" r="' + r + '" stroke-width="' + sw +
+        '" stroke-dasharray="' + (len * v).toFixed(2) + ' ' + len.toFixed(2) + '" transform="rotate(-90 ' + c + ' ' + c + ')"/>';
+    }
+    svg.innerHTML = html;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('svg.ring'), drawRing);
+
+  var root = document.documentElement;
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var dark = getComputedStyle(root).getPropertyValue('--bg').trim().toUpperCase() === '#111D27';
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+/* ==========================================================================
+   Knowledgeable UI: reference stylesheet (tokens + component classes)
+   Target path in repo: apps/web/client/src/knowledgeable/styles/k.css
+   Import ONCE, after upstream's stylesheet (see SPEC.md, Phase 0).
+
+   Why plain CSS with a k- prefix and not Tailwind classes:
+   - works unchanged on upstream Tailwind 3.4 today and on the v4 migration
+   - no dependency on upstream's class names or palette
+   - every value is here, so nothing has to be guessed
+   Dark mode: upstream toggles the `dark` class on <html> (verify, SPEC.md 2.3).
+   ========================================================================== */
+
+:root {
+  --k-bg: #F4F6F5;        /* canvas */
+  --k-rail: #EBEFED;      /* rail, sidebar */
+  --k-card: #FFFFFF;      /* inputs, cards */
+  --k-line: #D5DDE0;
+  --k-text: #14212B;
+  --k-text-2: #4A5B68;
+  --k-text-3: #5A6B77;
+  --k-accent: #0F6E8C;
+  --k-accent-ink: #FFFFFF;             /* text on accent fill */
+  --k-accent-wash: rgba(15,110,140,.10);
+  --k-marker-line: #9A6200;            /* rings and lines in "building" */
+  --k-marker-fill: rgba(242,194,48,.45);
+  --k-unseen: #6B7C88;
+  --k-grid: #DDE4E6;
+  --k-shadow: 0 12px 40px rgba(20,33,43,.14);
+  --k-danger: #B3261E;
+
+  --k-font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --k-font-read: 'Literata Variable', 'Literata', Georgia, 'Times New Roman', serif;
+  --k-radius: 10px;
+}
+
+.dark {
+  --k-bg: #111D27;
+  --k-rail: #0D1720;
+  --k-card: #182733;
+  --k-line: #243746;
+  --k-text: #E6EDF2;
+  --k-text-2: #A3B4C2;
+  --k-text-3: #7C8FA0;
+  --k-accent: #79C7DE;
+  --k-accent-ink: #0D1720;
+  --k-accent-wash: rgba(121,199,222,.12);
+  --k-marker-line: #F2C94C;
+  --k-marker-fill: rgba(242,201,76,.22);
+  --k-unseen: #7C8FA0;
+  --k-grid: #1A2B38;
+  --k-shadow: 0 12px 40px rgba(0,0,0,.45);
+  --k-danger: #F2B8B5;
+}
+
+/* visually hidden but available to screen readers and tests */
+.k-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+/* developer-only controls (UUID root, depth, limit): render inside <details class="k-dev"> only when DEV or ?kdebug=1 */
+.k-dev { font-size: 12.5px; color: var(--k-text-3); }
+.k-dev summary { cursor: pointer; }
+
+/* ---- shared -------------------------------------------------------------- */
+.k-panel, .k-reader { font-family: var(--k-font-ui); color: var(--k-text); font-size: 14.5px; line-height: 1.5; }
+.k-panel *, .k-reader * { box-sizing: border-box; }
+.k-panel button, .k-reader button, .k-panel input { font: inherit; color: inherit; }
+.k-panel :focus-visible, .k-reader :focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
+
+/* ---- panel shell (sidebar tab content) ----------------------------------- */
+.k-panel { display: flex; flex-direction: column; gap: 14px; padding: 16px; min-height: 0; }
+.k-panel__title { font-size: 15px; font-weight: 600; margin: 0; }
+
+/* ---- search field: <label class="k-field"><svg/><input class="k-input"/></label> */
+.k-field { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px;
+  background: var(--k-card); border: 1px solid var(--k-line); border-radius: var(--k-radius); color: var(--k-text-3); }
+.k-field:focus-within { border-color: var(--k-accent); box-shadow: 0 0 0 3px var(--k-accent-wash); }
+.k-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--k-text); font-size: 14px; }
+.k-input::placeholder { color: var(--k-text-3); opacity: 1; }
+.k-field .k-input:focus-visible { outline: 0; }
+
+/* ---- buttons -------------------------------------------------------------- */
+.k-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px;
+  border: 1px solid var(--k-line); background: var(--k-card); color: var(--k-text); border-radius: 9px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.k-btn:hover { border-color: var(--k-accent); }
+.k-btn:disabled { opacity: .5; cursor: not-allowed; }
+.k-btn--primary { background: var(--k-accent); color: var(--k-accent-ink); border-color: transparent; font-weight: 500; }
+.k-btn--primary:hover { filter: brightness(1.06); border-color: transparent; }
+.k-btn--ghost { background: transparent; border-color: transparent; color: var(--k-text-2); }
+.k-btn--ghost:hover { background: var(--k-accent-wash); color: var(--k-text); border-color: transparent; }
+
+/* ---- segmented control: <div class="k-seg" role="group"><button aria-pressed=..> */
+.k-seg { display: inline-flex; padding: 3px; background: var(--k-card); border: 1px solid var(--k-line); border-radius: var(--k-radius); align-self: flex-start; }
+.k-seg button { border: 0; background: transparent; padding: 4px 12px; min-height: 28px; border-radius: 7px; font-size: 13px; color: var(--k-text-2); cursor: pointer; }
+.k-seg button[aria-pressed="true"] { background: var(--k-accent-wash); color: var(--k-text); font-weight: 500; }
+
+/* ---- rows: <button class="k-row"> ring + name + value --------------------- */
+.k-rows { display: flex; flex-direction: column; margin: 0 -8px; padding: 0; list-style: none; }
+.k-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 46px; padding: 6px 8px; border: 0; background: transparent;
+  border-radius: var(--k-radius); text-align: left; cursor: pointer; }
+.k-row:hover, .k-row[aria-current="true"] { background: var(--k-accent-wash); }
+.k-row__body { display: flex; flex-direction: column; min-width: 0; }
+.k-row__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k-row__sub { font-size: 12.5px; color: var(--k-text-3); }
+.k-row__pct { margin-left: auto; font-size: 13.5px; color: var(--k-text-2); font-variant-numeric: tabular-nums; }
+
+/* ---- confidence ring (SVG, drawn by <ConfidenceRing/>) -------------------- */
+.k-ring { display: block; flex: none; }
+.k-ring__track { fill: none; stroke: var(--k-line); }
+.k-ring__arc { fill: none; stroke-linecap: round; }
+.k-ring--solid .k-ring__arc { stroke: var(--k-accent); }
+.k-ring--building .k-ring__arc { stroke: var(--k-marker-line); }
+.k-ring--unseen .k-ring__track { stroke: var(--k-unseen); stroke-dasharray: 2.2 3.2; }
+
+/* ---- focus summary above the map ------------------------------------------ */
+.k-focus { display: flex; align-items: center; gap: 12px; }
+.k-focus__name { font-weight: 600; font-size: 16px; line-height: 1.25; }
+.k-focus__state { font-size: 13px; color: var(--k-text-2); }
+.k-focus .k-btn { margin-left: auto; }
+
+/* ---- map canvas: scroll container > stage (sized inline) > edges svg + nodes */
+.k-canvas { position: relative; height: 262px; flex: none; overflow: auto; border: 1px solid var(--k-line); border-radius: 12px;
+  background-color: var(--k-card); background-image: radial-gradient(var(--k-grid) 1px, transparent 1px); background-size: 18px 18px; }
+.k-canvas__stage { position: relative; }               /* width/height set inline from layout */
+.k-edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.k-edge { fill: none; stroke: var(--k-text-3); stroke-width: 1.5; }
+.k-edge--related { stroke-dasharray: 2 4; opacity: .55; }
+.k-arrow { fill: none; stroke: var(--k-text-3); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.k-node { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; height: 36px; max-width: 220px;
+  padding: 0 14px 0 10px; border-radius: 999px; background: var(--k-bg); border: 1px solid var(--k-line); font-size: 13.5px; white-space: nowrap; cursor: pointer; }
+.k-node:hover { border-color: var(--k-accent); }
+.k-node__label { overflow: hidden; text-overflow: ellipsis; }
+.k-node--focus { height: 42px; font-size: 15px; font-weight: 600; border-color: var(--k-accent); box-shadow: 0 0 0 4px var(--k-accent-wash); padding-right: 18px; }
+.k-legend { font-size: 12.5px; color: var(--k-text-3); }
+
+/* ---- states ---------------------------------------------------------------- */
+.k-empty { color: var(--k-text-2); font-size: 14px; padding: 8px 0; }
+.k-error { color: var(--k-danger); font-size: 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.k-skeleton { height: 12px; border-radius: 6px; background: var(--k-line); margin: 10px 0; }
+.k-skeleton--short { width: 60%; }
+@media (prefers-reduced-motion: no-preference) {
+  .k-row, .k-btn, .k-node { transition: background-color .15s, border-color .15s; }
+  .k-skeleton { animation: k-pulse 1.4s ease-in-out infinite; }
+  @keyframes k-pulse { 50% { opacity: .5; } }
+}
+
+/* ---- reading pane (fixed overlay; does NOT take part in upstream layout).
+        No scrim on purpose: the sidebar stays clickable while a page is open. */
+.k-reader { position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; width: min(456px, 100vw); overflow-y: auto;
+  background: var(--k-bg); border-left: 1px solid var(--k-line); box-shadow: var(--k-shadow); padding: 22px 28px 40px; display: flex; flex-direction: column; gap: 14px; }
+.k-reader__close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; display: grid; place-items: center; border: 0; background: transparent; color: var(--k-text-2); border-radius: 8px; cursor: pointer; }
+.k-reader__close:hover { background: var(--k-accent-wash); color: var(--k-text); }
+.k-reader__title { margin: 0; padding-right: 32px; font-family: var(--k-font-read); font-size: 27px; line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.k-reader__meta { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--k-text-2); }
+.k-lede { margin: 0; font-family: var(--k-font-read); font-size: 17.5px; line-height: 1.55; color: var(--k-text-2); }
+.k-stale { font-size: 13px; color: var(--k-text-2); display: flex; align-items: center; gap: 8px; }
+.k-stale::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--k-marker-line); }
+.k-section-label { font-size: 13px; font-weight: 600; color: var(--k-text-2); margin: 0 0 8px; }
+.k-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.k-chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px 0 8px; border: 1px solid var(--k-line); background: var(--k-card); border-radius: 999px; font-size: 13.5px; cursor: pointer; }
+.k-chip:hover { border-color: var(--k-accent); }
+
+/* wiki body: wrap MarkdownBlocks output in <div class="k-read"> */
+.k-read { font-family: var(--k-font-read); font-size: 16px; line-height: 1.68; color: var(--k-text); }
+.k-read > *:first-child { margin-top: 0; }
+.k-read p, .k-read ul, .k-read ol, .k-read blockquote, .k-read pre { margin: 0 0 12px; }
+.k-read h1, .k-read h2, .k-read h3, .k-read h4 { font-family: var(--k-font-read); font-weight: 600; line-height: 1.3; margin: 20px 0 8px; }
+.k-read h1 { font-size: 22px; } .k-read h2 { font-size: 19px; } .k-read h3, .k-read h4 { font-size: 16.5px; }
+.k-read ul, .k-read ol { padding-left: 1.3em; }
+.k-read li { margin: 4px 0; }
+.k-read blockquote { margin-left: 0; padding-left: 14px; border-left: 3px solid var(--k-line); color: var(--k-text-2); }
+.k-read a { color: var(--k-accent); text-underline-offset: 3px; }
+.k-read code { font-size: .9em; background: var(--k-card); border: 1px solid var(--k-line); border-radius: 5px; padding: 1px 5px; }
+.k-read pre { overflow-x: auto; background: var(--k-card); border: 1px solid var(--k-line); border-radius: var(--k-radius); padding: 12px 14px; }
+.k-read pre code { border: 0; padding: 0; background: transparent; }
+.k-try { border-left: 3px solid var(--k-accent); padding: 4px 0 4px 14px; font-family: var(--k-font-read); font-size: 15.5px; line-height: 1.6; }
+.k-try strong { display: block; font-family: var(--k-font-ui); font-size: 13.5px; margin-bottom: 2px; }
+
+/* ---- concept badges inside chat messages (replace ConceptHighlight classes) - */
+.k-concept { cursor: pointer; border-radius: 3px; }
+.k-concept--known { text-decoration: underline dotted; text-decoration-color: var(--k-accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.k-concept--weak { background: var(--k-marker-fill); padding: 0 2px; }
+.k-concept--new { background: var(--k-accent-wash); padding: 0 2px; }
+.k-tip { font-family: var(--k-font-ui); font-size: 12.5px; background: var(--k-card); color: var(--k-text); border: 1px solid var(--k-line); border-radius: 8px; box-shadow: var(--k-shadow); padding: 8px 10px; }
