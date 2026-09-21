@@ -222,3 +222,39 @@ that file's unrelated T24 phase numbering.
 - **Screenshots**: swatch before/after per mode proves the seam end to end
   (`brand-swatch-*-{before,after}.png`); `reader-badges-light.png` proves
   the `k-concept` badge identity in real markdown. Harness deleted after.
+
+## 13. Phase 5 decisions (SPEC silent details, conservative options)
+
+Per-item levers (SPEC 8.3 preference order):
+- **Title/app name**: (1) config already served `appTitle: Knowledgeable`;
+  (2) `index.html` title + meta description + PWA manifest names updated.
+- **Footer**: (1) `customFooter: ""` added to `/api/config` (verified live:
+  the generic line is gone; the `configuredOnly` variant is unaffected).
+- **Favicon/logo**: (2) `logo.svg` + adaptive `favicon.svg` from the bundle;
+  PNGs rasterized with `rsvg-convert` at 16/32/180/192/512 (dimensions
+  verified from file headers); svg link added to `index.html`.
+- **Greeting**: (1) `interface.customWelcome` added to `/api/config`.
+  **Icon**: (5) `Landing.tsx` renders `assets/logo.svg` (precedent:
+  `AuthLayout.tsx`); the temporary-chat branch is untouched.
+- **Composer placeholder**: (3) new `com_ui_composer_placeholder` key in
+  `knowledgeable/i18n/overrides.ts` (merged for `en` + every loaded
+  locale) with (5) a fallback-only one-liner in `useTextarea.ts`. The
+  generic `com_endpoint_message_new` was NOT overridden — it also feeds
+  screen-reader message labels.
+- **Sliders icon**: (4) `#tools-dropdown-button { display: none }` in new
+  `knowledgeable/styles/chrome.css` (`k.css` stays verbatim). No config
+  lever exists: capabilities default on with no agents endpoint, and only
+  the artifacts row slips through (all others are permission-gated and
+  revoked). Verified live: `parameters-button` never renders
+  (`parameters: false`); the tools trigger is gone from the composer.
+- **Rail entries**: (3) override `com_ui_knowledge_graph`/`com_ui_personal_wiki`
+  to Map/Notebook (verified live in the DOM; bookmarks stay off via
+  config, matching "keep bookmarks only if backed").
+- **Query devtools**: verified dev-only (`import.meta.env.DEV` or explicit
+  global opt-in); no change.
+- **Rust note**: `json!` takes no comments and the config literal sits at
+  the macro recursion limit — brand keys are inserted post-literal.
+- **Screenshots**: real stack (`scripts/dev`) landing shot
+  `docs/ui-proof/landing-dark.png` — greeting + mark, placeholder, no
+  footer, no sliders. SplitText letter animation can freeze mid-flight
+  under headless virtual time; retaken with a longer budget.

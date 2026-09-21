@@ -1,0 +1,12 @@
+/* Phase 5 chrome hiding (SPEC 8.3, lever 4: no config lever exists).
+ *
+ * The composer tools trigger (`#tools-dropdown-button`) renders because
+ * agent capabilities default on when no agents endpoint is configured, and
+ * only the artifacts row slips through (every other row is permission-
+ * gated, and those grants are revoked). All tool surfaces the menu opens
+ * are already outside this product, so the trigger itself hides here.
+ * `k.css` stays a verbatim reference copy; site rules live in this file.
+ */
+#tools-dropdown-button {
+  display: none;
+}
