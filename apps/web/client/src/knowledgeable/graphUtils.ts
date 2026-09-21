@@ -45,6 +45,23 @@ export function confidenceStatus(
   return learnerConfidence >= HEALTHY_THRESHOLD ? 'healthy' : 'review';
 }
 
+export type ConfidenceWord = 'Solid' | 'Building' | 'Not met yet';
+
+/** Learner-facing copy deck wording corresponding to ConfidenceStatus. */
+export function confidenceWords(
+  learnerConfidence: number | null | undefined,
+): ConfidenceWord {
+  const status = confidenceStatus(learnerConfidence);
+  switch (status) {
+    case 'healthy':
+      return 'Solid';
+    case 'review':
+      return 'Building';
+    case 'unseen':
+      return 'Not met yet';
+  }
+}
+
 /** True when the learner has state and it is below the healthy threshold. */
 export function isReviewEligible(node: NeighborhoodNode): boolean {
   const c = node.learner_confidence;

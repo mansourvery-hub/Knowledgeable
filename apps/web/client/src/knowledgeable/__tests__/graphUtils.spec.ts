@@ -4,6 +4,7 @@ import {
   clampDepth,
   clampLimit,
   confidenceStatus,
+  confidenceWords,
   countNeighborhood,
   edgeLabel,
   filterReviewOnly,
@@ -59,6 +60,17 @@ describe('graphUtils', () => {
     expect(confidenceStatus(0.3)).toBe('review');
     expect(confidenceStatus(null)).toBe('unseen');
     expect(confidenceStatus(undefined)).toBe('unseen');
+  });
+
+  it('maps confidence values to learner-facing words Solid/Building/Not met yet', () => {
+    expect(confidenceWords(0.98)).toBe('Solid');
+    expect(confidenceWords(0.95)).toBe('Solid');
+    expect(confidenceWords(0.85)).toBe('Building');
+    expect(confidenceWords(0.3)).toBe('Building');
+    expect(confidenceWords(0)).toBe('Building');
+    expect(confidenceWords(null)).toBe('Not met yet');
+    expect(confidenceWords(undefined)).toBe('Not met yet');
+    expect(confidenceWords(NaN)).toBe('Not met yet');
   });
 
   it('treats unseen nodes as not review-eligible', () => {
