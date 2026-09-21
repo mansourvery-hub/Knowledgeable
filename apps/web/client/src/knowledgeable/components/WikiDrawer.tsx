@@ -1,12 +1,12 @@
 /**
- * Personal Knowledge Wiki slide-over drawer (M8, brick G4).
+ * Notebook reading pane (Phase 3, SPEC 7.2).
  *
- * Store-driven by default (single host mounted in `ChatRoute` renders
+ * Fixed overlay (`k-reader`): never pushes the chat, no scrim. Store-driven
+ * by default (a single `KnowledgeableHost` mounted in `ChatRoute` renders
  * whatever `store/wikiDrawer.ts` holds); `conceptId`/`onClose` props take
- * over for controlled use and tests. Viewing loads from the SQLite cache —
- * generation happens server-side on miss, never from this component.
+ * over for controlled use and tests.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import MarkdownBlocks from '~/components/Chat/Messages/Content/MarkdownBlocks';
 import { getMarkdownComponents, getRehypePlugins, getRemarkPlugins } from '~/components/Chat/Messages/Content/markdownConfig';
@@ -17,7 +17,11 @@ import {
   type WikiPage,
 } from '../api/wikiClient';
 import { sanitizeAnnotations } from '../store/annotations';
-import { closeWiki, useOpenWikiConceptId } from '../store/wikiDrawer';
+import { closeWiki, goBackWiki, openWiki, useOpenWikiConceptId, useWikiCanGoBack } from '../store/wikiDrawer';
+import { confidenceWords, formatConfidence } from '../graphUtils';
+import Button from './ui/Button';
+import ConfidenceRing from './ui/ConfidenceRing';
+import ErrorState from './ui/ErrorState';
 import store from '~/store';
 
 export interface WikiDrawerProps {
@@ -25,28 +29,51 @@ export interface WikiDrawerProps {
   onClose?: () => void;
 }
 
+/** Copy deck (SPEC 9): learner-facing reader errors. */
 function errorMessage(err: unknown): string {
   if (err instanceof WikiNotReadyError) {
-    return "This concept isn't ready for a wiki page yet — keep learning and check back.";
+    return 'Notes appear once you have a good grip on this concept. Keep learning and check back.';
   }
   if (err instanceof WikiNotFoundError) {
     return 'Concept not found.';
   }
-  return "Couldn't load the wiki page.";
+  return "Couldn't load this page. Try again.";
+}
+
+const TRY_MARKER = /^check-for-understanding\b/i;
+
+/**
+ * Split generated markdown into body + try-this section: a line beginning
+ * "Check-for-understanding" (case-insensitive) starts the try section, with
+ * the marker label stripped in favour of the "Try this" heading.
+ */
+export function splitTrySection(content: string): { main: string; tryText: string | null } {
+  const lines = content.split('\n');
+  const marker = lines.findIndex((line) => TRY_MARKER.test(line.trimStart()));
+  if (marker === -1) {
+    return { main: content, tryText: null };
+  }
+  const tryLines = lines.slice(marker);
+  tryLines[0] = tryLines[0].replace(TRY_MARKER, '').replace(/^\s*[:—–-]\s*/, '').trimStart();
+  const tryText = tryLines.join('\n').trim();
+  return { main: lines.slice(0, marker).join('\n').trimEnd(), tryText: tryText || null };
 }
 
 export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
   const storeId = useOpenWikiConceptId();
   const id = conceptId !== undefined ? conceptId : storeId;
   const handleClose = onClose ?? closeWiki;
+  const canGoBack = useWikiCanGoBack();
   // Render parity with chat (F7): same LaTeX setting, same badge pipeline
   // fed with the page's live-derived annotations (validated, never stored —
-  // the drawer is not a message). Percentages follow the debug toggle.
+  // the drawer is not a message).
   const LaTeXParsing = useRecoilValue(store.LaTeXParsing);
-  const showConfidence = useRecoilValue(store.showConfidenceDebug);
   const [page, setPage] = useState<WikiPage | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const openerRef = useRef<Element | null>(null);
+  const wasOpenRef = useRef(false);
 
   const load = useCallback(
     (target: string, signal: AbortSignal) => {
@@ -97,99 +124,152 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
     return () => document.removeEventListener('keydown', onKey);
   }, [id, handleClose]);
 
+  // Focus the close button on open; restore the opener on close.
+  useEffect(() => {
+    if (id && !wasOpenRef.current) {
+      wasOpenRef.current = true;
+      openerRef.current = document.activeElement;
+      closeRef.current?.focus();
+    } else if (!id && wasOpenRef.current) {
+      wasOpenRef.current = false;
+      const opener = openerRef.current as HTMLElement | null;
+      openerRef.current = null;
+      opener?.focus?.();
+    }
+  }, [id]);
+
   if (!id) {
     return null;
   }
 
+  const confidence = page?.learner_confidence_at_generation ?? null;
+  const { main, tryText } = splitTrySection(page?.personalized_content ?? '');
+  const remarkPlugins = getRemarkPlugins(LaTeXParsing, sanitizeAnnotations(page?.concept_annotations));
+  const rehypePlugins = getRehypePlugins();
+  const components = getMarkdownComponents();
+
   return (
     <aside
-      data-testid="wiki-drawer"
+      className="k-reader"
       role="dialog"
-      aria-label="Personal knowledge wiki"
-      className="flex h-full w-80 flex-col border-l border-border-light bg-surface-primary"
+      aria-label={`Notebook page: ${page?.title ?? 'Notebook'}`}
+      data-testid="wiki-drawer"
     >
-      <div className="flex items-center justify-between p-3">
-        <h2 data-testid="wiki-heading">Personal Wiki</h2>
-        <button type="button" data-testid="wiki-close" onClick={handleClose} aria-label="Close wiki">
-          ×
-        </button>
-      </div>
+      <button
+        ref={closeRef}
+        className="k-reader__close"
+        type="button"
+        aria-label="Close"
+        data-testid="wiki-close"
+        onClick={handleClose}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+      {canGoBack && (
+        <Button variant="ghost" onClick={() => goBackWiki()}>
+          Back
+        </Button>
+      )}
       {loading && (
         <div role="status" data-testid="wiki-loading">
-          Loading wiki page… (first view generates your personal page and can take a minute)
+          <div className="k-skeleton k-skeleton--short" />
+          <div className="k-skeleton" />
+          <div className="k-skeleton" />
+          <div className="k-skeleton" />
+          <div className="k-skeleton" />
+          <p>Writing your page. The first time can take a minute.</p>
         </div>
       )}
-      {error && !loading && (
-        <div role="alert" data-testid="wiki-error">
-          {error}
-          <button
-            type="button"
-            data-testid="wiki-retry"
-            onClick={() => {
-              const controller = new AbortController();
-              load(id, controller.signal);
-            }}
-          >
-            Retry
-          </button>
-        </div>
+      {!loading && error && (
+        <ErrorState
+          message={error}
+          onRetry={() => {
+            const controller = new AbortController();
+            load(id, controller.signal);
+          }}
+          retryLabel="Try again"
+          testId="wiki-error"
+          retryTestId="wiki-retry"
+        />
       )}
-      {page && !loading && !error && (
-        <div className="overflow-y-auto p-3">
-          <h3 data-testid="wiki-title">{page.title}</h3>
+      {!loading && !error && page && (
+        <>
+          <h3 className="k-reader__title" data-testid="wiki-title">
+            {page.title}
+          </h3>
+          <div className="k-reader__meta" data-testid="wiki-confidence">
+            <ConfidenceRing value={confidence} size={22} />
+            {confidenceWords(confidence)}, {formatConfidence(confidence)}
+          </div>
           {page.is_stale && (
-            <p data-testid="wiki-stale">May be outdated — refreshes on next view.</p>
+            <p className="k-stale" data-testid="wiki-stale">
+              May be outdated. It refreshes the next time you open it.
+            </p>
           )}
-          {showConfidence && (
-            <div data-testid="wiki-confidence">
-              Confidence {Math.round(page.learner_confidence_at_generation * 100)}%
-              <div
-                aria-hidden="true"
-                data-testid="wiki-confidence-bar"
-                style={{ width: `${Math.round(page.learner_confidence_at_generation * 100)}%` }}
-              />
-            </div>
-          )}
-          <p data-testid="wiki-summary">{page.summary}</p>
-          {/* Same content-typography container as chat assistant messages
-            (MessageContent): identical type scale, spacing, and dark-mode
-            inversion for the same rendered elements. */}
-          <div
-            data-testid="wiki-content"
-            className="markdown prose message-content dark:prose-invert light w-full break-words"
-          >
+          <p className="k-lede" data-testid="wiki-summary">
+            {page.summary}
+          </p>
+          <div data-testid="wiki-content" className="markdown message-content k-read w-full break-words">
             <MarkdownBlocks
-              content={page.personalized_content}
-              remarkPlugins={getRemarkPlugins(
-                LaTeXParsing,
-                sanitizeAnnotations(page.concept_annotations),
-              )}
-              rehypePlugins={getRehypePlugins()}
-              components={getMarkdownComponents()}
+              content={main}
+              remarkPlugins={remarkPlugins}
+              rehypePlugins={rehypePlugins}
+              components={components}
               animate={false}
               hydrated={false}
             />
           </div>
+          {tryText && (
+            <div className="k-try" data-testid="wiki-try">
+              <strong>Try this</strong>
+              <MarkdownBlocks
+                content={tryText}
+                remarkPlugins={remarkPlugins}
+                rehypePlugins={rehypePlugins}
+                components={components}
+                animate={false}
+                hydrated={false}
+              />
+            </div>
+          )}
           {page.known_prerequisites.length > 0 && (
-            <ul data-testid="wiki-prereqs" aria-label="Prerequisites">
-              {page.known_prerequisites.map((prereq) => (
-                <li key={prereq.concept_id} data-testid="wiki-prereq">
-                  {prereq.name}
-                  {showConfidence && <> · {Math.round(prereq.learner_confidence * 100)}%</>}
-                </li>
-              ))}
-            </ul>
+            <div>
+              <p className="k-section-label">Builds on</p>
+              <div className="k-chips" data-testid="wiki-prereqs">
+                {page.known_prerequisites.map((prereq) => (
+                  <button
+                    key={prereq.concept_id}
+                    type="button"
+                    className="k-chip"
+                    data-testid="wiki-prereq"
+                    onClick={() => openWiki(prereq.concept_id)}
+                  >
+                    <ConfidenceRing value={prereq.learner_confidence} size={18} />
+                    {prereq.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
           {page.related_concepts.length > 0 && (
-            <ul data-testid="wiki-related" aria-label="Related concepts">
-              {page.related_concepts.map((related) => (
-                <li key={related.concept_id} data-testid="wiki-related-item">
-                  {related.name}
-                </li>
-              ))}
-            </ul>
+            <div>
+              <p className="k-section-label">Related</p>
+              <div className="k-chips" data-testid="wiki-related">
+                {page.related_concepts.map((related) => (
+                  <button
+                    key={related.concept_id}
+                    type="button"
+                    className="k-chip"
+                    data-testid="wiki-related-item"
+                    onClick={() => openWiki(related.concept_id)}
+                  >
+                    {related.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
-        </div>
+        </>
       )}
     </aside>
   );
