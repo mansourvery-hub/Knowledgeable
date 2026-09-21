@@ -258,3 +258,26 @@ Per-item levers (SPEC 8.3 preference order):
   `docs/ui-proof/landing-dark.png` — greeting + mark, placeholder, no
   footer, no sliders. SplitText letter animation can freeze mid-flight
   under headless virtual time; retaken with a longer budget.
+
+## 14. Beta-prep pass (SPEC 11 definition of done)
+
+- **CDP gate script** `e2e/knowledgeable-ui.cjs` (kept): raw DevTools
+  protocol via the workspace `ws` package, no new dependencies. Covers
+  11.2 (dark input bg + contrast), 11.3 (12px floor), 11.4 (arrowhead
+  endpoints outside node boxes via `getPointAtLength`), 11.5 (keyboard Tab
+  walk, outline or `.k-field` focus glow), 11.6 (forbidden text outside
+  `.k-dev`), 11.8 (chat bbox unchanged across drawer close). 15 scenarios,
+  all passing. Run: serve any fixture harness, then
+  `node e2e/knowledgeable-ui.cjs --harness <url>`.
+- **Carve-outs**: `.k-dev` inputs are exempt from the 11.2 white-bg rule
+  (dev-only, production-hidden — same spirit as the 11.6 carve-out), and
+  focused search inputs pass 11.5 via the `.k-field:focus-within` glow
+  instead of their own outline (deliberate in `k.css`: `.k-input:
+  focus-visible { outline: 0 }`).
+- **Proof set** (`docs/ui-proof/`, 25 shots): map × (3-concept, empty,
+  error) × themes, notebook list/empty, reader open × sizes × themes,
+  brand swatches, landing. Missing nothing from 11.9 except a light
+  landing (headless resolves dark; palette already proven per-theme).
+- **Strays resolved**: `models.json` was curl trace output (deleted);
+  `repomix.md` moved to `docs/agent-context/`; the handoff bundle is
+  tracked under `docs/design/`.
