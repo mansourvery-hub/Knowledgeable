@@ -15,7 +15,7 @@ use crate::routes::AppState;
 /// always mints a local session), no social logins, and only the
 /// Knowledgeable endpoint is advertised.
 pub async fn config(State(_state): State<AppState>) -> Json<Value> {
-    Json(json!({
+    let mut config = json!({
         "appTitle": "Knowledgeable",
         "emailLoginEnabled": false,
         "registrationEnabled": false,
@@ -60,7 +60,14 @@ pub async fn config(State(_state): State<AppState>) -> Json<Value> {
         "endpoints": {
             ENDPOINT_NAME: endpoint_config(),
         }
-    }))
+    });
+    // Brand levers the client already honors (Phase 5): an empty custom
+    // footer suppresses the generic LibreChat footer line, and customWelcome
+    // replaces the landing greeting. Inserted here (not in the literal) to
+    // stay under the `json!` macro recursion limit.
+    config["customFooter"] = json!("");
+    config["interface"]["customWelcome"] = json!("What do you want to understand?");
+    Json(config)
 }
 
 /// `GET /api/user` — current learner profile.

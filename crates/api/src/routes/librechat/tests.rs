@@ -66,6 +66,10 @@ async fn config_advertises_knowledgeable_endpoint() {
 
     let config = body_json(response).await;
     assert_eq!(config["appTitle"], "Knowledgeable");
+    // Phase 5 brand levers: empty footer suppresses the generic line,
+    // customWelcome replaces the landing greeting.
+    assert_eq!(config["customFooter"], "");
+    assert_eq!(config["interface"]["customWelcome"], "What do you want to understand?");
     assert_eq!(config["emailLoginEnabled"], false);
     assert!(config["endpoints"]["knowledgeable"].is_object());
 }
