@@ -177,3 +177,27 @@ that file's unrelated T24 phase numbering.
   after; three-node case at 372px, both themes, stored under
   `docs/ui-proof/map-panel-372-*.png`). The collapsed `Developer controls`
   row in the shots is dev-only (`import.meta.env.DEV`, hidden in prod).
+
+## 11. Phase 3 decisions (SPEC silent details, conservative options)
+
+- **Percentages always visible in Notebook/reader** (SPEC 7.1/7.2, markup,
+  board): this overrides the F7/F8 debug-only gating for these two
+  surfaces — the gated Phase 1 `ConceptRow` renders pct unconditionally by
+  design. The debug toggle still governs chat badges/tooltips. The two
+  WikiBrowser debug tests were replaced with an always-visible assertion.
+- **`wiki-heading` dropped**: the markup contract has no `h2`; looks defer
+  to `markup-reference.html` over the old testid table.
+- **`k-read` added alongside `markdown message-content`** (kept so chat
+  component styling still applies); only the no-op `prose` classes were
+  removed per SPEC 7.2.
+- **Try-this section renders through the same `MarkdownBlocks` pipeline**
+  so concept badges still highlight inside it.
+- **History records every `openWiki` transition**, not only chip clicks
+  (single entry point; "Open notes" navigation behaves the same).
+- **Focus moves to close only on initial open**, not on every chip
+  navigation; restore-on-close targets the recorded opener.
+- **Not-ready stays `ErrorState` with retry** (keeps the existing retry
+  flow), copy softened per the deck.
+- **Screenshots**: headless-Chrome harness as in Phase 2 (deleted after).
+  The badge tooltips needed the upstream stylesheets in the harness to
+  hide — production-real, since `main.jsx` loads them before `k.css`.

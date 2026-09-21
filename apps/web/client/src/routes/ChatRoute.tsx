@@ -40,7 +40,7 @@ import {
 } from '~/hooks';
 import { ToolCallsMapProvider, useAgentsMapContext } from '~/Providers';
 import ChatView from '~/components/Chat/ChatView';
-import WikiDrawer from '~/knowledgeable/components/WikiDrawer';
+import KnowledgeableHost from '~/knowledgeable/components/KnowledgeableHost';
 import { NotificationSeverity } from '~/common';
 import useAuthRedirect from './useAuthRedirect';
 import temporaryStore from '~/store/temporary';
@@ -356,8 +356,8 @@ export default function ChatRoute() {
   return (
     <ToolCallsMapProvider conversationId={conversation.conversationId ?? ''}>
       <ChatView index={index} project={verifiedChatProjectId ? projectQuery.data : undefined} />
-      {/* Knowledgeable M8: single wiki drawer host for concept badges. */}
-      <WikiDrawer />
+      {/* Knowledgeable: single overlay host for the notebook reading pane. */}
+      <KnowledgeableHost />
     </ToolCallsMapProvider>
   );
 }
