@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <style>
+    .ring { stroke: #0F6E8C; } .dot { fill: #9A6200; }
+    @media (prefers-color-scheme: dark) { .ring { stroke: #79C7DE; } .dot { fill: #F2C94C; } }
+  </style>
+  <circle class="ring" cx="24" cy="24" r="16" fill="none" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="78 100" transform="rotate(-90 24 24)"/>
+  <circle class="dot" cx="8.6" cy="21" r="4.4"/>
+</svg>
