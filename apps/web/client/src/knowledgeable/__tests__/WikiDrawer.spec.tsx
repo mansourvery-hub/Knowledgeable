@@ -202,6 +202,8 @@ describe('WikiDrawer', () => {
     await waitFor(() => {
       expect(screen.getByTestId('wiki-title')).toHaveTextContent('Factor');
     });
+    // Navigating to a new page moves focus back to the close button.
+    expect(screen.getByTestId('wiki-close')).toHaveFocus();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     await waitFor(() => {
       expect(screen.getByTestId('wiki-title')).toHaveTextContent('Prime Number');

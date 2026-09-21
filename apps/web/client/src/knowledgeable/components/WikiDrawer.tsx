@@ -73,7 +73,7 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
   const [error, setError] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<Element | null>(null);
-  const wasOpenRef = useRef(false);
+  const prevIdRef = useRef<string | null>(null);
 
   const load = useCallback(
     (target: string, signal: AbortSignal) => {
@@ -124,18 +124,20 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
     return () => document.removeEventListener('keydown', onKey);
   }, [id, handleClose]);
 
-  // Focus the close button on open; restore the opener on close.
+  // Focus the close button whenever a new page opens (initial open and
+  // chip navigation); restore the opener only when the drawer fully closes.
   useEffect(() => {
-    if (id && !wasOpenRef.current) {
-      wasOpenRef.current = true;
-      openerRef.current = document.activeElement;
+    if (id && prevIdRef.current !== id) {
+      if (!prevIdRef.current) {
+        openerRef.current = document.activeElement;
+      }
       closeRef.current?.focus();
-    } else if (!id && wasOpenRef.current) {
-      wasOpenRef.current = false;
+    } else if (!id && prevIdRef.current) {
       const opener = openerRef.current as HTMLElement | null;
       openerRef.current = null;
       opener?.focus?.();
     }
+    prevIdRef.current = id;
   }, [id]);
 
   if (!id) {

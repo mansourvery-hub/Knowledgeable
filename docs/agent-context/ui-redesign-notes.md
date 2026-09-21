@@ -281,3 +281,25 @@ Per-item levers (SPEC 8.3 preference order):
 - **Strays resolved**: `models.json` was curl trace output (deleted);
   `repomix.md` moved to `docs/agent-context/`; the handoff bundle is
   tracked under `docs/design/`.
+
+## 15. Bundle-compliance audit (post-beta-1)
+
+Method: every SPEC section re-read against the implementation with
+automated sweeps (k-class inventory vs `k.css`, glyph/prose/old-string
+greps, copy-deck presence, seam diffs) plus targeted tests.
+- **No invented classes**: all 48 `k-` classes used resolve to `k.css`.
+  No arrow glyphs, no `prose`, no old product strings in components.
+- **Panel-hint copy row**: the deck maps the old hint to "Search for a
+  concept to see what it builds on.", but §6.1 defines no hint slot, the
+  remove list does not mention it, and `markup-reference.html` (authority
+  for looks) shows none. The hint's old role is absorbed by the §6.2.3
+  empty state, so it is intentionally not rendered.
+- **Fixes from the audit**: reader refocuses the close button on every new
+  page (chip navigation included), not just the initial open; search
+  results are sliced to 8 client-side as well as at the request; added a
+  canvas-keeps-focus-under-filter test.
+- **Standing accepted deviations**: `wiki-heading` dropped (no `h2` in the
+  markup contract); `themeDefinition` instead of `brand.css`/`themeRGB`
+  (§8.2 option 2, verified necessary); `minSize` 4th layout param
+  (optional, backward compatible); axe-core itself not run (CDP checks
+  cover its §11 items); light landing unshot (palette proven per theme).

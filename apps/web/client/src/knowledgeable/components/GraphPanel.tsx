@@ -202,7 +202,9 @@ export default function GraphPanel() {
     const controller = new AbortController();
     setSearching(true);
     try {
-      const hits = await searchConcepts(trimmed, { limit: 8, signal: controller.signal });
+      // The panel shows at most 8 results; slice defensively so a backend
+      // over-delivery can never widen the list.
+      const hits = (await searchConcepts(trimmed, { limit: 8, signal: controller.signal })).slice(0, 8);
       setSearchResults(hits);
       setSearched(true);
     } catch (err) {

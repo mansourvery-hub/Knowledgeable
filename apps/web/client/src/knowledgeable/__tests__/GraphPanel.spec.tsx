@@ -339,6 +339,29 @@ describe('GraphPanel', () => {
     expect(rows[0]).toHaveAttribute('data-testid', `graph-node-select-${B}`);
   });
 
+  it('keeps the focus concept on the canvas under the review filter', async () => {
+    stubFetch((url) => {
+      if (url.startsWith('/api/concepts/mastered')) {
+        return { status: 200, payload: masteredItems([{ id: A, name: 'Alpha', confidence: 0.3 }]) };
+      }
+      return {
+        status: 200,
+        payload: {
+          nodes: [node(A, 'Alpha', 0.98), node(B, 'Beta', 0.3)],
+          edges: [],
+        },
+      };
+    });
+    render(<GraphPanel />);
+    await waitFor(() => {
+      expect(screen.getByTestId('graph-counts')).toHaveTextContent('2 concepts');
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Needs review 1' }));
+    // Rows narrow to Beta; the canvas keeps Beta plus the Alpha focus.
+    expect(screen.getAllByTestId(/^graph-node-select-/)).toHaveLength(1);
+    expect(screen.getAllByTestId('graph-canvas-node')).toHaveLength(2);
+  });
+
   it('opens notes for the focus concept', async () => {
     stubFetch((url) => {
       if (url.startsWith('/api/concepts/mastered')) {
