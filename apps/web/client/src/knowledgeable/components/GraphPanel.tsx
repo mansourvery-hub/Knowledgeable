@@ -43,15 +43,15 @@ function toDisplayError(err: unknown): string {
     return "We couldn't find that concept.";
   }
   if (err instanceof NeighborhoodUnavailableError) {
-    return "The map isn't available right now. Try again in a moment.";
+    return "The concept map isn't available right now. Try again in a moment.";
   }
   if (err instanceof NeighborhoodValidationError) {
     return err.message;
   }
   if (err instanceof Error) {
-    return err.message || "Couldn't load the map. Try again.";
+    return err.message || "Couldn't load the concept map. Try again.";
   }
-  return "Couldn't load the map. Try again.";
+  return "Couldn't load the concept map. Try again.";
 }
 
 function showDevControls(): boolean {
@@ -244,8 +244,8 @@ export default function GraphPanel() {
   const showSkeleton = (loading || booting) && neighborhood == null;
 
   return (
-    <section className="k-panel" data-testid="graph-panel" aria-label="Map">
-      <h2 className="k-panel__title">Map</h2>
+    <section className="k-panel" data-testid="graph-panel" aria-label="Concept Map">
+      <h2 className="k-panel__title">Concept Map</h2>
 
       <form
         data-testid="graph-search-form"

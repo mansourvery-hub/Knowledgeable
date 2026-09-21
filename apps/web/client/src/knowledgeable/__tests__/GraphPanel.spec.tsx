@@ -226,7 +226,7 @@ describe('GraphPanel', () => {
     }));
     fireEvent.click(screen.getByTestId('graph-retry'));
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent("The map isn't available right now.");
+      expect(screen.getByRole('alert')).toHaveTextContent("The concept map isn't available right now.");
     });
   });
 

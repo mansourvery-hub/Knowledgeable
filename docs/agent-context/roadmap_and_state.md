@@ -737,6 +737,15 @@ Product renames below deliberately reverse the UI-redesign copy deck
   list known concepts. Suspect is an unseeded/empty graph (empty state is
   correct then) rather than a data bug, but verify against seeded data
   before closing; F4's data layer was proven correct pre-redesign.
+  Rename DONE 2026-09-21 (rail `com_ui_knowledge_graph`, panel title +
+  aria-label, error copy; 16 Jest green across branding + GraphPanel; tsc
+  zero in touched files). Seeded-API proof same day vs live backend:
+  `/api/concepts/mastered` returns 4 weakest-first (Divisibility 0.85,
+  Integer 0.9, Mersenne 0.95, Prime 0.98); boot default (Divisibility)
+  neighborhood is 1 node / 0 edges; Prime Number is 3 nodes / 2 edges —
+  data layer correct, so the report reads as empty-graph empty state (or
+  the sparse single-node boot) rather than a data bug. Open: CDP browser
+  pass (Concept Map title/nav, canvas, empty state on wiped graph).
 - [ ] F10 Notebook rename to Wiki — rename "Notebook" to "Wiki" everywhere
   user-facing (panel title, rail entry, reader labels, empty/error copy).
   Reverses the redesign naming; keep "notebook" only as a code identifier
