@@ -11,6 +11,7 @@ import WakeLockManager from '~/components/System/WakeLockManager';
 import QueryDevtoolsGate from '~/components/QueryDevtoolsGate';
 import LanguageSync from '~/components/System/LanguageSync';
 import { getThemeFromEnv } from './utils/getThemeFromEnv';
+import { brandThemeDefinition } from '~/knowledgeable/styles/brandTheme';
 import { initializeFontSize } from '~/store/fontSize';
 import { LiveAnnouncer } from '~/a11y';
 import { router } from './routes';
@@ -52,6 +53,11 @@ const App = () => {
         <LanguageSync />
         <LiveAnnouncer>
           <ThemeProvider
+            // Knowledgeable brand palette (Phase 4): travels as a theme
+            // definition because the provider writes inline variables that a
+            // stylesheet override would lose to. Appearance-mode switching is
+            // unaffected (both modes are defined).
+            themeDefinition={brandThemeDefinition}
             // Only pass initialTheme and themeRGB if environment theme exists
             // This allows localStorage values to persist when no env theme is set
             {...(envTheme && { initialTheme: 'system', themeRGB: envTheme })}
