@@ -24,7 +24,7 @@ describe('ConceptHighlight', () => {
     );
     const badge = screen.getByTestId('concept-highlight');
     expect(badge).toHaveAttribute('data-status', 'known');
-    expect(badge).toHaveClass('border-dotted');
+    expect(badge).toHaveClass('k-concept', 'k-concept--known');
     expect(badge).toHaveAttribute('aria-label', 'Prime Number, Known concept');
     expect(screen.queryByTestId('concept-highlight-confidence')).not.toBeInTheDocument();
 
@@ -35,8 +35,9 @@ describe('ConceptHighlight', () => {
         </ConceptHighlight>
       </RecoilRoot>,
     );
-    expect(screen.getByTestId('concept-highlight')).toHaveClass('bg-amber-500/15');
+    expect(screen.getByTestId('concept-highlight')).toHaveClass('k-concept', 'k-concept--weak');
     expect(screen.getByTestId('concept-highlight-tooltip')).toHaveTextContent('Needs review');
+    expect(screen.getByTestId('concept-highlight-tooltip')).toHaveClass('k-tip');
   });
 
   it('shows percentages with the debug toggle on', () => {

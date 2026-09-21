@@ -7,6 +7,7 @@
  */
 import { render, screen } from '@testing-library/react';
 import type { ElementType } from 'react';
+import { RecoilRoot } from 'recoil';
 import ReactMarkdown from 'react-markdown';
 import {
   getMarkdownComponents,
@@ -40,13 +41,15 @@ function renderMarkdown(markdown: string) {
     'concept-highlight': ConceptHighlight,
   };
   return render(
-    <ReactMarkdown
-      remarkPlugins={getRemarkPlugins(true, ANNOTATIONS)}
-      rehypePlugins={getRehypePlugins()}
-      components={components}
-    >
-      {markdown}
-    </ReactMarkdown>,
+    <RecoilRoot>
+      <ReactMarkdown
+        remarkPlugins={getRemarkPlugins(true, ANNOTATIONS)}
+        rehypePlugins={getRehypePlugins()}
+        components={components}
+      >
+        {markdown}
+      </ReactMarkdown>
+    </RecoilRoot>,
   );
 }
 
@@ -62,6 +65,7 @@ describe('concept highlight pipeline', () => {
     const badges = screen.getAllByTestId('concept-highlight');
     expect(badges).toHaveLength(1);
     expect(badges[0]).toHaveAttribute('data-status', 'known');
+    expect(badges[0]).toHaveClass('k-concept', 'k-concept--known');
     expect(screen.getByText(/uses each/)).toBeInTheDocument();
     // Code and math render their literal text with no badge inside.
     expect(container.querySelector('code')).not.toBeNull();
@@ -77,13 +81,15 @@ describe('concept highlight pipeline', () => {
       'concept-highlight': ConceptHighlight,
     };
     render(
-      <ReactMarkdown
-        remarkPlugins={getRemarkPlugins(true, [])}
-        rehypePlugins={getRehypePlugins()}
-        components={components}
-      >
-        {'A Prime Number'}
-      </ReactMarkdown>,
+      <RecoilRoot>
+        <ReactMarkdown
+          remarkPlugins={getRemarkPlugins(true, [])}
+          rehypePlugins={getRehypePlugins()}
+          components={components}
+        >
+          {'A Prime Number'}
+        </ReactMarkdown>
+      </RecoilRoot>,
     );
     expect(screen.queryByTestId('concept-highlight')).not.toBeInTheDocument();
     expect(screen.getByText(/Prime Number/)).toBeInTheDocument();

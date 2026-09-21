@@ -3,12 +3,13 @@
  *
  * Receives its data from `remarkConceptHighlight` via `hProperties`
  * (registered as `concept-highlight` in `getMarkdownComponents`):
- * - known (>= 0.80): subtle dotted underline + tooltip.
- * - weak (< 0.80): soft amber highlight + prerequisite tooltip.
- * - new: soft blue highlight + new-concept tooltip.
+ * - known (>= 0.80): dotted accent underline + tooltip.
+ * - weak (< 0.80): marker wash + prerequisite tooltip.
+ * - new: accent wash + new-concept tooltip.
  *
- * Pure CSS hover/focus tooltip (no portals, no new deps). Missing/invalid
- * props degrade to plain text so a malformed frame never breaks render.
+ * Identity comes from `k-concept`/`k-tip` (Phase 4); structure, data-testids
+ * and hover/focus behaviour are unchanged. Missing/invalid props degrade to
+ * plain text so a malformed frame never breaks render.
  * Wiki-drawer click wiring lands with M8.
  */
 import type { ReactNode } from 'react';
@@ -33,9 +34,9 @@ const STATUS_LABEL: Record<ConceptAnnotationStatus, string> = {
 };
 
 const STATUS_CLASS: Record<ConceptAnnotationStatus, string> = {
-  known: 'border-b border-dotted border-text-secondary',
-  weak: 'bg-amber-500/15 text-amber-900 dark:text-amber-100 rounded px-0.5',
-  new: 'bg-blue-500/15 text-blue-900 dark:text-blue-100 rounded px-0.5',
+  known: 'k-concept k-concept--known',
+  weak: 'k-concept k-concept--weak',
+  new: 'k-concept k-concept--new',
 };
 
 function isStatus(value: unknown): value is ConceptAnnotationStatus {
@@ -91,7 +92,7 @@ export default function ConceptHighlight({
       <span
         data-testid="concept-highlight-tooltip"
         role="tooltip"
-        className="invisible absolute bottom-full left-0 z-10 mb-1 w-max max-w-60 rounded bg-surface-primary p-2 text-xs shadow-lg group-hover:visible group-focus-within:visible"
+        className="k-tip invisible absolute bottom-full left-0 z-10 mb-1 w-max max-w-60 group-hover:visible group-focus-within:visible"
       >
         <strong>{label}</strong>
         {showConfidence && (
