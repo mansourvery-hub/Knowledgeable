@@ -726,3 +726,60 @@ bodies.
   Phase 5 idea. Tooltip percentages DECIDED 2026-09-20 (user): debug-toggle,
   OFF by default (see F7). Remaining tooltip questions (sticky behavior)
   stay open for the visual overhaul.
+
+## 6. Beta feedback log, round 2 (manual testing, 2026-09-21)
+
+Product renames below deliberately reverse the UI-redesign copy deck
+(Map/Notebook/Open notes); the deck stands until each rename ships.
+
+- [ ] F9 Map tab rename + empty-map report — rename "Map" to "Concept Map"
+  (panel title, rail entry, copy). Report: tab shows no map and does not
+  list known concepts. Suspect is an unseeded/empty graph (empty state is
+  correct then) rather than a data bug, but verify against seeded data
+  before closing; F4's data layer was proven correct pre-redesign.
+- [ ] F10 Notebook rename to Wiki — rename "Notebook" to "Wiki" everywhere
+  user-facing (panel title, rail entry, reader labels, empty/error copy).
+  Reverses the redesign naming; keep "notebook" only as a code identifier
+  if churn demands it.
+- [ ] F11 Wiki generation voice: drop the rigid template — remove the
+  forced Key Facts/definition-style one-size-fits-all structure from the
+  generation prompt and give the LLM more freedom in shaping each page.
+  Partly reverses the "Wiki voice DONE" constraints (third-person
+  reference voice stays unless the freer prompt regresses it). Backend
+  prompt task with a prompt-invariant test update; cached pages refresh
+  on staleness as before.
+- [ ] F12 Projects misnamed — "Projects" is the wrong product word
+  (candidate: "Folders"). DECISION NEEDED from the user, then rename the
+  surface. Upstream feature, rename only.
+- [ ] F13 Projects list refreshes uncontrollably every few seconds —
+  suspected runaway refetch/polling loop. Reproduce, find the trigger
+  (query invalidation, interval, or focus-refetch), fix, and lock with a
+  regression test.
+- [ ] F14 Project creation fails ("failed to create project") — reproduce
+  and diagnose (suspect: no backend route backing the upstream mutation);
+  either implement the contract or remove the affordance. Do not leave a
+  dead button.
+- [ ] F15 "Open notes" becomes "Open Wiki", disabled for unmastered
+  concepts — rename the button and gate it on mastery/wiki-readiness
+  instead of the current half measure (enabled button leading to a
+  "Notes appear once…" error + retry). Not-ready concepts show the
+  disabled state; no dead-end error path.
+- [ ] F16 Model name is a debug feature — hide the model name/selector
+  from end users (debug-gated or removed from the learner surface).
+  Reverses the redesign "keep model selector" call; keep the dispatch
+  default intact underneath.
+- [ ] F17 Badge tooltip removal — the floating popup over known concepts
+  cannot be dismissed and reads as clutter; tooltips are a debug feature.
+  Replace with style-only badges (background change / underline / custom
+  CSS, no popup). Partly reverses the redesign 8.1 `k-tip` call; keep the
+  click-to-wiki behavior and the debug-gated percentages.
+- [ ] F18 Pre-ship debug purge (epic, final step before public shipping) —
+  sweep and remove/gate every debug remnant: LibreChat leftovers (query
+  devtools confirm, verbose surfaces) and ours (`?kdebug`, `k-dev`
+  details, confidence percentages, debug toggles, badge tooltips). File
+  per-surface sub-tasks from the sweep; nothing ships while any remain.
+- [ ] F19 Bookmarks not functional — POST-MVP, not beta-blocking. Backend
+  contracts (tags/pin/archive/search/share) are acknowledged missing in
+  `MVP.md` ("Deliberately Out of MVP") and `integration/librechat.md`
+  ("future contract"). Track here so the gap is not lost; implementing
+  any of them is its own backend+UI task.
