@@ -732,7 +732,7 @@ bodies.
 Product renames below deliberately reverse the UI-redesign copy deck
 (Map/Notebook/Open notes); the deck stands until each rename ships.
 
-- [ ] F9 Map tab rename + empty-map report — rename "Map" to "Concept Map"
+- [x] F9 Map tab rename + empty-map report — rename "Map" to "Concept Map"
   (panel title, rail entry, copy). Report: tab shows no map and does not
   list known concepts. Suspect is an unseeded/empty graph (empty state is
   correct then) rather than a data bug, but verify against seeded data
@@ -744,8 +744,15 @@ Product renames below deliberately reverse the UI-redesign copy deck
   Integer 0.9, Mersenne 0.95, Prime 0.98); boot default (Divisibility)
   neighborhood is 1 node / 0 edges; Prime Number is 3 nodes / 2 edges —
   data layer correct, so the report reads as empty-graph empty state (or
-  the sparse single-node boot) rather than a data bug. Open: CDP browser
-  pass (Concept Map title/nav, canvas, empty state on wiped graph).
+  the sparse single-node boot) rather than a data bug.
+  Browser pass DONE 2026-09-21 (CDP vs backend :3000 + Vite :3090,
+  `/tmp/cdp-f9.js` uncommitted): 10/10 — boot with composer, rail
+  `nav-panel-knowledge-graph` aria "Concept Map" with zero bare-"Map"
+  entries, panel title + aria "Concept Map", boot canvas 1 node
+  ("1 concepts · 0 links · 1 need review"), search "prime" picks Prime
+  Number, drill renders 3 canvas nodes ("3 concepts · 2 links"), zero
+  uncaught exceptions. User DB untouched (read-only GETs; no test
+  conversations created); servers stopped after the pass. CLOSED.
 - [ ] F10 Notebook rename to Wiki — rename "Notebook" to "Wiki" everywhere
   user-facing (panel title, rail entry, reader labels, empty/error copy).
   Reverses the redesign naming; keep "notebook" only as a code identifier
