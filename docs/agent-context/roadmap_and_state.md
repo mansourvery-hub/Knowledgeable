@@ -966,6 +966,18 @@ Product renames below deliberately reverse the UI-redesign copy deck
   Chats nav entry (a stale Bookmarks-panel tab reads empty); tag names
   unique per run (409 on re-create). User DB untouched (scratch
   destroyed). CLOSED as implemented.
+  STAR REFINEMENT 2026-09-22 (user: bookmark should just star the tab;
+  double-tap opens the detail menu): single click toggles the built-in
+  `Saved` tag after a 280ms double-click window (menu forcibly shut via a
+  `setIsOpen` gate — `preventDefault` alone does not stop Ariakit in a
+  real browser); double click cancels the star and opens the menu; filled
+  icon + `aria-pressed` follow starred state; keyboard Enter/Space stars
+  (menu keyboard access stays in the header overflow, which shares the
+  items). Hook exposes `tags` + `toggleSaved` (additive). Locked by
+  `BookmarkMenuStar.spec.tsx` (2/2; menu-open half proven live — Ariakit
+  under jsdom takes ~45s per open) + CDP `/tmp/cdp-bmstar.js` 6/6
+  (star/no-menu, unstar, double-click menu without star, zero uncaught;
+  final backend state a clean `Saved` tag at count 0). CLOSED.
 
 ## 7. Beta feedback log, round 3 (manual testing, 2026-09-22)
 

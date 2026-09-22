@@ -23,6 +23,10 @@ export type UseBookmarkItemsResult = {
   items: t.MenuItemProps[];
   bookmarks: TConversationTag[];
   hasBookmarks: boolean;
+  /** Raw tag names on this conversation (for the star toggle state). */
+  tags: string[];
+  /** Star toggle: single click bookmarks via the built-in Saved tag. */
+  toggleSaved: () => void;
   isLoading: boolean;
   triggerAriaLabel: string;
   /** Rendered by whichever surface owns the menu; both need the same instance. */
@@ -166,11 +170,19 @@ export default function useBookmarkItems({
     />
   );
 
+  const toggleSaved = useCallback(() => {
+    handleSubmit(Constants.SAVED_TAG);
+  }, [handleSubmit]);
+
   return {
     show: enabled && isActiveConvo && !isTemporary,
     items,
     bookmarks: data ?? [],
     hasBookmarks: tagsCount > 0,
+    /** Raw tag names on this conversation (for the star toggle state). */
+    tags: tags ?? [],
+    /** Star toggle: single click bookmarks via the built-in Saved tag. */
+    toggleSaved,
     isLoading: mutation.isLoading,
     triggerAriaLabel,
     dialog,
