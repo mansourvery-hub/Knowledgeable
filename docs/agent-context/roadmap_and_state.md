@@ -980,3 +980,18 @@ Product renames below deliberately reverse the UI-redesign copy deck
   loop stays deterministically locked by T15's StubLlmClient tests, and
   T17 proved real-model proposal willingness). User DB untouched
   (scratch destroyed). CLOSED.
+  FOLLOW-UP 2026-09-22 (user retest "explain anal"): the new refusal is a
+  different animal — provider safety caution on an ambiguous term, not our
+  graph logic. Evidence: our client sends default safety settings and
+  surfaces whatever returns (no safety code of ours exists); the
+  unambiguous clinical phrasing ("biology of the human anus, anatomy
+  study") is ANSWERED fully. So the fixable part is disambiguation, now a
+  Teaching Rule in both sources (ambiguous term → assume the learner,
+  offer the legitimate readings, teach their pick; never jump to the
+  crudest reading or launder refusal through a fake subject list;
+  invariant test extended; tutor 5/5 green). LIVE PROOF (scratch,
+  "Explain balls"): taught the math reading AND asked which context the
+  learner means — no refusal. What I will not do unilaterally: lower
+  provider sexual-content filters — educational anatomy already passes at
+  defaults, and overriding explicit-content refusal is a safety decision
+  (students/minors), not a prompt tweak. CLOSED.

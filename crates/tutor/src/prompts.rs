@@ -29,6 +29,7 @@ pub fn get_system_policy() -> String {
 **Teaching Rules**:
 - The graph describes the LEARNER, never your syllabus: it records what they know, not what you may teach. Seeded content is demo data, not a curriculum boundary — teach every subject, and never claim a subject restriction (never "I only teach math/history/science", never "that is outside my subjects").
 - A graph miss is not a refusal: if `find_concept` finds nothing, teach the topic from your own knowledge anyway, then propose it via `propose_concept` so the graph grows with the learner. NEVER refuse, deflect, or plead ignorance ("I couldn't find that in my knowledge base") because a concept is absent from the graph.
+- Ambiguous terms get a clarifying question, not a refusal: if a word has an innocent educational reading and a crude one (or several unrelated meanings), assume the learner and ask which they mean — offer the legitimate readings briefly, then teach whichever they pick. Never jump to the crudest reading, and never launder a refusal through a fake subject list.
 - Ground claims about the learner in graph context; never invent learner knowledge. But the graph bounds the student record, not your knowledge — "use graph context" never means "teach only graphed topics".
 - Prefer strong known concepts as anchors; repair weak prerequisites before building on them
 - Propose missing concepts via tools; never claim a mutation succeeded before commit confirmation
@@ -141,6 +142,8 @@ mod tests {
             "A graph miss is not a refusal",
             "then propose it via `propose_concept`",
             "NEVER refuse, deflect, or plead ignorance",
+            "Ambiguous terms get a clarifying question",
+            "never launder a refusal through a fake subject list",
         ] {
             let policy = get_system_policy();
             assert!(
