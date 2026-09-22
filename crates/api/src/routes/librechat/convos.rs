@@ -24,11 +24,27 @@ async fn pool(state: &AppState) -> Result<&sqlx::SqlitePool, AppError> {
 ///
 /// The client sends `cursor`/`limit`; v1 returns every conversation for the
 /// default learner with a null cursor (single-user, small histories).
-pub async fn list(State(state): State<AppState>) -> Result<Json<Value>, AppError> {
+/// `isArchived`/`pinned` filters serve the archive view and the pinned
+/// section (Phase 5 pin/archive); other params are accepted and ignored.
+#[derive(Debug, Deserialize)]
+pub struct ListQuery {
+    #[serde(rename = "isArchived")]
+    pub is_archived: Option<bool>,
+    pub pinned: Option<bool>,
+}
+
+pub async fn list(
+    State(state): State<AppState>,
+    Query(query): Query<ListQuery>,
+) -> Result<Json<Value>, AppError> {
     let pool = pool(&state).await?;
-    let convs = application::conversation_service::list_conversations(pool)
-        .await
-        .map_err(|e| AppError::Internal(e.to_string()))?;
+    let convs = application::conversation_service::list_conversations_filtered(
+        pool,
+        query.is_archived,
+        query.pinned,
+    )
+    .await
+    .map_err(|e| AppError::Internal(e.to_string()))?;
 
     let conversations: Vec<Value> = {
         let learner_id = application::conversation_service::default_learner_id();
@@ -203,6 +219,93 @@ pub async fn update(
         .await
         .map_err(|e| AppError::Internal(e.to_string()))?;
     Ok(Json(conv_json_tags(&updated, &tags)))
+}
+
+#[derive(Deserialize)]
+pub struct ArchiveRequest {
+    pub arg: ArchiveArg,
+}
+
+#[derive(Deserialize)]
+pub struct ArchiveArg {
+    #[serde(rename = "conversationId")]
+    pub conversation_id: String,
+    #[serde(rename = "isArchived")]
+    pub is_archived: bool,
+}
+
+/// `POST /api/convos/archive` — archives or unarchives one conversation.
+pub async fn archive(
+    State(state): State<AppState>,
+    Json(body): Json<ArchiveRequest>,
+) -> Result<Json<Value>, AppError> {
+    let pool = pool(&state).await?;
+    let conversation_id = parse_uuid(&body.arg.conversation_id)?;
+    let updated = application::conversation_service::set_archived(
+        pool,
+        conversation_id,
+        body.arg.is_archived,
+    )
+    .await
+    .map_err(|e| AppError::Internal(e.to_string()))?;
+    if !updated {
+        return Err(AppError::NotFound("conversation not found".into()));
+    }
+    let learner_id = application::conversation_service::default_learner_id();
+    let conv = application::conversation_service::get_conversation(pool, conversation_id)
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?
+        .ok_or_else(|| AppError::NotFound("conversation not found".into()))?;
+    let tags = application::tag_service::tags_for_conversation(pool, learner_id, conversation_id)
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    Ok(Json(conv_json_tags(&conv, &tags)))
+}
+
+/// `POST /api/convos/archive/all` — archives every unarchived conversation.
+pub async fn archive_all(State(state): State<AppState>) -> Result<Json<Value>, AppError> {
+    let pool = pool(&state).await?;
+    let count = application::conversation_service::archive_all(pool)
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    Ok(Json(json!({ "archivedCount": count })))
+}
+
+#[derive(Deserialize)]
+pub struct PinRequest {
+    pub arg: PinArg,
+}
+
+#[derive(Deserialize)]
+pub struct PinArg {
+    #[serde(rename = "conversationId")]
+    pub conversation_id: String,
+    pub pinned: bool,
+}
+
+/// `POST /api/convos/pin` — pins or unpins one conversation.
+pub async fn pin(
+    State(state): State<AppState>,
+    Json(body): Json<PinRequest>,
+) -> Result<Json<Value>, AppError> {
+    let pool = pool(&state).await?;
+    let conversation_id = parse_uuid(&body.arg.conversation_id)?;
+    let updated =
+        application::conversation_service::set_pinned(pool, conversation_id, body.arg.pinned)
+            .await
+            .map_err(|e| AppError::Internal(e.to_string()))?;
+    if !updated {
+        return Err(AppError::NotFound("conversation not found".into()));
+    }
+    let learner_id = application::conversation_service::default_learner_id();
+    let conv = application::conversation_service::get_conversation(pool, conversation_id)
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?
+        .ok_or_else(|| AppError::NotFound("conversation not found".into()))?;
+    let tags = application::tag_service::tags_for_conversation(pool, learner_id, conversation_id)
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    Ok(Json(conv_json_tags(&conv, &tags)))
 }
 
 #[derive(Deserialize)]

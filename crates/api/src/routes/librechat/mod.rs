@@ -46,6 +46,9 @@ pub fn routes() -> Router<AppState> {
         .route("/api/convos", get(convos::list).delete(convos::delete))
         .route("/api/convos/update", post(convos::update))
         .route("/api/convos/gen_title/:id", get(convos::gen_title))
+        .route("/api/convos/archive", post(convos::archive))
+        .route("/api/convos/archive/all", post(convos::archive_all))
+        .route("/api/convos/pin", post(convos::pin))
         .route("/api/convos/:id", get(convos::get_one))
         // Conversation tags for bookmarks (Phase 5, F19): the static
         // `convo` segment wins over `:tag` so the two cannot collide.
@@ -101,8 +104,8 @@ pub fn conv_json_tags(conv: &domain::Conversation, tags: &[String]) -> serde_jso
         "tags": tags,
         "createdAt": conv.created_at.to_rfc3339(),
         "updatedAt": conv.updated_at.to_rfc3339(),
-        "isArchived": false,
-        "pinned": false,
+        "isArchived": conv.is_archived,
+        "pinned": conv.pinned,
     })
 }
 

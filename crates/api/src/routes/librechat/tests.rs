@@ -1500,9 +1500,8 @@ async fn tags_reject_bad_input_and_missing_rows() {
 }
 
 async fn seed_search_convo(pool: &sqlx::SqlitePool, title: &str, texts: &[&str]) -> uuid::Uuid {
-    let conv = application::conversation_service::create_conversation(pool, Some(title))
-        .await
-        .unwrap();
+    let conv =
+        application::conversation_service::create_conversation(pool, Some(title)).await.unwrap();
     for text in texts {
         application::conversation_service::add_message(
             pool,
@@ -1522,11 +1521,7 @@ async fn message_search_finds_titled_hits_with_pagination() {
     seed_search_convo(&pool, "Prime Talk", &["prime numbers are fun", "nothing relevant"]).await;
     seed_search_convo(&pool, "Other", &["more prime facts here"]).await;
 
-    let response = app
-        .clone()
-        .oneshot(get("/api/messages?search=prime"))
-        .await
-        .unwrap();
+    let response = app.clone().oneshot(get("/api/messages?search=prime")).await.unwrap();
     assert_eq!(response.status(), StatusCode::OK);
     let page = body_json(response).await;
     let hits = page["messages"].as_array().unwrap();
@@ -1539,11 +1534,7 @@ async fn message_search_finds_titled_hits_with_pagination() {
     assert_eq!(page["nextCursor"], serde_json::Value::Null);
 
     // Pagination: one per page chains cursors, last page terminates.
-    let response = app
-        .clone()
-        .oneshot(get("/api/messages?search=prime&pageSize=1"))
-        .await
-        .unwrap();
+    let response = app.clone().oneshot(get("/api/messages?search=prime&pageSize=1")).await.unwrap();
     let first = body_json(response).await;
     assert_eq!(first["messages"].as_array().unwrap().len(), 1);
     let cursor = first["nextCursor"].as_str().unwrap().to_string();
@@ -1554,10 +1545,7 @@ async fn message_search_finds_titled_hits_with_pagination() {
         .unwrap();
     let second = body_json(response).await;
     assert_eq!(second["messages"].as_array().unwrap().len(), 1);
-    assert_ne!(
-        second["messages"][0]["messageId"],
-        first["messages"][0]["messageId"]
-    );
+    assert_ne!(second["messages"][0]["messageId"], first["messages"][0]["messageId"]);
     assert_eq!(second["nextCursor"], serde_json::Value::Null);
 
     // Blank query: empty page, never an error.
@@ -1571,11 +1559,7 @@ async fn message_search_finds_titled_hits_with_pagination() {
     assert_eq!(response.status(), StatusCode::OK);
 
     // No match: empty page.
-    let response = app
-        .clone()
-        .oneshot(get("/api/messages?search=zzz-no-such-word"))
-        .await
-        .unwrap();
+    let response = app.clone().oneshot(get("/api/messages?search=zzz-no-such-word")).await.unwrap();
     assert_eq!(body_json(response).await["messages"].as_array().unwrap().len(), 0);
 }
 
@@ -1585,4 +1569,152 @@ async fn search_enable_advertises_true() {
     let response = app.clone().oneshot(get("/api/search/enable")).await.unwrap();
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(body_json(response).await, serde_json::json!(true));
+}
+
+async fn seed_flag_convo(pool: &sqlx::SqlitePool, title: &str) -> uuid::Uuid {
+    application::conversation_service::create_conversation(pool, Some(title))
+        .await
+        .unwrap()
+        .id
+}
+
+#[tokio::test]
+async fn pin_archive_cycle_with_live_flags_and_filters() {
+    let (app, pool) = setup().await;
+    let a = seed_flag_convo(&pool, "A").await;
+    let b = seed_flag_convo(&pool, "B").await;
+
+    // Pin A.
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            "/api/convos/pin",
+            serde_json::json!({ "arg": { "conversationId": a, "pinned": true } }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await["pinned"], true);
+
+    // Pinned filter serves exactly A.
+    let response = app.clone().oneshot(get("/api/convos?pinned=true")).await.unwrap();
+    let pinned = body_json(response).await;
+    let ids: Vec<String> = pinned["conversations"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["conversationId"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(ids, vec![a.to_string()]);
+
+    // Unfiltered list carries real flags on both rows.
+    let response = app.clone().oneshot(get("/api/convos")).await.unwrap();
+    let all = body_json(response).await;
+    let flags: Vec<(bool, bool)> = all["conversations"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| (c["pinned"].as_bool().unwrap(), c["isArchived"].as_bool().unwrap()))
+        .collect();
+    assert!(flags.contains(&(true, false)));
+    assert!(flags.contains(&(false, false)));
+
+    // Archive B; archived filter serves exactly B.
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            "/api/convos/archive",
+            serde_json::json!({ "arg": { "conversationId": b, "isArchived": true } }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await["isArchived"], true);
+    let response = app
+        .clone()
+        .oneshot(get("/api/convos?isArchived=true"))
+        .await
+        .unwrap();
+    let archived = body_json(response).await;
+    assert_eq!(archived["conversations"].as_array().unwrap().len(), 1);
+
+    // Unarchive + unpin restore the resto.
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            "/api/convos/archive",
+            serde_json::json!({ "arg": { "conversationId": b, "isArchived": false } }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(body_json(response).await["isArchived"], false);
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            "/api/convos/pin",
+            serde_json::json!({ "arg": { "conversationId": a, "pinned": false } }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(body_json(response).await["pinned"], false);
+}
+
+#[tokio::test]
+async fn archive_all_counts_only_newly_archived() {
+    let (app, pool) = setup().await;
+    let a = seed_flag_convo(&pool, "A").await;
+    seed_flag_convo(&pool, "B").await;
+    application::conversation_service::set_archived(&pool, a, true)
+        .await
+        .unwrap();
+
+    let response = app
+        .clone()
+        .oneshot(json_req("POST", "/api/convos/archive/all", serde_json::json!({})))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await["archivedCount"], 1);
+
+    // Second run archives nothing.
+    let response = app
+        .clone()
+        .oneshot(json_req("POST", "/api/convos/archive/all", serde_json::json!({})))
+        .await
+        .unwrap();
+    assert_eq!(body_json(response).await["archivedCount"], 0);
+}
+
+#[tokio::test]
+async fn pin_archive_reject_unknown_conversations() {
+    let (app, _pool) = setup().await;
+    let missing = uuid::Uuid::new_v4();
+    for (uri, body) in [
+        (
+            "/api/convos/pin",
+            serde_json::json!({ "arg": { "conversationId": missing, "pinned": true } }),
+        ),
+        (
+            "/api/convos/archive",
+            serde_json::json!({ "arg": { "conversationId": missing, "isArchived": true } }),
+        ),
+    ] {
+        let response = app.clone().oneshot(json_req("POST", uri, body)).await.unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+    // Malformed ids are validation errors, not 404s.
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            "/api/convos/pin",
+            serde_json::json!({ "arg": { "conversationId": "nope", "pinned": true } }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }

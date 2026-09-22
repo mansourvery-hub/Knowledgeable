@@ -52,6 +52,8 @@ pub async fn create_conversation(
         id,
         learner_id,
         title: title.map(|s| s.to_string()),
+        is_archived: false,
+        pinned: false,
         created_at: now,
         updated_at: now,
     })
@@ -61,20 +63,48 @@ pub async fn list_conversations(
     pool: &SqlitePool,
     learner_id: Uuid,
 ) -> Result<Vec<Conversation>, sqlx::Error> {
+    list_conversations_filtered(pool, learner_id, None, None).await
+}
+
+/// Conversation list with optional archived/pinned filters (Phase 5
+/// pin/archive). `None` means unfiltered; the sidebar's archive view and
+/// pinned-section drain pass `Some`.
+pub async fn list_conversations_filtered(
+    pool: &SqlitePool,
+    learner_id: Uuid,
+    archived: Option<bool>,
+    pinned: Option<bool>,
+) -> Result<Vec<Conversation>, sqlx::Error> {
     let learner_s = learner_id.to_string();
-    let rows = sqlx::query_as::<_, (String, String, Option<String>, String, String)>(
-        "SELECT id, learner_id, title, created_at, updated_at FROM conversations WHERE learner_id = ? ORDER BY updated_at DESC",
-    )
-    .bind(&learner_s)
-    .fetch_all(pool)
-    .await?;
+    let mut sql = "SELECT id, learner_id, title, is_archived, pinned, created_at, updated_at \
+                   FROM conversations WHERE learner_id = ?"
+        .to_string();
+    if archived.is_some() {
+        sql.push_str(" AND is_archived = ?");
+    }
+    if pinned.is_some() {
+        sql.push_str(" AND pinned = ?");
+    }
+    sql.push_str(" ORDER BY updated_at DESC");
+    let mut q =
+        sqlx::query_as::<_, (String, String, Option<String>, i64, i64, String, String)>(&sql);
+    q = q.bind(&learner_s);
+    if let Some(archived) = archived {
+        q = q.bind(if archived { 1 } else { 0 });
+    }
+    if let Some(pinned) = pinned {
+        q = q.bind(if pinned { 1 } else { 0 });
+    }
+    let rows = q.fetch_all(pool).await?;
 
     Ok(rows
         .into_iter()
-        .map(|(id, learner_id, title, created_at, updated_at)| Conversation {
+        .map(|(id, learner_id, title, is_archived, pinned, created_at, updated_at)| Conversation {
             id: id.parse().unwrap(),
             learner_id: learner_id.parse().unwrap(),
             title,
+            is_archived: is_archived != 0,
+            pinned: pinned != 0,
             created_at: parse_dt(&created_at),
             updated_at: parse_dt(&updated_at),
         })
@@ -88,20 +118,24 @@ pub async fn get_conversation(
 ) -> Result<Option<Conversation>, sqlx::Error> {
     let learner_s = learner_id.to_string();
     let id_s = conversation_id.to_string();
-    let row = sqlx::query_as::<_, (String, String, Option<String>, String, String)>(
-        "SELECT id, learner_id, title, created_at, updated_at FROM conversations WHERE id = ? AND learner_id = ?",
+    let row = sqlx::query_as::<_, (String, String, Option<String>, i64, i64, String, String)>(
+        "SELECT id, learner_id, title, is_archived, pinned, created_at, updated_at FROM conversations WHERE id = ? AND learner_id = ?",
     )
     .bind(&id_s)
     .bind(&learner_s)
     .fetch_optional(pool)
     .await?;
 
-    Ok(row.map(|(id, learner_id, title, created_at, updated_at)| Conversation {
-        id: id.parse().unwrap(),
-        learner_id: learner_id.parse().unwrap(),
-        title,
-        created_at: parse_dt(&created_at),
-        updated_at: parse_dt(&updated_at),
+    Ok(row.map(|(id, learner_id, title, is_archived, pinned, created_at, updated_at)| {
+        Conversation {
+            id: id.parse().unwrap(),
+            learner_id: learner_id.parse().unwrap(),
+            title,
+            is_archived: is_archived != 0,
+            pinned: pinned != 0,
+            created_at: parse_dt(&created_at),
+            updated_at: parse_dt(&updated_at),
+        }
     }))
 }
 
@@ -250,6 +284,62 @@ pub async fn update_conversation_title(
         .execute(pool)
         .await?;
     Ok(())
+}
+
+/// Sets the archived flag (Phase 5 pin/archive). Returns `false` when the
+/// conversation does not belong to the learner.
+pub async fn set_archived(
+    pool: &SqlitePool,
+    learner_id: Uuid,
+    conversation_id: Uuid,
+    archived: bool,
+) -> Result<bool, sqlx::Error> {
+    let now = Utc::now().to_rfc3339();
+    let result = sqlx::query(
+        "UPDATE conversations SET is_archived = ?, updated_at = ? WHERE id = ? AND learner_id = ?",
+    )
+    .bind(if archived { 1 } else { 0 })
+    .bind(&now)
+    .bind(conversation_id.to_string())
+    .bind(learner_id.to_string())
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected() > 0)
+}
+
+/// Sets the pinned flag (Phase 5 pin/archive). Returns `false` when the
+/// conversation does not belong to the learner.
+pub async fn set_pinned(
+    pool: &SqlitePool,
+    learner_id: Uuid,
+    conversation_id: Uuid,
+    pinned: bool,
+) -> Result<bool, sqlx::Error> {
+    let now = Utc::now().to_rfc3339();
+    let result = sqlx::query(
+        "UPDATE conversations SET pinned = ?, updated_at = ? WHERE id = ? AND learner_id = ?",
+    )
+    .bind(if pinned { 1 } else { 0 })
+    .bind(&now)
+    .bind(conversation_id.to_string())
+    .bind(learner_id.to_string())
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected() > 0)
+}
+
+/// Archives every unarchived conversation. Returns the archived count —
+/// already-archived rows are excluded so the count stays honest.
+pub async fn archive_all(pool: &SqlitePool, learner_id: Uuid) -> Result<i64, sqlx::Error> {
+    let now = Utc::now().to_rfc3339();
+    let result = sqlx::query(
+        "UPDATE conversations SET is_archived = 1, updated_at = ? WHERE learner_id = ? AND is_archived = 0",
+    )
+    .bind(&now)
+    .bind(learner_id.to_string())
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected() as i64)
 }
 
 /// Deletes a conversation. Messages cascade via the schema's foreign key.

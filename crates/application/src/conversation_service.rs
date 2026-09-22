@@ -68,6 +68,47 @@ pub async fn delete_conversation(
     infrastructure::conversation_repo::delete_conversation(pool, conversation_id).await
 }
 
+/// Lists conversations with optional archived/pinned filters (Phase 5
+/// pin/archive): the sidebar archive view and pinned-section drain.
+pub async fn list_conversations_filtered(
+    pool: &SqlitePool,
+    archived: Option<bool>,
+    pinned: Option<bool>,
+) -> Result<Vec<Conversation>, sqlx::Error> {
+    let learner_id = default_learner_id();
+    infrastructure::conversation_repo::list_conversations_filtered(
+        pool, learner_id, archived, pinned,
+    )
+    .await
+}
+
+/// Sets the archived flag. Returns `false` for unknown conversations.
+pub async fn set_archived(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+    archived: bool,
+) -> Result<bool, sqlx::Error> {
+    let learner_id = default_learner_id();
+    infrastructure::conversation_repo::set_archived(pool, learner_id, conversation_id, archived)
+        .await
+}
+
+/// Sets the pinned flag. Returns `false` for unknown conversations.
+pub async fn set_pinned(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+    pinned: bool,
+) -> Result<bool, sqlx::Error> {
+    let learner_id = default_learner_id();
+    infrastructure::conversation_repo::set_pinned(pool, learner_id, conversation_id, pinned).await
+}
+
+/// Archives every unarchived conversation; returns the archived count.
+pub async fn archive_all(pool: &SqlitePool) -> Result<i64, sqlx::Error> {
+    let learner_id = default_learner_id();
+    infrastructure::conversation_repo::archive_all(pool, learner_id).await
+}
+
 /// F20: synthesized conversation titles.
 ///
 /// Display cap mirrors the API's `derive_title` truncation so a synthesized

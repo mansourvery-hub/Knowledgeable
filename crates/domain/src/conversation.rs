@@ -37,6 +37,8 @@ pub struct Conversation {
     pub id: Uuid,
     pub learner_id: Uuid,
     pub title: Option<String>,
+    pub is_archived: bool,
+    pub pinned: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
