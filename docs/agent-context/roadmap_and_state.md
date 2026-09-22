@@ -1135,3 +1135,17 @@ Product renames below deliberately reverse the UI-redesign copy deck
   uncaught. Out of scope: custom pin drag-order (`pinned-order` settings
   store), fork/branch, share. User DB untouched (scratch destroyed).
   CLOSED.
+
+## 11. Post-MVP projects, continued (2026-09-22)
+
+- [x] F26 Duplicate conversation — row menu offered Duplicate against a
+  missing route (same dead-end family as F19). DONE: transactional
+  `POST /api/convos/duplicate` (fresh ids, `title + " (copy)"`, messages
+  with linear parent chain, flags + tag membership carried, source
+  untouched; 404/400 envelopes). Locked by a router test (shape, chain,
+  flags/tags, 404/400); 137/137 workspace green. Browser proof
+  `/tmp/cdp-dup.js` (uncommitted) 4/4 — menu Duplicate opens the copy
+  with its messages, sidebar lists both after reload, zero uncaught.
+  Proof note: desktop row-menu trigger is `aria "Conversation Menu
+  Options"` (the `convo-options-trigger` testid is the small-screen
+  fallback only). User DB untouched (scratch destroyed). CLOSED.
