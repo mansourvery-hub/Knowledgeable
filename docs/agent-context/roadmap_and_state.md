@@ -753,10 +753,22 @@ Product renames below deliberately reverse the UI-redesign copy deck
   Number, drill renders 3 canvas nodes ("3 concepts · 2 links"), zero
   uncaught exceptions. User DB untouched (read-only GETs; no test
   conversations created); servers stopped after the pass. CLOSED.
-- [ ] F10 Notebook rename to Wiki — rename "Notebook" to "Wiki" everywhere
+- [x] F10 Notebook rename to Wiki — rename "Notebook" to "Wiki" everywhere
   user-facing (panel title, rail entry, reader labels, empty/error copy).
   Reverses the redesign naming; keep "notebook" only as a code identifier
   if churn demands it.
+  DONE 2026-09-22 (rail `com_ui_personal_wiki`, browser title + aria,
+  browser error copy, drawer dialog aria-label; F9 follow-up in the same
+  brick: truncated-note "Use the map…" → "Use the concept map…"; 19 Jest
+  green across branding + WikiBrowser + WikiDrawer; tsc zero in touched
+  files). "Notes" copy (search placeholder, empty states, drawer
+  not-ready) deliberately left for F15, which owns the Open-notes button
+  + not-ready gating. Browser pass DONE 2026-09-22 (CDP vs backend :3000
+  + Vite :3090, `/tmp/cdp-f10.js` uncommitted): 9/9 — rail "Wiki" with
+  zero bare-"Notebook" entries, panel title + aria "Wiki", 4 seeded rows,
+  first row opens the drawer labelled "Wiki page: Understanding
+  Divisibility", zero uncaught exceptions. User DB untouched (read-only
+  GETs); servers stopped after the pass. CLOSED.
 - [ ] F11 Wiki generation voice: drop the rigid template — remove the
   forced Key Facts/definition-style one-size-fits-all structure from the
   generation prompt and give the LLM more freedom in shaping each page.

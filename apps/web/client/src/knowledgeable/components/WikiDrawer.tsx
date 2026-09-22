@@ -154,7 +154,7 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
     <aside
       className="k-reader"
       role="dialog"
-      aria-label={`Notebook page: ${page?.title ?? 'Notebook'}`}
+      aria-label={`Wiki page: ${page?.title ?? 'Wiki'}`}
       data-testid="wiki-drawer"
     >
       <button

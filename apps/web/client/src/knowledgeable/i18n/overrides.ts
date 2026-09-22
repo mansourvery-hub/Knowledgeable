@@ -10,6 +10,6 @@
  */
 export const knowledgeableOverrides: Record<string, string> = {
   com_ui_knowledge_graph: 'Concept Map',
-  com_ui_personal_wiki: 'Notebook',
+  com_ui_personal_wiki: 'Wiki',
   com_ui_composer_placeholder: "Ask about something you're learning",
 };

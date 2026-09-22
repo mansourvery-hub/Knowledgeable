@@ -39,10 +39,10 @@ describe('WikiBrowser', () => {
     closeWiki();
   });
 
-  it('renders the Notebook title with search and skeleton rows while loading', () => {
+  it('renders the Wiki title with search and skeleton rows while loading', () => {
     stubFetch(() => ({ status: 200, payload: listPayload() }));
     render(<WikiBrowser />);
-    expect(screen.getByText('Notebook')).toBeInTheDocument();
+    expect(screen.getByText('Wiki')).toBeInTheDocument();
     expect(screen.getByTestId('wiki-search-input')).toHaveAttribute(
       'placeholder',
       'Search your notes',
@@ -118,7 +118,7 @@ describe('WikiBrowser', () => {
     stubFetch(() => ({ status: 503, payload: { message: 'down' } }));
     render(<WikiBrowser />);
     expect(await screen.findByTestId('wiki-error')).toHaveTextContent(
-      "Your notebook isn't available right now.",
+      "Your wiki isn't available right now.",
     );
 
     (global.fetch as jest.Mock).mockReset();
@@ -134,7 +134,7 @@ describe('WikiBrowser', () => {
 
     await screen.findAllByTestId('wiki-row');
     expect(screen.getByTestId('wiki-truncated-note')).toHaveTextContent(
-      'Showing the 2 weakest. Use the map to find others.',
+      'Showing the 2 weakest. Use the concept map to find others.',
     );
   });
 });

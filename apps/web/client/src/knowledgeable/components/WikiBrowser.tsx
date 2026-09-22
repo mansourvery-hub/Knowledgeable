@@ -14,7 +14,7 @@ import ErrorState from './ui/ErrorState';
 /** Copy deck (SPEC 9): learner-facing notebook errors. */
 function toDisplayError(err: unknown): string {
   if (err instanceof WikiUnavailableError) {
-    return "Your notebook isn't available right now. Try again in a moment.";
+    return "Your wiki isn't available right now. Try again in a moment.";
   }
   if (err instanceof WikiValidationError) {
     return err.message;
@@ -81,8 +81,8 @@ export default function WikiBrowser() {
     items == null ? [] : query ? items.filter((item) => item.name.toLowerCase().includes(query)) : items;
 
   return (
-    <section className="k-panel" data-testid="wiki-browser" aria-label="Notebook">
-      <h2 className="k-panel__title">Notebook</h2>
+    <section className="k-panel" data-testid="wiki-browser" aria-label="Wiki">
+      <h2 className="k-panel__title">Wiki</h2>
       <SearchField
         value={filter}
         onChange={setFilter}
@@ -140,7 +140,7 @@ export default function WikiBrowser() {
 
       {!loading && !error && truncated && (
         <p data-testid="wiki-truncated-note">
-          Showing the {items?.length ?? 0} weakest. Use the map to find others.
+          Showing the {items?.length ?? 0} weakest. Use the concept map to find others.
         </p>
       )}
     </section>

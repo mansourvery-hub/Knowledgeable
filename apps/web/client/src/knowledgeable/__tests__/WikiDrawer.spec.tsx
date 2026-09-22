@@ -92,7 +92,7 @@ describe('WikiDrawer', () => {
     });
     expect(screen.getByTestId('wiki-drawer')).toHaveAttribute(
       'aria-label',
-      'Notebook page: Prime Number',
+      'Wiki page: Prime Number',
     );
     expect(screen.getByTestId('wiki-confidence')).toHaveTextContent('Solid, 98%');
     expect(screen.getByTestId('wiki-summary')).toHaveTextContent('exactly two factors');
