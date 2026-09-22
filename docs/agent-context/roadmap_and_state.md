@@ -786,6 +786,15 @@ Product renames below deliberately reverse the UI-redesign copy deck
   (template phrases banned, voice phrases required); `cargo test -p
   application` 54/54 green, `cargo fmt` clean. No frontend changes.
   Cached pages keep old voice until staleness regenerates them. CLOSED.
+  LIVE PROOF 2026-09-22 (scratch backup of the user DB, rebuilt binary —
+  first attempt ran stale and re-proved only the old template): Mersenne
+  Prime + Even Numbers regenerated v1→v2 against live Gemini with the new
+  prompt (binary strings confirm "shaped to fit" in, "one worked example"
+  out). Voice holds on both (third-person, no patter, no questions);
+  Even Numbers adds an unprompted "Context" section outside the old mold
+  while Mersenne stays classical — freedom granted, model uses judgment.
+  Envelope, versioning, and staleness lifecycle all correct. User DB
+  untouched (reads only; scratch destroyed).
 - [x] F12 Projects misnamed — "Projects" is the wrong product word
   (candidate: "Folders"). DECISION NEEDED from the user, then rename the
   surface. Upstream feature, rename only.
