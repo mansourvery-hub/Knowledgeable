@@ -59,6 +59,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/tags/:tag", put(tags::update).delete(tags::delete))
         // Messages
         .route("/api/messages/:conversation_id", get(convos::list_messages))
+        .route("/api/messages/:conversation_id/:message_id", get(convos::get_message))
         // Global message search for the `/search` page (Phase 5): exact
         // path wins over `:conversation_id`, so the two cannot collide.
         .route("/api/messages", get(convos::search_messages))

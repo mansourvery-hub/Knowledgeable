@@ -128,6 +128,23 @@ pub async fn search_messages(
     Ok(Json(json!({ "messages": messages, "nextCursor": next_cursor })))
 }
 
+/// `GET /api/messages/:conversation_id/:message_id` — single message fetch
+/// (Phase 5 share flow: target resolution). Shape matches the client's
+/// `getMessageById` (array with the one message).
+pub async fn get_message(
+    State(state): State<AppState>,
+    Path((conversation_id, message_id)): Path<(String, String)>,
+) -> Result<Json<Value>, AppError> {
+    let pool = pool(&state).await?;
+    let conversation_id = parse_uuid(&conversation_id)?;
+    let message_id = parse_uuid(&message_id)?;
+    let message = infrastructure::conversation_repo::get_message(pool, conversation_id, message_id)
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?
+        .ok_or_else(|| AppError::NotFound("message not found".into()))?;
+    Ok(Json(json!([msg_json(&message, NO_PARENT, None)])))
+}
+
 /// `GET /api/convos/:id`
 pub async fn get_one(
     State(state): State<AppState>,

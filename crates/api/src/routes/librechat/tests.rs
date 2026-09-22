@@ -1803,14 +1803,9 @@ async fn seed_share_convo(pool: &sqlx::SqlitePool) -> uuid::Uuid {
         .await
         .unwrap();
     for (i, text) in ["ask one", "answer one", "ask two"].iter().enumerate() {
-        let role = if i % 2 == 0 {
-            domain::MessageRole::User
-        } else {
-            domain::MessageRole::Assistant
-        };
-        application::conversation_service::add_message(pool, conv.id, role, text)
-            .await
-            .unwrap();
+        let role =
+            if i % 2 == 0 { domain::MessageRole::User } else { domain::MessageRole::Assistant };
+        application::conversation_service::add_message(pool, conv.id, role, text).await.unwrap();
     }
     conv.id
 }
@@ -1823,11 +1818,7 @@ async fn share_cycle_with_public_read_fork_and_revoke() {
     // Create.
     let response = app
         .clone()
-        .oneshot(json_req(
-            "POST",
-            &format!("/api/share/{id}"),
-            serde_json::json!({}),
-        ))
+        .oneshot(json_req("POST", &format!("/api/share/{id}"), serde_json::json!({})))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
@@ -1837,21 +1828,13 @@ async fn share_cycle_with_public_read_fork_and_revoke() {
     assert_eq!(created["conversationId"], id.to_string());
 
     // Owner lookup finds it.
-    let response = app
-        .clone()
-        .oneshot(get(&format!("/api/share/link/{id}")))
-        .await
-        .unwrap();
+    let response = app.clone().oneshot(get(&format!("/api/share/link/{id}"))).await.unwrap();
     let lookup = body_json(response).await;
     assert_eq!(lookup["shareId"], share_id);
     assert_eq!(lookup["success"], true);
 
     // Public read serves the messages with the real title.
-    let response = app
-        .clone()
-        .oneshot(get(&format!("/api/share/{share_id}")))
-        .await
-        .unwrap();
+    let response = app.clone().oneshot(get(&format!("/api/share/{share_id}"))).await.unwrap();
     assert_eq!(response.status(), StatusCode::OK);
     let shared = body_json(response).await;
     assert_eq!(shared["title"], "Shared Talk");
@@ -1860,11 +1843,8 @@ async fn share_cycle_with_public_read_fork_and_revoke() {
     assert_eq!(messages[0]["text"], "ask one");
 
     // Public render config is title-only.
-    let response = app
-        .clone()
-        .oneshot(get(&format!("/api/share/{share_id}/config")))
-        .await
-        .unwrap();
+    let response =
+        app.clone().oneshot(get(&format!("/api/share/{share_id}/config"))).await.unwrap();
     assert_eq!(body_json(response).await["appTitle"], "Knowledgeable");
 
     // Fork copies into the viewer's history.
@@ -1880,10 +1860,7 @@ async fn share_cycle_with_public_read_fork_and_revoke() {
     assert_eq!(response.status(), StatusCode::OK);
     let forked = body_json(response).await;
     assert_eq!(forked["messages"].as_array().unwrap().len(), 2);
-    assert_ne!(
-        forked["conversation"]["conversationId"].as_str().unwrap(),
-        id.to_string()
-    );
+    assert_ne!(forked["conversation"]["conversationId"].as_str().unwrap(), id.to_string());
 
     // Revoke: public read, config, and fork all 404 afterwards.
     let response = app
@@ -1905,10 +1882,7 @@ async fn share_cycle_with_public_read_fork_and_revoke() {
     ] {
         let builder = Request::builder().method(method).uri(&uri);
         let request = if method == "POST" {
-            builder
-                .header("content-type", "application/json")
-                .body(Body::from("{}"))
-                .unwrap()
+            builder.header("content-type", "application/json").body(Body::from("{}")).unwrap()
         } else {
             builder.body(Body::empty()).unwrap()
         };
@@ -1916,11 +1890,7 @@ async fn share_cycle_with_public_read_fork_and_revoke() {
         assert_eq!(response.status(), StatusCode::NOT_FOUND, "{method} {uri}");
     }
     // Owner lookup reports no link.
-    let response = app
-        .clone()
-        .oneshot(get(&format!("/api/share/link/{id}")))
-        .await
-        .unwrap();
+    let response = app.clone().oneshot(get(&format!("/api/share/link/{id}"))).await.unwrap();
     let lookup = body_json(response).await;
     assert_eq!(lookup["shareId"], serde_json::Value::Null);
 }
@@ -1932,27 +1902,16 @@ async fn share_rejects_bad_ids_and_missing_rows() {
 
     let response = app
         .clone()
-        .oneshot(json_req(
-            "POST",
-            &format!("/api/share/{missing}"),
-            serde_json::json!({}),
-        ))
+        .oneshot(json_req("POST", &format!("/api/share/{missing}"), serde_json::json!({})))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
-    let response = app
-        .clone()
-        .oneshot(get(&format!("/api/share/{missing}")))
-        .await
-        .unwrap();
+    let response = app.clone().oneshot(get(&format!("/api/share/{missing}"))).await.unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     let id = seed_share_convo(&pool).await;
-    let link = application::share_service::create_link(&pool, id, None)
-        .await
-        .unwrap()
-        .unwrap();
+    let link = application::share_service::create_link(&pool, id, None).await.unwrap().unwrap();
     let share_id = link.share_id;
     let response = app
         .clone()
@@ -1973,4 +1932,24 @@ async fn share_rejects_bad_ids_and_missing_rows() {
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn message_by_id_serves_single_message_array() {
+    let (app, pool) = setup().await;
+    let id = seed_share_convo(&pool).await;
+    let messages = application::conversation_service::list_messages(&pool, id)
+        .await
+        .unwrap();
+    let first = &messages[0];
+    let uri = format!("/api/messages/{id}/{}", first.id);
+    let response = app.clone().oneshot(get(&uri)).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = body_json(response).await;
+    assert_eq!(body.as_array().unwrap().len(), 1);
+    assert_eq!(body[0]["messageId"], first.id.to_string());
+
+    let uri = format!("/api/messages/{id}/{}", uuid::Uuid::new_v4());
+    let response = app.clone().oneshot(get(&uri)).await.unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }

@@ -15,18 +15,12 @@ mod tests {
     }
 
     async fn convo(pool: &SqlitePool, title: &str, texts: &[&str]) -> Uuid {
-        let conv = crate::conversation_service::create_conversation(pool, Some(title))
-            .await
-            .unwrap();
+        let conv =
+            crate::conversation_service::create_conversation(pool, Some(title)).await.unwrap();
         for (i, text) in texts.iter().enumerate() {
-            let role = if i % 2 == 0 {
-                domain::MessageRole::User
-            } else {
-                domain::MessageRole::Assistant
-            };
-            crate::conversation_service::add_message(pool, conv.id, role, text)
-                .await
-                .unwrap();
+            let role =
+                if i % 2 == 0 { domain::MessageRole::User } else { domain::MessageRole::Assistant };
+            crate::conversation_service::add_message(pool, conv.id, role, text).await.unwrap();
         }
         conv.id
     }
@@ -60,12 +54,7 @@ mod tests {
         assert!(share_service::get_link(&pool, link.share_id).await.unwrap().is_none());
 
         // Unknown conversation yields no link.
-        assert!(
-            share_service::create_link(&pool, Uuid::new_v4(), None)
-                .await
-                .unwrap()
-                .is_none()
-        );
+        assert!(share_service::create_link(&pool, Uuid::new_v4(), None).await.unwrap().is_none());
     }
 
     #[tokio::test]
@@ -75,19 +64,14 @@ mod tests {
         let link = share_service::create_link(&pool, id, None).await.unwrap().unwrap();
 
         // Index 1 → first two messages.
-        let (copy, messages) = share_service::fork_link(&pool, &link, Some(1))
-            .await
-            .unwrap()
-            .unwrap();
+        let (copy, messages) =
+            share_service::fork_link(&pool, &link, Some(1)).await.unwrap().unwrap();
         assert_ne!(copy.id, id);
         assert_eq!(messages.len(), 2);
         assert_eq!(messages[0].content, "q one");
 
         // No index → everything.
-        let (_, all) = share_service::fork_link(&pool, &link, None)
-            .await
-            .unwrap()
-            .unwrap();
+        let (_, all) = share_service::fork_link(&pool, &link, None).await.unwrap().unwrap();
         assert_eq!(all.len(), 4);
 
         // Gone source → None (revoke the link's conversation by deleting it).
