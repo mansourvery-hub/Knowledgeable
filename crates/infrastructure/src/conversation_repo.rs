@@ -67,8 +67,10 @@ pub async fn list_conversations(
 }
 
 /// Conversation list with optional archived/pinned filters (Phase 5
-/// pin/archive). `None` means unfiltered; the sidebar's archive view and
-/// pinned-section drain pass `Some`.
+/// pin/archive). Absent `archived` reads as unarchived-only — the client
+/// omits the parameter (rather than sending false) for the working
+/// surface, and the archive view passes explicit `true`. Absent `pinned`
+/// is unfiltered.
 pub async fn list_conversations_filtered(
     pool: &SqlitePool,
     learner_id: Uuid,
@@ -77,11 +79,8 @@ pub async fn list_conversations_filtered(
 ) -> Result<Vec<Conversation>, sqlx::Error> {
     let learner_s = learner_id.to_string();
     let mut sql = "SELECT id, learner_id, title, is_archived, pinned, created_at, updated_at \
-                   FROM conversations WHERE learner_id = ?"
+                   FROM conversations WHERE learner_id = ? AND is_archived = ?"
         .to_string();
-    if archived.is_some() {
-        sql.push_str(" AND is_archived = ?");
-    }
     if pinned.is_some() {
         sql.push_str(" AND pinned = ?");
     }
@@ -89,9 +88,7 @@ pub async fn list_conversations_filtered(
     let mut q =
         sqlx::query_as::<_, (String, String, Option<String>, i64, i64, String, String)>(&sql);
     q = q.bind(&learner_s);
-    if let Some(archived) = archived {
-        q = q.bind(if archived { 1 } else { 0 });
-    }
+    q = q.bind(if archived.unwrap_or(false) { 1 } else { 0 });
     if let Some(pinned) = pinned {
         q = q.bind(if pinned { 1 } else { 0 });
     }
@@ -286,8 +283,11 @@ pub async fn update_conversation_title(
     Ok(())
 }
 
-/// Sets the archived flag (Phase 5 pin/archive). Returns `false` when the
-/// conversation does not belong to the learner.
+/// Sets the archived flag (Phase 5 pin/archive). Archiving also unpins:
+/// archive files the conversation away from the working surface entirely,
+/// so a pinned row never lingers in the Pinned section. Unarchiving does
+/// not restore the pin. Returns `false` when the conversation does not
+/// belong to the learner.
 pub async fn set_archived(
     pool: &SqlitePool,
     learner_id: Uuid,
@@ -296,8 +296,9 @@ pub async fn set_archived(
 ) -> Result<bool, sqlx::Error> {
     let now = Utc::now().to_rfc3339();
     let result = sqlx::query(
-        "UPDATE conversations SET is_archived = ?, updated_at = ? WHERE id = ? AND learner_id = ?",
+        "UPDATE conversations SET is_archived = ?, pinned = CASE WHEN ? = 1 THEN 0 ELSE pinned END, updated_at = ? WHERE id = ? AND learner_id = ?",
     )
+    .bind(if archived { 1 } else { 0 })
     .bind(if archived { 1 } else { 0 })
     .bind(&now)
     .bind(conversation_id.to_string())

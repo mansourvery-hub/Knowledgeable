@@ -1572,10 +1572,7 @@ async fn search_enable_advertises_true() {
 }
 
 async fn seed_flag_convo(pool: &sqlx::SqlitePool, title: &str) -> uuid::Uuid {
-    application::conversation_service::create_conversation(pool, Some(title))
-        .await
-        .unwrap()
-        .id
+    application::conversation_service::create_conversation(pool, Some(title)).await.unwrap().id
 }
 
 #[tokio::test]
@@ -1620,7 +1617,7 @@ async fn pin_archive_cycle_with_live_flags_and_filters() {
     assert!(flags.contains(&(true, false)));
     assert!(flags.contains(&(false, false)));
 
-    // Archive B; archived filter serves exactly B.
+    // Archive B; archiving unpins, so the row leaves Pinned too.
     let response = app
         .clone()
         .oneshot(json_req(
@@ -1631,22 +1628,33 @@ async fn pin_archive_cycle_with_live_flags_and_filters() {
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(body_json(response).await["isArchived"], true);
-    let response = app
-        .clone()
-        .oneshot(get("/api/convos?isArchived=true"))
-        .await
-        .unwrap();
+    let archived = body_json(response).await;
+    assert_eq!(archived["isArchived"], true);
+    assert_eq!(archived["pinned"], false);
+    let response = app.clone().oneshot(get("/api/convos?isArchived=true")).await.unwrap();
     let archived = body_json(response).await;
     assert_eq!(archived["conversations"].as_array().unwrap().len(), 1);
 
+    // Archive A as well: archiving unpins, so its pinned flag clears.
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            "/api/convos/archive",
+            serde_json::json!({ "arg": { "conversationId": a, "isArchived": true } }),
+        ))
+        .await
+        .unwrap();
+    let archived_a = body_json(response).await;
+    assert_eq!(archived_a["isArchived"], true);
+    assert_eq!(archived_a["pinned"], false);
     // Unarchive + unpin restore the resto.
     let response = app
         .clone()
         .oneshot(json_req(
             "POST",
             "/api/convos/archive",
-            serde_json::json!({ "arg": { "conversationId": b, "isArchived": false } }),
+            serde_json::json!({ "arg": { "conversationId": a, "isArchived": false } }),
         ))
         .await
         .unwrap();
@@ -1668,9 +1676,7 @@ async fn archive_all_counts_only_newly_archived() {
     let (app, pool) = setup().await;
     let a = seed_flag_convo(&pool, "A").await;
     seed_flag_convo(&pool, "B").await;
-    application::conversation_service::set_archived(&pool, a, true)
-        .await
-        .unwrap();
+    application::conversation_service::set_archived(&pool, a, true).await.unwrap();
 
     let response = app
         .clone()

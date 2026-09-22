@@ -1117,3 +1117,21 @@ Product renames below deliberately reverse the UI-redesign copy deck
   headless clipboard-permission request wedges CDP (upstream/environment
   quirk, real browsers unaffected, out of scope). User DB untouched
   (scratch destroyed). CLOSED.
+
+## 10. Post-MVP projects, continued (2026-09-22)
+
+- [x] F25 Pin + archive — row menus, Pinned section, archive view/table all
+  mounted against missing routes with hardcoded `false` flags (F14 pattern,
+  one size larger). DONE: migration (`is_archived`, `pinned` columns),
+  repo/service fns, 3 routes (`POST /api/convos/{pin,archive,archive/all}`
+  with `{arg: …}` envelopes + 404s), real flags in `conv_json`, list
+  honors `?isArchived=`/`?pinned=`. Two semantic calls from live proof:
+  archiving unpins (archive files away from the working surface; no
+  lingering Pinned rows), and absent `isArchived` reads as unarchived-only
+  (the client omits rather than sending false). Locked by 3 router tests;
+  136/136 workspace green. Browser proof `/tmp/cdp-pa2.js` (uncommitted)
+  7/7 — pin lands exactly in Pinned, archive clears the whole sidebar
+  with the filter serving it, restore returns it, reload persists, zero
+  uncaught. Out of scope: custom pin drag-order (`pinned-order` settings
+  store), fork/branch, share. User DB untouched (scratch destroyed).
+  CLOSED.
