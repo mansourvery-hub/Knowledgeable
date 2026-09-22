@@ -769,13 +769,23 @@ Product renames below deliberately reverse the UI-redesign copy deck
   first row opens the drawer labelled "Wiki page: Understanding
   Divisibility", zero uncaught exceptions. User DB untouched (read-only
   GETs); servers stopped after the pass. CLOSED.
-- [ ] F11 Wiki generation voice: drop the rigid template — remove the
+- [x] F11 Wiki generation voice: drop the rigid template — remove the
   forced Key Facts/definition-style one-size-fits-all structure from the
   generation prompt and give the LLM more freedom in shaping each page.
   Partly reverses the "Wiki voice DONE" constraints (third-person
   reference voice stays unless the freer prompt regresses it). Backend
   prompt task with a prompt-invariant test update; cached pages refresh
   on staleness as before.
+  DONE 2026-09-22 (`wiki_service.rs` `wiki_prompt` only): the article spec
+  now reads "shaped to fit this concept — definition-first, example-first,
+  comparison, narrative, or a mix" instead of the mandatory "declarative
+  definition, key facts, one worked example". Voice rules untouched
+  (third-person, no tutoring patter, no reader questions, dialogue belongs
+  in chat); JSON envelope, 0.70 trigger, caching, staleness, and 24h
+  refresh unchanged. Locked by the updated prompt-invariant test
+  (template phrases banned, voice phrases required); `cargo test -p
+  application` 54/54 green, `cargo fmt` clean. No frontend changes.
+  Cached pages keep old voice until staleness regenerates them. CLOSED.
 - [ ] F12 Projects misnamed — "Projects" is the wrong product word
   (candidate: "Folders"). DECISION NEEDED from the user, then rename the
   surface. Upstream feature, rename only.

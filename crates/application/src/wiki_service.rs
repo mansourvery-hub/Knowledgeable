@@ -203,8 +203,9 @@ fn wiki_prompt(
          Canonical truth (never contradict): {statement}\n\n\
          Prerequisites they know:\n{prereqs}\n\nRelated concepts: {related_list}\n\n\
          Return JSON with exactly: title (short), summary (one or two sentences), \
-         personalized_content (markdown reference article: third-person declarative definition, \
-         key facts, and where it fits, one worked example; anchor it in the known prerequisites \
+         personalized_content (markdown reference article in the third person, shaped to fit \
+         this concept — choose whatever structure serves the topic best: definition-first, \
+         example-first, comparison, narrative, or a mix; anchor it in the known prerequisites \
          by name). House rules: no second-person tutoring patter (never \"think back\", \
          \"imagine you\", \"as you know\"), no questions to the reader, no check-for-understanding \
          questions — dialogue belongs in chat, this page is the durable record. \
@@ -237,20 +238,28 @@ mod prompt_tests {
     }
 
     /// Wiki pages are durable reference articles, not tutor dialogue: the
-    /// prompt must demand third-person declarative prose and ban Socratic
-    /// patter and reader questions outright.
+    /// prompt must demand third-person prose and ban Socratic patter and
+    /// reader questions outright — while leaving the article's structure
+    /// free (F11: no one-size-fits-all template) so each page fits its
+    /// concept.
     #[test]
     fn wiki_prompt_demands_reference_article_not_dialogue() {
         let prompt = sample_prompt();
         for required in [
             "reference article",
-            "third-person declarative",
+            "third person",
+            "shaped to fit",
             "no questions to the reader",
             "dialogue belongs in chat",
         ] {
             assert!(prompt.contains(required), "prompt missing: {required}");
         }
-        for banned in ["Socratic-leaning", "then one check-for-understanding question"] {
+        for banned in [
+            "Socratic-leaning",
+            "then one check-for-understanding question",
+            "key facts",
+            "worked example",
+        ] {
             assert!(!prompt.contains(banned), "prompt still invites dialogue: {banned}");
         }
     }
