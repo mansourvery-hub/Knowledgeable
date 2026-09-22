@@ -1051,7 +1051,7 @@ Product renames below deliberately reverse the UI-redesign copy deck
   prompts/style per pattern (Socratic pacing, length, examples) with
   prompt-invariant tests + keyed proofs, one pattern at a time. Do NOT
   bundle with other work; do not start without examples.
-- [ ] F23 Dead-endpoint polling noise (`/api/tags`, `/api/search/enable`,
+- [x] F23 Dead-endpoint polling noise (`/api/tags`, `/api/search/enable`,
   `/api/share/link/:id`) — found during the F19 full-path repro via the
   CDP Network domain: all three poll repeatedly for the whole session
   against backends that do not exist (JSON 404s). Same class as F13
@@ -1059,3 +1059,15 @@ Product renames below deliberately reverse the UI-redesign copy deck
   trigger hunt (interval vs focus vs status-poll) + narrow gate, one
   surface per brick with a live Network-domain proof. Not beta-blocking
   (handled 404s, zero uncaught), but it is log/client-traffic noise.
+  INVESTIGATED 2026-09-22, NO CODE CHANGE (honest downgrade). CDP
+  Network-domain watches (`/tmp/cdp-f23*.js`, uncommitted) show NO
+  perpetual polling: idle 60s at `/c/new` → 5 hits (boot + retry storm,
+  then silence); idle 60s with a conversation open → 9 hits (mount +
+  retry storms in the first ~6s, then 54s of silence). All three queries
+  already disable focus/reconnect/mount refetches; the F19-session
+  "repeats" were remount-driven storms across heavy harness
+  navigation/reload (errored queries correctly refetch on mount — they
+  hold no data) plus pre-F13-fix focus storms for tags. Degradation is
+  already graceful (search hook disables on error; share UI config-gated
+  off; tags now served since the bookmarks build). Nothing left to gate.
+  CLOSED as investigated.
