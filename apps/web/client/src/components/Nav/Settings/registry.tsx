@@ -27,6 +27,7 @@ import { toggleControl, ThemeSetting, LangSetting } from './controls';
 import BackupCodesItem from '../SettingsTabs/Account/BackupCodesItem';
 import { EngineSTTSetting, EngineTTSSetting } from './SpeechControls';
 import FontSizeSelector from '../SettingsTabs/Chat/FontSizeSelector';
+import { hasDebugParam } from '~/knowledgeable/debug';
 import ChatTitleInTab from '../SettingsTabs/General/ChatTitleInTab';
 import AdvancedPrompts from '../SettingsTabs/Chat/AdvancedPrompts';
 import DuringRunAction from '../SettingsTabs/Chat/DuringRunAction';
@@ -404,11 +405,14 @@ export const registry: SettingEntry[] = [
     }),
   },
   {
-    // Knowledgeable F7/F8: confidence percentages are a debug aid, off by
-    // default. No `show` gate: the toggle itself is harmless without badges.
+    // Knowledgeable F7/F8/F18: confidence percentages are a debug aid.
+    // The toggle stays fully functional for dev, but the entry lists only
+    // behind `?kdebug` — end users never see a debug switch in Settings.
+    // (Registry `show` gates also hide it from settings search.)
     id: 'showConfidenceDebug',
     tab: CHAT,
     section: 'messages',
+    show: () => hasDebugParam(),
     labelKey: 'com_nav_show_confidence_debug',
     Component: toggleControl({
       stateAtom: store.showConfidenceDebug,

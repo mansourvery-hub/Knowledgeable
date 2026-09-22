@@ -930,6 +930,20 @@ Product renames below deliberately reverse the UI-redesign copy deck
   default, F18f map/wiki percentages verdict (product call open), F18g
   final sweep re-run. Reframe on execution: prefer load-gates over
   deletion everywhere (keep code, skip mounting/importing in prod).
+  EXECUTING 2026-09-22 under the clarified doctrine (debug vital for dev;
+  never displayed to end users; delete nothing): F18b DONE — the
+  `showConfidenceDebug` settings entry lists only behind `?kdebug` (new
+  shared `knowledgeable/debug.ts` helper; registry `show` gate also hides
+  it from settings search; atom + aria wiring untouched). Verified:
+  helper spec 2/2, CDP 6/6 (entry absent by default + search clean,
+  present with `?kdebug`; stale-dialog harness trap documented), tsc zero
+  in touched files. Gate confirmations: QueryDevtoolsGate spec 3/3
+  green (prod defaults closed, adapter sends no enable flag),
+  showThinking default false (policy §9.5 compliant, kept), trace off (no
+  adapter key), k-dev controls already DEV-or-`?kdebug` only. Ship-quiet
+  logging: `.env.example` down to `RUST_LOG=info` (local `.env`
+  untouched). Dead `.k-tip` CSS deliberately LEFT (no-deletion rule).
+  OPEN: F18f map/wiki percentages verdict (product call).
 - [x] F19 Bookmarks not functional — POST-MVP, not beta-blocking. Backend
   contracts (tags/pin/archive/search/share) are acknowledged missing in
   `MVP.md` ("Deliberately Out of MVP") and `integration/librechat.md`
