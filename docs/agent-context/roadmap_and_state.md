@@ -947,6 +947,15 @@ Product renames below deliberately reverse the UI-redesign copy deck
   pin/archive/search/minimal-share siblings per §9.2): tags CRUD routes,
   panel truthfulness, then re-verify this check into a positive proof.
   CLOSED as tracked.
+  FULL-PATH REPRO 2026-09-22 (user re-report "adding bookmarks still
+  broken"): the header menu exposes a "New Bookmark" item, but with no
+  `/api/tags*` behind it nothing can persist — confirmed end to end, no
+  crash, no phantom state, scratch cleaned. Side finding from the same
+  pass (Network domain): `GET /api/tags`, `/api/search/enable`, and
+  `/api/share/link/:id` poll REPEATEDLY against missing backends for the
+  whole session — F13-class noise on three more dead surfaces; filed as
+  F23. Bookmarks remain: implement as a real Phase 5 backend+UI project
+  or keep tracked — user decision open.
 
 ## 7. Beta feedback log, round 3 (manual testing, 2026-09-22)
 
@@ -1010,3 +1019,21 @@ Product renames below deliberately reverse the UI-redesign copy deck
   provider sexual-content filters — educational anatomy already passes at
   defaults, and overriding explicit-content refusal is a safety decision
   (students/minors), not a prompt tweak. CLOSED.
+
+## 8. Beta feedback log, round 4 (manual testing, 2026-09-22)
+
+- [ ] F22 Tutor explanation polish (LONG-TERM track) — explanations work
+  but "still need polishing". No specific defect cited; treat as an
+  ongoing quality bar, not a bug brick. Direction when scheduled:
+  collect concrete before/after examples from real turns, then tune
+  prompts/style per pattern (Socratic pacing, length, examples) with
+  prompt-invariant tests + keyed proofs, one pattern at a time. Do NOT
+  bundle with other work; do not start without examples.
+- [ ] F23 Dead-endpoint polling noise (`/api/tags`, `/api/search/enable`,
+  `/api/share/link/:id`) — found during the F19 full-path repro via the
+  CDP Network domain: all three poll repeatedly for the whole session
+  against backends that do not exist (JSON 404s). Same class as F13
+  (fixed for folders via focus/reconnect gate). Direction: per-surface
+  trigger hunt (interval vs focus vs status-poll) + narrow gate, one
+  surface per brick with a live Network-domain proof. Not beta-blocking
+  (handled 404s, zero uncaught), but it is log/client-traffic noise.
