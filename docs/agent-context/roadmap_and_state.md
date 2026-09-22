@@ -825,10 +825,28 @@ Product renames below deliberately reverse the UI-redesign copy deck
   zero in touched files). Browser proof post-fix (CDP, `/tmp/cdp-f13*.js`
   uncommitted): boot storm 4 hits, then 3 focus events → zero additional
   hits, zero uncaught. User DB untouched; servers stopped. CLOSED.
-- [ ] F14 Project creation fails ("failed to create project") — reproduce
+- [x] F14 Project creation fails ("failed to create project") — reproduce
   and diagnose (suspect: no backend route backing the upstream mutation);
   either implement the contract or remove the affordance. Do not leave a
   dead button.
+  DIAGNOSIS 2026-09-22 (confirmed, not suspected): the only reachable
+  create entry — the sidebar empty-state "New folder" button — flows
+  `ProjectCreateDialog` → `useCreateProjectMutation` → `POST
+  /api/projects` → the adapter's JSON 404 (`api_not_found`; no projects
+  route exists by design) → "Failed to create folder" toast. A full
+  folders backend (tables, CRUD, assignment) is a Phase 5-sized project,
+  out of scope for a bug brick and against the narrow-adapter rule — so
+  the affordance goes. FIX (same brick): the empty state renders static
+  "No folders yet" copy (matching `ProjectChatsInline`'s empty style)
+  instead of the button; `ProjectCreateDialog` stays mounted but
+  unopenable as the Phase 5 seam; `FolderPlus` import dropped. Locked by
+  `ProjectsSectionCreate.spec.tsx` (static copy present, zero create
+  affordance — FAILS pre-fix, green post-fix; tsc zero in touched files).
+  Browser pass DONE 2026-09-22 (CDP vs backend :3000 + Vite :3090,
+  `/tmp/cdp-f14.js` uncommitted): 6/6 — "No folders yet" renders, no "New
+  folder" button anywhere, no create dialog in DOM, zero `POST
+  /api/projects` fired, zero uncaught exceptions. User DB untouched;
+  servers stopped. CLOSED.
 - [ ] F15 "Open notes" becomes "Open Wiki", disabled for unmastered
   concepts — rename the button and gate it on mastery/wiki-readiness
   instead of the current half measure (enabled button leading to a

@@ -10,7 +10,6 @@ import {
   ChevronRight,
   Ellipsis,
   Folder,
-  FolderPlus,
   Folders,
   Pencil,
   Trash2,
@@ -434,16 +433,15 @@ const ProjectsSection = ({ toggleNav, isAuthenticated }: ProjectsSectionProps) =
     }
 
     if (projects.length === 0) {
+      // Knowledgeable (F14): folder creation has no backend contract —
+      // `POST /api/projects` 404s and the mutation can only toast an error.
+      // So the empty state is static copy, never a button into a dead
+      // dialog. `ProjectCreateDialog` below stays mounted (unopenable) as
+      // the Phase 5 seam; revisit when the backend lands.
       return (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => setIsCreateOpen(true)}
-          className="flex h-9 w-full justify-start gap-2 rounded-lg px-2 text-sm font-normal text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
-        >
-          <FolderPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
-          <span className="truncate">{localize('com_ui_new_project')}</span>
-        </Button>
+        <div className="py-1.5 pl-2 text-xs text-text-secondary">
+          {localize('com_ui_no_projects')}
+        </div>
       );
     }
 
