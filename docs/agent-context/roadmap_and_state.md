@@ -950,13 +950,28 @@ Product renames below deliberately reverse the UI-redesign copy deck
 
 ## 7. Beta feedback log, round 3 (manual testing, 2026-09-22)
 
-- [ ] F20 Chat history titles are literal prompts — tabs show the raw first
+- [x] F20 Chat history titles are literal prompts — tabs show the raw first
   message truncated to 48 chars (`derive_title` in
   `crates/api/src/routes/librechat/mod.rs`, used both as the provisional
   title at turn start (`chat.rs`) and by lazy `gen_title` (`convos.rs`)).
   Ask: synthesize each title at creation (what the tab is about), not the
   literal "explain X …". Direction: LLM-written title on first turn with
   truncation fallback for the offline path; never a bare prompt echo.
+  DONE 2026-09-22: new `conversation_service` seam (`title_prompt` +
+  `sanitize_title` + `synthesize_and_store_title` via `generate_structured`
+  {"title"}; ≤6 words, single-line, 48-char cap, truncation kept on any
+  failure or error turn). The route detects first turns by the existing
+  empty-title check (user renames can never match it), threads the turn
+  LLM + effective model name through `TurnContext` (both legacy + v2
+  paths), and spawns synthesis AFTER the `final` frame — zero stream
+  latency. Locked by `title_test.rs` (prompt grounding, sanitize cases,
+  store/fallback/no-call-on-error; application 59 green, api 35 green,
+  fmt clean). LIVE PROOF (scratch DB, rebuilt binary, keyed turn
+  "Explain how sourdough starter works…"): `final` carried the
+  provisional echo, then the stored title became "Explaining Sourdough
+  Starter Science" — synthesis, not echo. No frontend changes (same
+  string field the sidebar always rendered). User DB untouched (scratch
+  destroyed). CLOSED.
 - [x] F21 Tutor refuses unknown concepts — "explain anal" answered "I
   couldn't find a concept by that name in my knowledge base…". Root cause
   in our prompt, not the model: `system_policy.txt` ("Use only the

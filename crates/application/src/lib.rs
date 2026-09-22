@@ -21,6 +21,8 @@ mod observation_test;
 #[cfg(test)]
 mod stream_integrity_test;
 #[cfg(test)]
+mod title_test;
+#[cfg(test)]
 mod tool_calling_test;
 pub mod tutor_service;
 #[cfg(test)]

@@ -212,6 +212,13 @@ struct TurnContext {
     request_parent: String,
     model: Option<String>,
     assistant_id: Uuid,
+    /// F20: the turn's LLM client (for background title synthesis) and the
+    /// effective model name. `synthesize_title` is true only when this turn
+    /// created the conversation (title was empty at turn start), so exactly
+    /// the first turn synthesizes — user renames are never overwritten.
+    llm: std::sync::Arc<dyn llm::LlmClient>,
+    title_model: String,
+    synthesize_title: bool,
 }
 
 /// Drives one tutor turn to completion, pushing every frame through `emit`
@@ -284,7 +291,17 @@ async fn drive_turn(
 /// Emits `concept_annotations` (success + non-empty text only; failures
 /// degrade to no frame) followed by terminal `final`.
 async fn annotate_and_finish(ctx: TurnContext, outcome: TurnOutcome, emit: impl Fn(Value)) {
-    let TurnContext { pool, conversation, user_msg, request_parent, model, assistant_id } = ctx;
+    let TurnContext {
+        pool,
+        conversation,
+        user_msg,
+        request_parent,
+        model,
+        assistant_id,
+        llm,
+        title_model,
+        synthesize_title,
+    } = ctx;
     let conversation_id = conversation.id;
     let TurnOutcome { accumulated, errored, error_text } = outcome;
 
@@ -317,10 +334,10 @@ async fn annotate_and_finish(ctx: TurnContext, outcome: TurnOutcome, emit: impl 
         if accumulated.trim().is_empty() {
             (error_text, true)
         } else {
-            (accumulated, true)
+            (accumulated.clone(), true)
         }
     } else {
-        (accumulated, false)
+        (accumulated.clone(), false)
     };
 
     emit(final_frame(
@@ -334,6 +351,25 @@ async fn annotate_and_finish(ctx: TurnContext, outcome: TurnOutcome, emit: impl 
         error_flag,
         chrono::Utc::now(),
     ));
+
+    // F20: first turn only, after `final` so synthesis never delays the
+    // stream. Failures keep the provisional truncation (logged in service).
+    if !errored && !accumulated.trim().is_empty() && synthesize_title {
+        let pool = pool.clone();
+        let user_text = user_msg.content.clone();
+        let assistant_text = accumulated.clone();
+        tokio::spawn(async move {
+            application::conversation_service::synthesize_and_store_title(
+                &pool,
+                &llm,
+                &title_model,
+                conversation_id,
+                &user_text,
+                &assistant_text,
+            )
+            .await;
+        });
+    }
 }
 
 /// M3 per-turn dispatch: resolve the provider for the requested model.
@@ -343,14 +379,15 @@ fn resolve_turn_llm(
     model: &Option<String>,
     api_key: Option<&str>,
     state: &AppState,
-) -> Result<std::sync::Arc<dyn llm::LlmClient>, AppError> {
+) -> Result<(std::sync::Arc<dyn llm::LlmClient>, String), AppError> {
     let plan = application::llm_dispatch::plan_for(
         model.as_deref(),
         api_key,
         &application::llm_dispatch::ProviderKeys::from_env(),
     )
     .map_err(AppError::Validation)?;
-    Ok(application::llm_dispatch::build_client(&plan, state.llm.clone()))
+    let name = plan.model.clone();
+    Ok((application::llm_dispatch::build_client(&plan, state.llm.clone()), name))
 }
 
 pub async fn handle(
@@ -369,7 +406,8 @@ pub async fn handle(
     // Validate credentials before touching the database: resolving the
     // provider is pure, so a missing key 400s here without persisting an
     // empty conversation shell.
-    let turn_llm = resolve_turn_llm(&payload.model, payload.api_key.as_deref(), &state)?;
+    let (turn_llm, title_model) =
+        resolve_turn_llm(&payload.model, payload.api_key.as_deref(), &state)?;
 
     let conversation = resolve_conversation(&pool, payload.conversation_id.as_deref()).await?;
 
@@ -377,7 +415,10 @@ pub async fn handle(
 
     // Give a brand-new conversation a provisional title immediately so the
     // sidebar and document title are meaningful before `/gen_title` runs.
-    if conversation.title.as_deref().map_or(true, |t| t.trim().is_empty()) {
+    // F20: the empty-title check doubles as the first-turn detector — only
+    // this turn will synthesize a title over the provisional one.
+    let synthesize_title = conversation.title.as_deref().map_or(true, |t| t.trim().is_empty());
+    if synthesize_title {
         let title = derive_title(&text);
         let _ = application::conversation_service::update_conversation_title(
             &pool,
@@ -397,7 +438,7 @@ pub async fn handle(
         pool.clone(),
         conversation.id,
         text,
-        turn_llm,
+        turn_llm.clone(),
         payload.model.clone(),
     )
     .await
@@ -413,6 +454,9 @@ pub async fn handle(
                 request_parent: parent_id,
                 model,
                 assistant_id,
+                llm: turn_llm,
+                title_model,
+                synthesize_title,
             },
             rx,
         )
@@ -430,6 +474,9 @@ pub async fn handle(
                 request_parent: parent_id,
                 model,
                 assistant_id,
+                llm: turn_llm,
+                title_model,
+                synthesize_title,
             },
             rx,
             move |frame| {
