@@ -6,10 +6,13 @@
 //! - `gemini*` → Gemini OpenAI-compatible client (request BYOK key first,
 //!   else `GEMINI_API_KEY`).
 //! - `gpt*` / `o1*` / `o3*` → OpenAI client (BYOK first, else `OPENAI_API_KEY`).
-//! - `ollama*` / `local-ollama` → OpenAI-compatible client against
-//!   `OLLAMA_BASE_URL` (default `http://localhost:11434/v1`, no key needed).
 //! - `local-tutor` → deterministic fake (offline demos and tests).
 //! - anything else (or absent) → the boot default (`default_llm`).
+//!
+//! Removed-for-now (mobile-first, 2026-09-22): the `ollama*` provider
+//! branch (`OLLAMA_*` env, advertised model). The generic
+//! `OpenAiClient::with_base_url` stays — any future local/mobile relay
+//! reuses it. Restoration is one revert.
 //!
 //! Request keys are turn-scoped: never stored, never logged (QUALITY.md
 //! credential rule). A missing key is an explicit error, never a silent
@@ -21,7 +24,6 @@ use std::sync::Arc;
 pub enum LlmProvider {
     Gemini,
     OpenAI,
-    Ollama,
     LocalTutor,
     BootDefault,
 }
@@ -53,8 +55,7 @@ impl ProviderKeys {
 }
 
 /// Models advertised by `GET /api/models`: provider models for configured
-/// keys, the Ollama model when explicitly enabled, always plus the offline
-/// `local-tutor` fallback.
+/// keys, always plus the offline `local-tutor` fallback.
 pub fn advertised_models() -> Vec<String> {
     let keys = ProviderKeys::from_env();
     let mut models = Vec::new();
@@ -72,14 +73,6 @@ pub fn advertised_models() -> Vec<String> {
                 .ok()
                 .filter(|m| !m.trim().is_empty())
                 .unwrap_or_else(|| "gpt-4o-mini".to_string()),
-        );
-    }
-    if std::env::var("OLLAMA_ENABLED").is_ok_and(|v| v.trim() == "true") {
-        models.push(
-            std::env::var("OLLAMA_MODEL")
-                .ok()
-                .filter(|m| !m.trim().is_empty())
-                .unwrap_or_else(|| "ollama-local".to_string()),
         );
     }
     models.push("local-tutor".to_string());
@@ -121,15 +114,13 @@ pub fn plan_for(
         })?;
         return Ok(LlmPlan { provider: LlmProvider::OpenAI, model: name, key: Some(key) });
     }
-    if name.starts_with("ollama") || name == "local-ollama" {
-        return Ok(LlmPlan { provider: LlmProvider::Ollama, model: name, key: None });
-    }
     Ok(LlmPlan { provider: LlmProvider::BootDefault, model: name, key: None })
 }
 
-/// Build the client for a plan. Ollama targets `OLLAMA_BASE_URL` (default
-/// localhost); everything else uses provider defaults. `BootDefault` reuses
-/// the boot-configured client (which honors test injection and boot env).
+/// Build the client for a plan. Provider defaults everywhere; `BootDefault`
+/// reuses the boot-configured client (which honors test injection and boot
+/// env). The generic `OpenAiClient::with_base_url` remains available for a
+/// future local/mobile relay; no provider routes to it today.
 pub fn build_client(
     plan: &LlmPlan,
     boot_default: Arc<dyn llm::LlmClient>,
@@ -140,13 +131,6 @@ pub fn build_client(
         }
         LlmProvider::OpenAI => {
             Arc::new(llm::OpenAiClient::new(plan.key.clone().unwrap_or_default()))
-        }
-        LlmProvider::Ollama => {
-            let base = std::env::var("OLLAMA_BASE_URL")
-                .ok()
-                .filter(|u| !u.trim().is_empty())
-                .unwrap_or_else(|| "http://localhost:11434/v1".to_string());
-            Arc::new(llm::OpenAiClient::with_base_url(String::new(), base))
         }
         LlmProvider::LocalTutor => Arc::new(llm::FakeLlmClient::new("local-tutor")),
         LlmProvider::BootDefault => boot_default,
@@ -188,9 +172,11 @@ mod tests {
     }
 
     #[test]
-    fn ollama_needs_no_key_and_tutor_is_pinned() {
+    fn ollama_names_fall_through_to_boot_default() {
+        // Removed-for-now (mobile-first): no Ollama provider exists, so
+        // these names resolve to the boot default instead of a local client.
         let plan = plan_for(Some("ollama-local"), None, &keys(false, false)).unwrap();
-        assert_eq!(plan.provider, LlmProvider::Ollama);
+        assert_eq!(plan.provider, LlmProvider::BootDefault);
         assert_eq!(plan.key, None);
 
         let plan = plan_for(Some("  LOCAL-TUTOR "), None, &keys(true, true)).unwrap();

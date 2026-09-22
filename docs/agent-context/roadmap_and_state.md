@@ -179,12 +179,13 @@ reconciled count 11 − 1 = 10). M2 browser exit gate fully closed._
 ```text
 [x] User can switch between Gemini, OpenAI, and local Ollama from the UI model picker.
 [x] Providing a personal API key in settings correctly routes requests using that key.
-[ ] Local Ollama instance successfully streams tutor responses without external internet access.
+[-] Local Ollama instance successfully streams tutor responses without external internet access — REMOVED-FOR-NOW 2026-09-22 (mobile-first): the Ollama provider branch, `OLLAMA_*` env, and model advertisement are out; `ollama*` names fall through to the boot default. Generic `with_base_url` client retained for a future local/mobile relay; restoration is one revert.
 ```
 _Model switching and BYOK routing verified at router level (23 api tests);
 no Ollama binary in this environment, so the offline-streaming gate stays
 open. The client settings UI for key entry is likewise open (backend honors
-`apiKey` today)._
+`apiKey` today). (2026-09-22: Ollama removed-for-now per above; the gate is
+moot until/unless the provider returns.)_
 
 _Live failure proof 2026-09-19: keyless `gpt-4o-mini` turn returns an explicit
 400 (`validation_failed`, "set OPENAI_API_KEY or provide apiKey") — never a
@@ -357,7 +358,7 @@ prerequisite-anchored summary, prereqs Factor 30% / Divisibility 85%, fresh
 ```
 _`./scripts/dev` for development; the Axum binary serves the built client
 for single-binary production. Offline path (`local-tutor`, no keys) verified
-throughout; Ollama-offline streaming still open (no local server here)._
+throughout; Ollama removed-for-now 2026-09-22 (mobile-first; see M3)._
 
 _Beta P0 proof 2026-09-19 (post-deletion tree): `npm run build` green, fresh
 `dist/` contains the cleanup code; Axum serves it single-origin (`/` → SPA,

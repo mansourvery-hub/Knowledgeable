@@ -32,6 +32,7 @@ Self-directed learners, students, and professionals acquiring complex new skills
 
 ## Product direction
 - Knowledgeable is a focused AI learning environment built on LibreChat's mature chat UX and adapted to a Rust/SQLite pedagogical backend. LibreChat supplies commodity infrastructure; Knowledgeable supplies the learner model, knowledge graph, prerequisite awareness, reactive teaching, pedagogical state, concept highlighting, and the personal knowledge wiki.
+- Mobile before anything (2026-09-22): the learner experience targets phones first. Consequences so far: desktop-only local-LLM runtimes (Ollama) are out; provider dispatch stays server-side behind a model-agnostic seam for whatever mobile inference follows. Open architecture question: phone as thin client to a home server (reachable with today's stack) vs fully offline on-device tutoring (new inference runtime + re-validation on weak hardware).
 - Cleanup goal: expose only the features that support Knowledgeable, keep useful future capabilities possible, and minimize divergence from upstream.
 - Canonical feature policy (KEEP / DISABLE / REMOVE-from-surface / FUTURE, with product decision recorded separately from backend status) lives in `docs/agent-context/integration/librechat.md`. The staged cleanup roadmap lives in `docs/agent-context/roadmap_and_state.md`.
 

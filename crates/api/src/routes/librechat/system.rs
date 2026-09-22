@@ -93,8 +93,7 @@ pub async fn endpoints() -> Json<Value> {
 /// `GET /api/models` — models available per endpoint.
 ///
 /// Truthful per M3: provider models appear only when their server key is
-/// configured, the Ollama model only when explicitly enabled, always plus
-/// the offline `local-tutor` fallback the header picker can always use.
+/// configured, always plus the offline `local-tutor` fallback.
 pub async fn models() -> Json<Value> {
     Json(json!({
         ENDPOINT_NAME: application::llm_dispatch::advertised_models(),

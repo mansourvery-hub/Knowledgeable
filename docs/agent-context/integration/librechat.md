@@ -267,7 +267,7 @@ To prevent vendor lock-in and keep upstream merges straightforward:
 2. **Legitimate Provider Authorization (BYOK & Server Configuration)**:
    - **Bring Your Own Key (BYOK)**: Users can configure their own developer API keys in the client Settings modal (stored in secure browser storage or encrypted SQLite).
    - **Server Keys**: Deployment administrators can set `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY` in `.env`.
-   - **Local LLMs**: Out-of-the-box support for Ollama, vLLM, and llama.cpp via standard OpenAI-compatible base URLs (`http://localhost:11434/v1`).
+   - **Local LLMs**: no local provider is wired today (Ollama removed-for-now, mobile-first). The generic OpenAI-compatible base-URL client remains in code for a future local/mobile relay.
 3. **Consumer Subscription Clarification**:
    - Consumer ChatGPT Plus ($20/mo) and Gemini Advanced subscriptions **do not** provide public third-party API keys or OAuth grant flows for arbitrary chat applications.
    - Knowledgeable strictly uses official developer APIs and does not attempt fragile browser session hijacking.
