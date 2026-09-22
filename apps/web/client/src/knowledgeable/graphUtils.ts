@@ -9,6 +9,22 @@ import type { ConfidenceStatus, ConceptRelation, NeighborhoodNode } from './grap
 /** Mirrors `crates/domain/src/confidence.rs::HEALTHY_THRESHOLD`. */
 export const HEALTHY_THRESHOLD = 0.95;
 
+/**
+ * Wiki-readiness floor (F15). Mirrors
+ * `crates/domain/src/wiki.rs::WIKI_MASTERY_THRESHOLD`: the drawer generates
+ * or serves a page at or above this confidence and 404s `wiki_not_ready`
+ * below it, so the map's Open Wiki button enables on exactly this rule.
+ */
+export const WIKI_READY_THRESHOLD = 0.7;
+
+/** True when the drawer will serve (or generate) a page for this confidence. */
+export function isWikiReady(learnerConfidence: number | null | undefined): boolean {
+  if (learnerConfidence == null || Number.isNaN(learnerConfidence)) {
+    return false;
+  }
+  return learnerConfidence >= WIKI_READY_THRESHOLD;
+}
+
 /** Backend depth default/clamp mirrors `domain::bounded_depth`. */
 export const DEFAULT_DEPTH = 3;
 export const MAX_DEPTH = 5;

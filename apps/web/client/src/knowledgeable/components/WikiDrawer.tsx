@@ -32,7 +32,7 @@ export interface WikiDrawerProps {
 /** Copy deck (SPEC 9): learner-facing reader errors. */
 function errorMessage(err: unknown): string {
   if (err instanceof WikiNotReadyError) {
-    return 'Notes appear once you have a good grip on this concept. Keep learning and check back.';
+    return 'Your wiki page appears once you have a good grip on this concept. Keep learning and check back.';
   }
   if (err instanceof WikiNotFoundError) {
     return 'Concept not found.';

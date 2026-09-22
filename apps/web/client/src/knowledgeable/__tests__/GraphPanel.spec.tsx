@@ -362,7 +362,7 @@ describe('GraphPanel', () => {
     expect(screen.getAllByTestId('graph-canvas-node')).toHaveLength(2);
   });
 
-  it('opens notes for the focus concept', async () => {
+  it('disables Open Wiki for unready focus concepts', async () => {
     stubFetch((url) => {
       if (url.startsWith('/api/concepts/mastered')) {
         return { status: 200, payload: masteredItems([{ id: A, name: 'Alpha', confidence: 0.3 }]) };
@@ -373,7 +373,36 @@ describe('GraphPanel', () => {
     await waitFor(() => {
       expect(screen.getByTestId('graph-counts')).toHaveTextContent('2 concepts');
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Open notes' }));
+    const button = screen.getByRole('button', { name: 'Open Wiki' });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute(
+      'title',
+      'Your wiki page unlocks once you have a good grip on this concept.',
+    );
+    fireEvent.click(button);
+    expect(getOpenWikiConceptId()).toBeNull();
+  });
+
+  it('opens the wiki for ready focus concepts', async () => {
+    stubFetch((url) => {
+      if (url.startsWith('/api/concepts/mastered')) {
+        return { status: 200, payload: masteredItems([{ id: A, name: 'Alpha', confidence: 0.9 }]) };
+      }
+      return {
+        status: 200,
+        payload: {
+          nodes: [node(A, 'Alpha', 0.9), node(B, 'Beta', 0.3)],
+          edges: [],
+        },
+      };
+    });
+    render(<GraphPanel />);
+    await waitFor(() => {
+      expect(screen.getByTestId('graph-counts')).toHaveTextContent('2 concepts');
+    });
+    const button = screen.getByRole('button', { name: 'Open Wiki' });
+    expect(button).not.toBeDisabled();
+    fireEvent.click(button);
     expect(getOpenWikiConceptId()).toBe(A);
   });
 });

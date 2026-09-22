@@ -847,11 +847,27 @@ Product renames below deliberately reverse the UI-redesign copy deck
   folder" button anywhere, no create dialog in DOM, zero `POST
   /api/projects` fired, zero uncaught exceptions. User DB untouched;
   servers stopped. CLOSED.
-- [ ] F15 "Open notes" becomes "Open Wiki", disabled for unmastered
+- [x] F15 "Open notes" becomes "Open Wiki", disabled for unmastered
   concepts — rename the button and gate it on mastery/wiki-readiness
   instead of the current half measure (enabled button leading to a
   "Notes appear once…" error + retry). Not-ready concepts show the
   disabled state; no dead-end error path.
+  DONE 2026-09-22: the map focus button reads "Open Wiki" and enables on
+  exactly the backend's rule — new `isWikiReady` over
+  `WIKI_READY_THRESHOLD = 0.7` (mirrors
+  `domain::WIKI_MASTERY_THRESHOLD`; gated at mastery, not known, so
+  enabled ⟺ the drawer succeeds). Unready focus renders the button
+  disabled with the "unlocks once you have a good grip" title; the drawer
+  not-ready fallback stays, reworded wiki-side (now nearly unreachable:
+  rows are mastered-only, badges known-only, map rows drill). `Button`
+  gains a `title` prop. Locked by `isWikiReady` unit cases + GraphPanel
+  gating specs (renamed open test, new disabled test; 45/45 across
+  GraphPanel/graphUtils/WikiDrawer/uiPrimitives; tsc zero in touched
+  files). Browser pass DONE 2026-09-22 (CDP vs backend :3000 + Vite
+  :3090, `/tmp/cdp-f15.js` uncommitted): 7/7 — "Open Wiki" never "Open
+  notes", Divisibility (0.85) enabled and opens the real page, Factor
+  (0.30) disabled with explanation and opens nothing, zero uncaught.
+  User DB untouched; servers stopped. CLOSED.
 - [ ] F16 Model name is a debug feature — hide the model name/selector
   from end users (debug-gated or removed from the learner surface).
   Reverses the redesign "keep model selector" call; keep the dispatch

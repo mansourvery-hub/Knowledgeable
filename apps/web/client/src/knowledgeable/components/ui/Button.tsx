@@ -5,6 +5,7 @@ export interface ButtonProps {
   variant?: 'primary' | 'ghost' | 'default';
   type?: 'button' | 'submit';
   disabled?: boolean;
+  title?: string;
   onClick?: () => void;
   testId?: string;
   ariaLabel?: string;
@@ -15,6 +16,7 @@ export default function Button({
   variant = 'default',
   type = 'button',
   disabled,
+  title,
   onClick,
   testId,
   ariaLabel,
@@ -30,6 +32,7 @@ export default function Button({
       type={type}
       className={className}
       disabled={disabled}
+      title={title}
       onClick={onClick}
       data-testid={testId}
       aria-label={ariaLabel}

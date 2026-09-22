@@ -1,6 +1,7 @@
 import type { NeighborhoodNode } from '../graphTypes';
 import {
   HEALTHY_THRESHOLD,
+  WIKI_READY_THRESHOLD,
   clampDepth,
   clampLimit,
   confidenceStatus,
@@ -10,6 +11,7 @@ import {
   filterReviewOnly,
   formatConfidence,
   isReviewEligible,
+  isWikiReady,
   sortByConfidenceAscending,
 } from '../graphUtils';
 
@@ -77,6 +79,17 @@ describe('graphUtils', () => {
     expect(isReviewEligible(node('a', 'A', null))).toBe(false);
     expect(isReviewEligible(node('b', 'B', 0.3))).toBe(true);
     expect(isReviewEligible(node('c', 'C', 0.98))).toBe(false);
+  });
+
+  it('gates wiki readiness on the 0.70 mastery threshold', () => {
+    expect(WIKI_READY_THRESHOLD).toBe(0.7);
+    expect(isWikiReady(0.98)).toBe(true);
+    expect(isWikiReady(0.7)).toBe(true);
+    expect(isWikiReady(0.69)).toBe(false);
+    expect(isWikiReady(0.3)).toBe(false);
+    expect(isWikiReady(null)).toBe(false);
+    expect(isWikiReady(undefined)).toBe(false);
+    expect(isWikiReady(NaN)).toBe(false);
   });
 
   it('prefers the server-derived review flag when present', () => {

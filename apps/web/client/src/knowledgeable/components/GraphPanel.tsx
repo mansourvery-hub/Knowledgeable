@@ -16,6 +16,7 @@ import {
   filterReviewOnly,
   formatConfidence,
   isReviewEligible,
+  isWikiReady,
   sortByConfidenceAscending,
 } from '../graphUtils';
 import {
@@ -294,7 +295,17 @@ export default function GraphPanel() {
                 {confidenceWords(focusConfidence)}, {formatConfidence(focusConfidence)}
               </div>
             </div>
-            <Button onClick={() => openWiki(focusNode.concept.id)}>Open notes</Button>
+            <Button
+              onClick={() => openWiki(focusNode.concept.id)}
+              disabled={!isWikiReady(focusConfidence)}
+              title={
+                isWikiReady(focusConfidence)
+                  ? undefined
+                  : 'Your wiki page unlocks once you have a good grip on this concept.'
+              }
+            >
+              Open Wiki
+            </Button>
           </div>
         )
       )}
