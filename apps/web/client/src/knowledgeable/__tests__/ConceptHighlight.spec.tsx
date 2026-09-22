@@ -36,11 +36,28 @@ describe('ConceptHighlight', () => {
       </RecoilRoot>,
     );
     expect(screen.getByTestId('concept-highlight')).toHaveClass('k-concept', 'k-concept--weak');
-    expect(screen.getByTestId('concept-highlight-tooltip')).toHaveTextContent('Needs review');
-    expect(screen.getByTestId('concept-highlight-tooltip')).toHaveClass('k-tip');
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
-  it('shows percentages with the debug toggle on', () => {
+  it('shows no popup on hover or focus', () => {
+    renderBadge(
+      <ConceptHighlight
+        conceptId="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        name="Prime Number"
+        status="known"
+        confidence={0.98}
+      >
+        Prime Number
+      </ConceptHighlight>,
+    );
+    const badge = screen.getByTestId('concept-highlight');
+    fireEvent.mouseOver(badge);
+    fireEvent.focus(badge);
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('concept-highlight-tooltip')).not.toBeInTheDocument();
+  });
+
+  it('keeps percentages in the accessible label with the debug toggle on', () => {
     renderBadge(
       <ConceptHighlight name="Prime Number" status="known" confidence={0.98}>
         Prime Number
@@ -51,7 +68,7 @@ describe('ConceptHighlight', () => {
       'aria-label',
       'Prime Number, Known concept, confidence 98%',
     );
-    expect(screen.getByTestId('concept-highlight-confidence')).toHaveTextContent('98%');
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
   it('degrades unknown confidence without crashing', () => {
@@ -59,7 +76,10 @@ describe('ConceptHighlight', () => {
       <ConceptHighlight name="Unseen Thing" status="new" confidence={null} />,
       true,
     );
-    expect(screen.getByTestId('concept-highlight-confidence')).toHaveTextContent('unseen');
+    expect(screen.getByTestId('concept-highlight')).toHaveAttribute(
+      'aria-label',
+      'Unseen Thing, New concept, confidence unseen',
+    );
   });
 
   it('degrades to plain text on invalid props', () => {

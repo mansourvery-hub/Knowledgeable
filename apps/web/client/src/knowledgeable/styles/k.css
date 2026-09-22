@@ -179,3 +179,6 @@
 .k-concept--weak { background: var(--k-marker-fill); padding: 0 2px; }
 .k-concept--new { background: var(--k-accent-wash); padding: 0 2px; }
 .k-tip { font-family: var(--k-font-ui); font-size: 12.5px; background: var(--k-card); color: var(--k-text); border: 1px solid var(--k-line); border-radius: 8px; box-shadow: var(--k-shadow); padding: 8px 10px; }
+/* F17: badges are style-only (no popup), so keyboard focus needs its own
+   indicator now that group-focus-within no longer reveals anything. */
+.k-concept:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }

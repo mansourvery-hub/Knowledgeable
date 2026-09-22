@@ -889,11 +889,26 @@ Product renames below deliberately reverse the UI-redesign copy deck
   boot redirect strips query params, so the escape is set post-boot via
   history + popstate — same limitation the pre-existing `?kdebug` dev
   controls have.) User DB untouched; servers stopped. CLOSED.
-- [ ] F17 Badge tooltip removal — the floating popup over known concepts
+- [x] F17 Badge tooltip removal — the floating popup over known concepts
   cannot be dismissed and reads as clutter; tooltips are a debug feature.
   Replace with style-only badges (background change / underline / custom
   CSS, no popup). Partly reverses the redesign 8.1 `k-tip` call; keep the
   click-to-wiki behavior and the debug-gated percentages.
+  DONE 2026-09-22: the `concept-highlight-tooltip` popup element is gone
+  (hover/focus reveal nothing); badges keep their `k-concept` style-only
+  classes, `role=button` click/Enter/Space → wiki, `tabIndex` focus, and
+  the accessible label (status always, `%` only with the debug toggle —
+  percentages retreat to the a11y tree, which is where debug info
+  belongs). New `:focus-visible` outline on `.k-concept` replaces the
+  lost focus cue; dead `.k-tip` CSS deliberately left for the F18 purge.
+  Locked by rewritten badge specs incl. a hover/focus-absence case (9/9
+  with the highlight pipeline suite; tsc zero in touched files). Browser
+  pass DONE 2026-09-22 (CDP vs backend :3000 + Vite :3090, one tiny keyed
+  turn, `/tmp/cdp-f17.js` uncommitted): 5/5 — live known badge with
+  `k-concept--known` styling and a clean aria-label, zero tooltip nodes
+  after hover+focus, click opens "Prime Numbers: A Foundational
+  Definition", zero uncaught; test conversation DELETE-confirmed gone
+  (0 rows) and servers stopped. CLOSED.
 - [ ] F18 Pre-ship debug purge (epic, final step before public shipping) —
   sweep and remove/gate every debug remnant: LibreChat leftovers (query
   devtools confirm, verbose surfaces) and ours (`?kdebug`, `k-dev`

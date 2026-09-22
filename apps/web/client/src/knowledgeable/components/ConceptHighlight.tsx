@@ -3,14 +3,14 @@
  *
  * Receives its data from `remarkConceptHighlight` via `hProperties`
  * (registered as `concept-highlight` in `getMarkdownComponents`):
- * - known (>= 0.80): dotted accent underline + tooltip.
- * - weak (< 0.80): marker wash + prerequisite tooltip.
- * - new: accent wash + new-concept tooltip.
+ * - known (>= 0.80): dotted accent underline, style-only.
+ * - weak (< 0.80): marker wash, style-only.
+ * - new: accent wash, style-only.
  *
- * Identity comes from `k-concept`/`k-tip` (Phase 4); structure, data-testids
- * and hover/focus behaviour are unchanged. Missing/invalid props degrade to
- * plain text so a malformed frame never breaks render.
- * Wiki-drawer click wiring lands with M8.
+ * F17 product call: badges never pop up — no tooltip on hover or focus.
+ * Status (and debug-gated confidence) lives in the accessible label;
+ * click/Enter/Space opens the wiki drawer (M8). Missing/invalid props
+ * degrade to plain text so a malformed frame never breaks render.
  */
 import type { ReactNode } from 'react';
 import { useRecoilValue } from 'recoil';
@@ -54,8 +54,8 @@ export default function ConceptHighlight({
     return <>{children}</>;
   }
   // F7/F8 product call: confidence percentages are a debug aid, off by
-  // default. The tooltip shows title + status; the percentage renders (and
-  // is announced) only with the debug toggle on.
+  // default. Status (and the percentage, with the debug toggle on) lives
+  // in the accessible label; F17 removed the visual popup entirely.
   const showConfidence = useRecoilValue(store.showConfidenceDebug);
   const label = typeof name === 'string' && name ? name : 'Concept';
   const confidenceText = formatConfidence(
@@ -75,7 +75,7 @@ export default function ConceptHighlight({
       tabIndex={0}
       role={clickable ? 'button' : undefined}
       aria-label={accessibleLabel}
-      className={`group relative ${STATUS_CLASS[status]}${clickable ? ' cursor-pointer' : ''}`}
+      className={`relative ${STATUS_CLASS[status]}${clickable ? ' cursor-pointer' : ''}`}
       onClick={clickable ? () => openWiki(conceptId as string) : undefined}
       onKeyDown={
         clickable
@@ -89,18 +89,6 @@ export default function ConceptHighlight({
       }
     >
       {children ?? label}
-      <span
-        data-testid="concept-highlight-tooltip"
-        role="tooltip"
-        className="k-tip invisible absolute bottom-full left-0 z-10 mb-1 w-max max-w-60 group-hover:visible group-focus-within:visible"
-      >
-        <strong>{label}</strong>
-        {showConfidence && (
-          <span data-testid="concept-highlight-confidence"> · {confidenceText}</span>
-        )}
-        <br />
-        <span>{STATUS_LABEL[status]}</span>
-      </span>
     </span>
   );
 }
