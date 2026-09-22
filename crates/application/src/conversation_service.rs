@@ -116,8 +116,31 @@ pub async fn duplicate_conversation(
     conversation_id: Uuid,
 ) -> Result<Option<(Conversation, Vec<ConversationMessage>)>, sqlx::Error> {
     let learner_id = default_learner_id();
-    infrastructure::conversation_repo::duplicate_conversation(pool, learner_id, conversation_id)
-        .await
+    infrastructure::conversation_repo::duplicate_conversation(
+        pool,
+        learner_id,
+        conversation_id,
+        None,
+    )
+    .await
+}
+
+/// Forks the first `max_messages` of a conversation into the learner's own
+/// copy (shared-link "continue the chat"). Returns `None` for unknown
+/// conversations.
+pub async fn fork_conversation(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+    max_messages: Option<usize>,
+) -> Result<Option<(Conversation, Vec<ConversationMessage>)>, sqlx::Error> {
+    let learner_id = default_learner_id();
+    infrastructure::conversation_repo::duplicate_conversation(
+        pool,
+        learner_id,
+        conversation_id,
+        max_messages,
+    )
+    .await
 }
 
 /// F20: synthesized conversation titles.

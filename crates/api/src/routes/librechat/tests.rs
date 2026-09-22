@@ -1797,3 +1797,180 @@ async fn duplicate_copies_messages_flags_tags_and_titles() {
         .unwrap();
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
+
+async fn seed_share_convo(pool: &sqlx::SqlitePool) -> uuid::Uuid {
+    let conv = application::conversation_service::create_conversation(pool, Some("Shared Talk"))
+        .await
+        .unwrap();
+    for (i, text) in ["ask one", "answer one", "ask two"].iter().enumerate() {
+        let role = if i % 2 == 0 {
+            domain::MessageRole::User
+        } else {
+            domain::MessageRole::Assistant
+        };
+        application::conversation_service::add_message(pool, conv.id, role, text)
+            .await
+            .unwrap();
+    }
+    conv.id
+}
+
+#[tokio::test]
+async fn share_cycle_with_public_read_fork_and_revoke() {
+    let (app, pool) = setup().await;
+    let id = seed_share_convo(&pool).await;
+
+    // Create.
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            &format!("/api/share/{id}"),
+            serde_json::json!({}),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let created = body_json(response).await;
+    let share_id = created["shareId"].as_str().unwrap().to_string();
+    assert_ne!(share_id, id.to_string());
+    assert_eq!(created["conversationId"], id.to_string());
+
+    // Owner lookup finds it.
+    let response = app
+        .clone()
+        .oneshot(get(&format!("/api/share/link/{id}")))
+        .await
+        .unwrap();
+    let lookup = body_json(response).await;
+    assert_eq!(lookup["shareId"], share_id);
+    assert_eq!(lookup["success"], true);
+
+    // Public read serves the messages with the real title.
+    let response = app
+        .clone()
+        .oneshot(get(&format!("/api/share/{share_id}")))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let shared = body_json(response).await;
+    assert_eq!(shared["title"], "Shared Talk");
+    let messages = shared["messages"].as_array().unwrap();
+    assert_eq!(messages.len(), 3);
+    assert_eq!(messages[0]["text"], "ask one");
+
+    // Public render config is title-only.
+    let response = app
+        .clone()
+        .oneshot(get(&format!("/api/share/{share_id}/config")))
+        .await
+        .unwrap();
+    assert_eq!(body_json(response).await["appTitle"], "Knowledgeable");
+
+    // Fork copies into the viewer's history.
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            &format!("/api/share/{share_id}/fork"),
+            serde_json::json!({ "targetMessageIndex": 1 }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let forked = body_json(response).await;
+    assert_eq!(forked["messages"].as_array().unwrap().len(), 2);
+    assert_ne!(
+        forked["conversation"]["conversationId"].as_str().unwrap(),
+        id.to_string()
+    );
+
+    // Revoke: public read, config, and fork all 404 afterwards.
+    let response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("DELETE")
+                .uri(format!("/api/share/{share_id}"))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    for (method, uri) in [
+        ("GET", format!("/api/share/{share_id}")),
+        ("GET", format!("/api/share/{share_id}/config")),
+        ("POST", format!("/api/share/{share_id}/fork")),
+    ] {
+        let builder = Request::builder().method(method).uri(&uri);
+        let request = if method == "POST" {
+            builder
+                .header("content-type", "application/json")
+                .body(Body::from("{}"))
+                .unwrap()
+        } else {
+            builder.body(Body::empty()).unwrap()
+        };
+        let response = app.clone().oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND, "{method} {uri}");
+    }
+    // Owner lookup reports no link.
+    let response = app
+        .clone()
+        .oneshot(get(&format!("/api/share/link/{id}")))
+        .await
+        .unwrap();
+    let lookup = body_json(response).await;
+    assert_eq!(lookup["shareId"], serde_json::Value::Null);
+}
+
+#[tokio::test]
+async fn share_rejects_bad_ids_and_missing_rows() {
+    let (app, pool) = setup().await;
+    let missing = uuid::Uuid::new_v4();
+
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            &format!("/api/share/{missing}"),
+            serde_json::json!({}),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    let response = app
+        .clone()
+        .oneshot(get(&format!("/api/share/{missing}")))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    let id = seed_share_convo(&pool).await;
+    let link = application::share_service::create_link(&pool, id, None)
+        .await
+        .unwrap()
+        .unwrap();
+    let share_id = link.share_id;
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            &format!("/api/share/{share_id}/fork"),
+            serde_json::json!({ "targetMessageIndex": 99 }),
+        ))
+        .await
+        .unwrap();
+    // Out-of-range index clamps to everything (no failure).
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await["messages"].as_array().unwrap().len(), 3);
+
+    let response = app
+        .clone()
+        .oneshot(json_req("POST", "/api/share/nope/fork", serde_json::json!({})))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+}

@@ -66,6 +66,21 @@ pub struct ConversationTag {
     pub updated_at: DateTime<Utc>,
 }
 
+/// A public share link for a conversation (Phase 5 minimal share, F27).
+///
+/// The share id is an unguessable UUID independent of the conversation id.
+/// Messages read live from the conversation (optionally scoped to
+/// `target_message_id`); revocation is explicit delete.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SharedLink {
+    pub share_id: Uuid,
+    pub conversation_id: Uuid,
+    pub title: Option<String>,
+    pub target_message_id: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SseEnvelope {
     pub version: u8,

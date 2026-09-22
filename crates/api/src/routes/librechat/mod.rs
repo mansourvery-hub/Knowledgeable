@@ -7,6 +7,7 @@
 pub mod chat;
 pub mod concepts;
 pub mod convos;
+pub mod share;
 pub mod stream_registry;
 pub mod system;
 pub mod tags;
@@ -16,7 +17,7 @@ pub mod wiki;
 mod tests;
 
 use axum::{
-    routing::{delete, get, post, put},
+    routing::{delete, get, patch, post, put},
     Router,
 };
 
@@ -79,6 +80,15 @@ pub fn routes() -> Router<AppState> {
         // and terminal teardown is authorized through the status read.
         .route("/api/agents/chat/stream/:stream_id", get(chat::handle_stream))
         .route("/api/agents/chat/status/:conversation_id", get(chat::handle_status))
+        // Minimal conversation sharing (Phase 5, F27): one capture name
+        // (`:id`) across the dynamic share routes — Axum rejects differing
+        // names at the same position. Static `link`/`config` segments and
+        // the method split disambiguate the rest.
+        .route("/api/share/link/:conversation_id", get(share::get_for_conversation))
+        .route("/api/share/:id", post(share::create))
+        .route("/api/share/:id", get(share::read).patch(share::update).delete(share::delete))
+        .route("/api/share/:id/config", get(share::render_config))
+        .route("/api/share/:id/fork", post(share::fork))
 }
 
 /// Serializes a conversation into LibreChat's `TConversation` shape.

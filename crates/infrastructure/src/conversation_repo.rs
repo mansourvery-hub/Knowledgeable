@@ -357,12 +357,14 @@ pub async fn delete_conversation(
 
 /// Duplicates a conversation with its messages, flags, and tag membership
 /// (Phase 5 fork/duplicate). The copy gets fresh ids, `title + " (copy)"`,
-/// and current timestamps; the source is untouched. Returns `None` when the
-/// source does not belong to the learner.
+/// and current timestamps; the source is untouched. `max_messages` caps the
+/// copied prefix (fork-a-branch); `None` copies everything. Returns `None`
+/// when the source does not belong to the learner.
 pub async fn duplicate_conversation(
     pool: &SqlitePool,
     learner_id: Uuid,
     source_id: Uuid,
+    max_messages: Option<usize>,
 ) -> Result<Option<(Conversation, Vec<ConversationMessage>)>, sqlx::Error> {
     let learner_s = learner_id.to_string();
     let source_s = source_id.to_string();
@@ -408,7 +410,8 @@ pub async fn duplicate_conversation(
     .fetch_all(&mut *tx)
     .await?;
     let mut messages = Vec::with_capacity(source_messages.len());
-    for (role, content, _created) in &source_messages {
+    for (role, content, _created) in source_messages.iter().take(max_messages.unwrap_or(usize::MAX))
+    {
         let id = Uuid::new_v4();
         sqlx::query(
             "INSERT INTO conversation_messages (id, conversation_id, role, content, created_at) \
