@@ -1724,3 +1724,76 @@ async fn pin_archive_reject_unknown_conversations() {
         .unwrap();
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
+
+#[tokio::test]
+async fn duplicate_copies_messages_flags_tags_and_titles() {
+    let (app, pool) = setup().await;
+    let learner = application::conversation_service::default_learner_id();
+    let src = application::conversation_service::create_conversation(&pool, Some("Source Title"))
+        .await
+        .unwrap();
+    application::conversation_service::add_message(
+        &pool,
+        src.id,
+        domain::MessageRole::User,
+        "hello",
+    )
+    .await
+    .unwrap();
+    application::conversation_service::add_message(
+        &pool,
+        src.id,
+        domain::MessageRole::Assistant,
+        "hi there",
+    )
+    .await
+    .unwrap();
+    application::conversation_service::set_pinned(&pool, src.id, true).await.unwrap();
+    application::tag_service::set_conversation_tags(&pool, learner, src.id, &["t".into()])
+        .await
+        .unwrap();
+
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            "/api/convos/duplicate",
+            serde_json::json!({ "conversationId": src.id }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let dup = body_json(response).await;
+    assert_eq!(dup["conversation"]["title"], "Source Title (copy)");
+    assert_eq!(dup["conversation"]["pinned"], true);
+    assert_eq!(dup["conversation"]["tags"], serde_json::json!(["t"]));
+    assert_ne!(dup["conversation"]["conversationId"].as_str().unwrap(), src.id.to_string());
+    let messages = dup["messages"].as_array().unwrap();
+    assert_eq!(messages.len(), 2);
+    assert_eq!(messages[0]["text"], "hello");
+    assert_eq!(messages[1]["text"], "hi there");
+    // Linear parent chain like history synthesis.
+    assert_eq!(messages[1]["parentMessageId"], messages[0]["messageId"]);
+
+    // Unknown conversation 404s; malformed id 400s.
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            "/api/convos/duplicate",
+            serde_json::json!({ "conversationId": uuid::Uuid::new_v4() }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    let response = app
+        .clone()
+        .oneshot(json_req(
+            "POST",
+            "/api/convos/duplicate",
+            serde_json::json!({ "conversationId": "nope" }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+}

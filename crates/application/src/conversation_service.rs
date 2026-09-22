@@ -109,6 +109,17 @@ pub async fn archive_all(pool: &SqlitePool) -> Result<i64, sqlx::Error> {
     infrastructure::conversation_repo::archive_all(pool, learner_id).await
 }
 
+/// Duplicates a conversation with messages, flags, and tags. Returns
+/// `None` for unknown conversations.
+pub async fn duplicate_conversation(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+) -> Result<Option<(Conversation, Vec<ConversationMessage>)>, sqlx::Error> {
+    let learner_id = default_learner_id();
+    infrastructure::conversation_repo::duplicate_conversation(pool, learner_id, conversation_id)
+        .await
+}
+
 /// F20: synthesized conversation titles.
 ///
 /// Display cap mirrors the API's `derive_title` truncation so a synthesized

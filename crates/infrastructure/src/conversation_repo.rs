@@ -354,3 +354,111 @@ pub async fn delete_conversation(
         .await?;
     Ok(())
 }
+
+/// Duplicates a conversation with its messages, flags, and tag membership
+/// (Phase 5 fork/duplicate). The copy gets fresh ids, `title + " (copy)"`,
+/// and current timestamps; the source is untouched. Returns `None` when the
+/// source does not belong to the learner.
+pub async fn duplicate_conversation(
+    pool: &SqlitePool,
+    learner_id: Uuid,
+    source_id: Uuid,
+) -> Result<Option<(Conversation, Vec<ConversationMessage>)>, sqlx::Error> {
+    let learner_s = learner_id.to_string();
+    let source_s = source_id.to_string();
+    let mut tx = pool.begin().await?;
+
+    let source: Option<(String, Option<String>, i64, i64)> = sqlx::query_as(
+        "SELECT id, title, is_archived, pinned FROM conversations WHERE id = ? AND learner_id = ?",
+    )
+    .bind(&source_s)
+    .bind(&learner_s)
+    .fetch_optional(&mut *tx)
+    .await?;
+    let Some((_, title, is_archived, pinned)) = source else {
+        return Ok(None);
+    };
+
+    let new_id = Uuid::new_v4();
+    let now = Utc::now();
+    let now_s = now.to_rfc3339();
+    let new_title = match title {
+        Some(t) if !t.trim().is_empty() => format!("{t} (copy)"),
+        _ => "New Chat (copy)".to_string(),
+    };
+    sqlx::query(
+        "INSERT INTO conversations (id, learner_id, title, is_archived, pinned, created_at, updated_at) \
+         VALUES (?, ?, ?, ?, ?, ?, ?)",
+    )
+    .bind(new_id.to_string())
+    .bind(&learner_s)
+    .bind(&new_title)
+    .bind(is_archived)
+    .bind(pinned)
+    .bind(&now_s)
+    .bind(&now_s)
+    .execute(&mut *tx)
+    .await?;
+
+    let source_messages: Vec<(String, String, String)> = sqlx::query_as(
+        "SELECT role, content, created_at FROM conversation_messages \
+         WHERE conversation_id = ? ORDER BY created_at ASC",
+    )
+    .bind(&source_s)
+    .fetch_all(&mut *tx)
+    .await?;
+    let mut messages = Vec::with_capacity(source_messages.len());
+    for (role, content, _created) in &source_messages {
+        let id = Uuid::new_v4();
+        sqlx::query(
+            "INSERT INTO conversation_messages (id, conversation_id, role, content, created_at) \
+             VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind(id.to_string())
+        .bind(new_id.to_string())
+        .bind(role)
+        .bind(content)
+        .bind(&now_s)
+        .execute(&mut *tx)
+        .await?;
+        messages.push(ConversationMessage {
+            id,
+            conversation_id: new_id,
+            role: parse_role(role),
+            content: content.clone(),
+            created_at: now,
+        });
+    }
+
+    let tags: Vec<(String,)> = sqlx::query_as(
+        "SELECT tag FROM conversation_tag_map WHERE conversation_id = ? AND learner_id = ?",
+    )
+    .bind(&source_s)
+    .bind(&learner_s)
+    .fetch_all(&mut *tx)
+    .await?;
+    for (tag,) in &tags {
+        sqlx::query(
+            "INSERT INTO conversation_tag_map (conversation_id, tag, learner_id) VALUES (?, ?, ?)",
+        )
+        .bind(new_id.to_string())
+        .bind(tag)
+        .bind(&learner_s)
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
+
+    Ok(Some((
+        Conversation {
+            id: new_id,
+            learner_id,
+            title: Some(new_title),
+            is_archived: is_archived != 0,
+            pinned: pinned != 0,
+            created_at: now,
+            updated_at: now,
+        },
+        messages,
+    )))
+}

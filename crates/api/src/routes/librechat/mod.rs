@@ -49,6 +49,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/convos/archive", post(convos::archive))
         .route("/api/convos/archive/all", post(convos::archive_all))
         .route("/api/convos/pin", post(convos::pin))
+        .route("/api/convos/duplicate", post(convos::duplicate))
         .route("/api/convos/:id", get(convos::get_one))
         // Conversation tags for bookmarks (Phase 5, F19): the static
         // `convo` segment wins over `:tag` so the two cannot collide.

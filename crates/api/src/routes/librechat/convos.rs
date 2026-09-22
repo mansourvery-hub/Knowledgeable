@@ -319,6 +319,38 @@ pub struct DeleteArg {
     pub conversation_id: Option<String>,
 }
 
+#[derive(Deserialize)]
+pub struct DuplicateRequest {
+    #[serde(rename = "conversationId")]
+    pub conversation_id: String,
+}
+
+/// `POST /api/convos/duplicate` — copies a conversation with its messages,
+/// flags, and tag membership under a fresh id (`title + " (copy)"`).
+pub async fn duplicate(
+    State(state): State<AppState>,
+    Json(body): Json<DuplicateRequest>,
+) -> Result<Json<Value>, AppError> {
+    let pool = pool(&state).await?;
+    let conversation_id = parse_uuid(&body.conversation_id)?;
+    let (conv, messages) =
+        application::conversation_service::duplicate_conversation(pool, conversation_id)
+            .await
+            .map_err(|e| AppError::Internal(e.to_string()))?
+            .ok_or_else(|| AppError::NotFound("conversation not found".into()))?;
+    let learner_id = application::conversation_service::default_learner_id();
+    let tags = application::tag_service::tags_for_conversation(pool, learner_id, conv.id)
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    let mut parent = NO_PARENT.to_string();
+    let mut out = Vec::with_capacity(messages.len());
+    for message in &messages {
+        out.push(msg_json(message, &parent, None));
+        parent = message.id.to_string();
+    }
+    Ok(Json(json!({ "conversation": conv_json_tags(&conv, &tags), "messages": out })))
+}
+
 /// `DELETE /api/convos` — deletes a conversation and its messages.
 pub async fn delete(
     State(state): State<AppState>,
