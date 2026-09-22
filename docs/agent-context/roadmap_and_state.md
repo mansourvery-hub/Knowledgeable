@@ -947,3 +947,22 @@ Product renames below deliberately reverse the UI-redesign copy deck
   pin/archive/search/minimal-share siblings per §9.2): tags CRUD routes,
   panel truthfulness, then re-verify this check into a positive proof.
   CLOSED as tracked.
+
+## 7. Beta feedback log, round 3 (manual testing, 2026-09-22)
+
+- [ ] F20 Chat history titles are literal prompts — tabs show the raw first
+  message truncated to 48 chars (`derive_title` in
+  `crates/api/src/routes/librechat/mod.rs`, used both as the provisional
+  title at turn start (`chat.rs`) and by lazy `gen_title` (`convos.rs`)).
+  Ask: synthesize each title at creation (what the tab is about), not the
+  literal "explain X …". Direction: LLM-written title on first turn with
+  truncation fallback for the offline path; never a bare prompt echo.
+- [ ] F21 Tutor refuses unknown concepts — "explain anal" answered "I
+  couldn't find a concept by that name in my knowledge base…". Root cause
+  in our prompt, not the model: `system_policy.txt` ("Use only the
+  provided graph context" + mandatory `find_concept`) reads as teach-only-
+  what-is-graphed, inverting the M5 design (novel material → teach from
+  own knowledge AND `propose_concept`). User verdict: every subject is
+  worth understanding; remove the refusal. Direction: prompt brick
+  (policy + `prompts.rs` fallback + invariant test) + live keyed proof on
+  a novel topic. Truth gates (`world_confidence`, mastery) stay.
