@@ -1498,3 +1498,91 @@ async fn tags_reject_bad_input_and_missing_rows() {
         .unwrap();
     assert_eq!(response.status(), StatusCode::CONFLICT);
 }
+
+async fn seed_search_convo(pool: &sqlx::SqlitePool, title: &str, texts: &[&str]) -> uuid::Uuid {
+    let conv = application::conversation_service::create_conversation(pool, Some(title))
+        .await
+        .unwrap();
+    for text in texts {
+        application::conversation_service::add_message(
+            pool,
+            conv.id,
+            domain::MessageRole::User,
+            text,
+        )
+        .await
+        .unwrap();
+    }
+    conv.id
+}
+
+#[tokio::test]
+async fn message_search_finds_titled_hits_with_pagination() {
+    let (app, pool) = setup().await;
+    seed_search_convo(&pool, "Prime Talk", &["prime numbers are fun", "nothing relevant"]).await;
+    seed_search_convo(&pool, "Other", &["more prime facts here"]).await;
+
+    let response = app
+        .clone()
+        .oneshot(get("/api/messages?search=prime"))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let page = body_json(response).await;
+    let hits = page["messages"].as_array().unwrap();
+    assert_eq!(hits.len(), 2);
+    // Newest first, real conversation titles for row navigation.
+    assert_eq!(hits[0]["title"], "Other");
+    assert_eq!(hits[1]["title"], "Prime Talk");
+    assert!(hits[0]["conversationId"].is_string());
+    assert!(hits[0]["text"].as_str().unwrap().contains("prime"));
+    assert_eq!(page["nextCursor"], serde_json::Value::Null);
+
+    // Pagination: one per page chains cursors, last page terminates.
+    let response = app
+        .clone()
+        .oneshot(get("/api/messages?search=prime&pageSize=1"))
+        .await
+        .unwrap();
+    let first = body_json(response).await;
+    assert_eq!(first["messages"].as_array().unwrap().len(), 1);
+    let cursor = first["nextCursor"].as_str().unwrap().to_string();
+    let response = app
+        .clone()
+        .oneshot(get(&format!("/api/messages?search=prime&pageSize=1&cursor={cursor}")))
+        .await
+        .unwrap();
+    let second = body_json(response).await;
+    assert_eq!(second["messages"].as_array().unwrap().len(), 1);
+    assert_ne!(
+        second["messages"][0]["messageId"],
+        first["messages"][0]["messageId"]
+    );
+    assert_eq!(second["nextCursor"], serde_json::Value::Null);
+
+    // Blank query: empty page, never an error.
+    let response = app.clone().oneshot(get("/api/messages?search=++")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let empty = body_json(response).await;
+    assert_eq!(empty["messages"].as_array().unwrap().len(), 0);
+
+    // Bare path serves the search contract, not a 404/405.
+    let response = app.clone().oneshot(get("/api/messages")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // No match: empty page.
+    let response = app
+        .clone()
+        .oneshot(get("/api/messages?search=zzz-no-such-word"))
+        .await
+        .unwrap();
+    assert_eq!(body_json(response).await["messages"].as_array().unwrap().len(), 0);
+}
+
+#[tokio::test]
+async fn search_enable_advertises_true() {
+    let (app, _pool) = setup().await;
+    let response = app.clone().oneshot(get("/api/search/enable")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await, serde_json::json!(true));
+}

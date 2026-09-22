@@ -1,7 +1,7 @@
 //! Conversation and message endpoints for the LibreChat client.
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     Json,
 };
 use serde::Deserialize;
@@ -54,6 +54,62 @@ pub async fn list(State(state): State<AppState>) -> Result<Json<Value>, AppError
         "conversations": conversations,
         "nextCursor": Value::Null,
     })))
+}
+
+/// `GET /api/messages?search=q&pageSize=n&cursor=o` — global message
+/// search for the `/search` page (Phase 5 conversation search).
+///
+/// Bounded SQLite substring match (no MeiliSearch daemon — the scale does
+/// not warrant one); blank queries return an empty page. `cursor` is an
+/// opaque offset: absent or non-empty with remaining hits yields the next
+/// one, otherwise `null` terminates pagination like upstream.
+#[derive(Debug, Deserialize)]
+pub struct MessageSearchQuery {
+    pub search: Option<String>,
+    #[serde(rename = "pageSize")]
+    pub page_size: Option<i64>,
+    pub cursor: Option<String>,
+}
+
+pub async fn search_messages(
+    State(state): State<AppState>,
+    Query(params): Query<MessageSearchQuery>,
+) -> Result<Json<Value>, AppError> {
+    let pool = pool(&state).await?;
+    let query = params.search.as_deref().unwrap_or("").trim();
+    if query.is_empty() {
+        return Ok(Json(json!({ "messages": [], "nextCursor": Value::Null })));
+    }
+    let limit = params.page_size.unwrap_or(20).clamp(1, 100);
+    let offset: i64 = params.cursor.as_deref().unwrap_or("0").parse().unwrap_or(0).max(0);
+    let learner_id = application::conversation_service::default_learner_id();
+    let (messages, total) =
+        infrastructure::conversation_repo::search_messages(pool, learner_id, query, limit, offset)
+            .await
+            .map_err(|e| AppError::Internal(e.to_string()))?;
+    let messages: Vec<Value> = messages
+        .iter()
+        .map(|(m, title)| {
+            let mut v = msg_json(m, NO_PARENT, None);
+            if let Some(obj) = v.as_object_mut() {
+                // Search rows navigate by conversation and display its real
+                // title — never the history placeholder.
+                obj.insert(
+                    "title".to_string(),
+                    Value::String(
+                        title
+                            .clone()
+                            .filter(|t| !t.trim().is_empty())
+                            .unwrap_or_else(|| "New Chat".to_string()),
+                    ),
+                );
+            }
+            v
+        })
+        .collect();
+    let next = offset + limit;
+    let next_cursor = if next < total { Value::String(next.to_string()) } else { Value::Null };
+    Ok(Json(json!({ "messages": messages, "nextCursor": next_cursor })))
 }
 
 /// `GET /api/convos/:id`

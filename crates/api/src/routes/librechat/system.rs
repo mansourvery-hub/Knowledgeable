@@ -100,6 +100,13 @@ pub async fn models() -> Json<Value> {
     }))
 }
 
+/// `GET /api/search/enable` — conversation search availability (Phase 5).
+/// Served `true`: the bundled SQLite substring search backs both the
+/// sidebar filter and the `/search` page, so no MeiliSearch daemon gates it.
+pub async fn search_enabled() -> Json<bool> {
+    Json(true)
+}
+
 /// Permission types the client gates UI on (`PermissionTypes` in
 /// `librechat-data-provider`). Kept as a literal list so a data-provider
 /// upgrade that adds a type fails loudly here instead of silently hiding UI.

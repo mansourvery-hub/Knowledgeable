@@ -180,6 +180,62 @@ pub async fn list_messages(
         .collect())
 }
 
+/// Global message search for the `/search` page (Phase 5): substring
+/// match over message content across the learner's conversations, newest
+/// first. Returns `(message, owning conversation title)` pairs plus the
+/// total hit count so callers can mint a cursor. Blank queries return
+/// nothing (typeahead-friendly).
+pub async fn search_messages(
+    pool: &SqlitePool,
+    learner_id: Uuid,
+    query: &str,
+    limit: i64,
+    offset: i64,
+) -> Result<(Vec<(ConversationMessage, Option<String>)>, i64), sqlx::Error> {
+    let learner_s = learner_id.to_string();
+    let like = format!("%{query}%");
+    let rows = sqlx::query_as::<_, (String, String, String, String, String, Option<String>)>(
+        "SELECT m.id, m.conversation_id, m.role, m.content, m.created_at, c.title \
+         FROM conversation_messages m \
+         JOIN conversations c ON c.id = m.conversation_id \
+         WHERE c.learner_id = ? AND m.content LIKE ? \
+         ORDER BY m.created_at DESC LIMIT ? OFFSET ?",
+    )
+    .bind(&learner_s)
+    .bind(&like)
+    .bind(limit)
+    .bind(offset)
+    .fetch_all(pool)
+    .await?;
+    let total: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM conversation_messages m \
+         JOIN conversations c ON c.id = m.conversation_id \
+         WHERE c.learner_id = ? AND m.content LIKE ?",
+    )
+    .bind(&learner_s)
+    .bind(&like)
+    .fetch_one(pool)
+    .await?;
+
+    Ok((
+        rows.into_iter()
+            .map(|(id, conversation_id, role, content, created_at, title)| {
+                (
+                    ConversationMessage {
+                        id: id.parse().unwrap(),
+                        conversation_id: conversation_id.parse().unwrap(),
+                        role: parse_role(&role),
+                        content,
+                        created_at: parse_dt(&created_at),
+                    },
+                    title,
+                )
+            })
+            .collect(),
+        total.0,
+    ))
+}
+
 /// Updates a conversation's title and bumps `updated_at`.
 pub async fn update_conversation_title(
     pool: &SqlitePool,

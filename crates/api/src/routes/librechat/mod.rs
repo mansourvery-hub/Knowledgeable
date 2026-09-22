@@ -54,6 +54,11 @@ pub fn routes() -> Router<AppState> {
         .route("/api/tags/:tag", put(tags::update).delete(tags::delete))
         // Messages
         .route("/api/messages/:conversation_id", get(convos::list_messages))
+        // Global message search for the `/search` page (Phase 5): exact
+        // path wins over `:conversation_id`, so the two cannot collide.
+        .route("/api/messages", get(convos::search_messages))
+        // Search availability flag for the sidebar filter + `/search` page.
+        .route("/api/search/enable", get(system::search_enabled))
         // Chat (SSE). LibreChat posts every endpoint's turns through the agents
         // router; `:endpoint` is the endpoint key returned by `/api/endpoints`.
         .route("/api/agents/chat/:endpoint", post(chat::handle))
