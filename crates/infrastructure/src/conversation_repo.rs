@@ -267,6 +267,30 @@ pub async fn search_messages(
     ))
 }
 
+/// Fetches one message by id within a conversation (Phase 5 share flow:
+/// target resolution). Returns `None` when either id is unknown.
+pub async fn get_message(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+    message_id: Uuid,
+) -> Result<Option<ConversationMessage>, sqlx::Error> {
+    let row = sqlx::query_as::<_, (String, String, String, String, String)>(
+        "SELECT id, conversation_id, role, content, created_at FROM conversation_messages WHERE id = ? AND conversation_id = ?",
+    )
+    .bind(message_id.to_string())
+    .bind(conversation_id.to_string())
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|(id, conversation_id, role, content, created_at)| ConversationMessage {
+        id: id.parse().unwrap(),
+        conversation_id: conversation_id.parse().unwrap(),
+        role: parse_role(&role),
+        content,
+        created_at: parse_dt(&created_at),
+    }))
+}
+
 /// Updates a conversation's title and bumps `updated_at`.
 pub async fn update_conversation_title(
     pool: &SqlitePool,
