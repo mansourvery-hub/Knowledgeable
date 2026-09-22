@@ -956,6 +956,16 @@ Product renames below deliberately reverse the UI-redesign copy deck
   whole session — F13-class noise on three more dead surfaces; filed as
   F23. Bookmarks remain: implement as a real Phase 5 backend+UI project
   or keep tracked — user decision open.
+  IMPLEMENTED 2026-09-22 (user chose A): commit `4d8888b` (migration +
+  repo + service + 5 routes + live tags in convo JSON; 131/131 workspace
+  green) plus live browser proof `/tmp/cdp-bm.js` (uncommitted) 7/7 —
+  history opens, New Bookmark saves with success toast and menu "1
+  selected", panel lists it, reload persists, toggle-off clears
+  membership, zero uncaught. Proof notes: Vite hard-codes
+  `BACKEND_PORT=3000`, so scratch serves on :3000; harness must click the
+  Chats nav entry (a stale Bookmarks-panel tab reads empty); tag names
+  unique per run (409 on re-create). User DB untouched (scratch
+  destroyed). CLOSED as implemented.
 
 ## 7. Beta feedback log, round 3 (manual testing, 2026-09-22)
 
