@@ -868,10 +868,27 @@ Product renames below deliberately reverse the UI-redesign copy deck
   notes", Divisibility (0.85) enabled and opens the real page, Factor
   (0.30) disabled with explanation and opens nothing, zero uncaught.
   User DB untouched; servers stopped. CLOSED.
-- [ ] F16 Model name is a debug feature — hide the model name/selector
+- [x] F16 Model name is a debug feature — hide the model name/selector
   from end users (debug-gated or removed from the learner surface).
   Reverses the redesign "keep model selector" call; keep the dispatch
   default intact underneath.
+  DONE 2026-09-22, debug-gated (not removed): new central
+  `knowledgeable/modelPicker.ts` (`modelPickerDisabled = true` +
+  `showModelPicker()` with the `?kdebug` escape mirroring
+  `showDevControls`); `Header.tsx` mounts `ModelSelector` only when the
+  gate passes. Picker, context, selection state, backend dispatch, and
+  the advertised default (`gemini-3.1-flash-lite` + `local-tutor` on
+  `/api/models`) all untouched — selection resolves from store defaults
+  exactly as on today's fresh boot. The header picker was the only
+  model-name surface (message components render none). Locked by a
+  helper contract + a Header render spec with the picker stubbed (5/5
+  Jest green; tsc zero in touched files). Browser pass DONE 2026-09-22
+  (CDP vs backend :3000 + Vite :3090, `/tmp/cdp-f16.js` uncommitted):
+  5/5 — no picker button and no model names in the header by default,
+  in-page `?kdebug` mounts the picker, zero uncaught. (Harness note: the
+  boot redirect strips query params, so the escape is set post-boot via
+  history + popstate — same limitation the pre-existing `?kdebug` dev
+  controls have.) User DB untouched; servers stopped. CLOSED.
 - [ ] F17 Badge tooltip removal — the floating popup over known concepts
   cannot be dismissed and reads as clutter; tooltips are a debug feature.
   Replace with style-only badges (background change / underline / custom
