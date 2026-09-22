@@ -786,9 +786,23 @@ Product renames below deliberately reverse the UI-redesign copy deck
   (template phrases banned, voice phrases required); `cargo test -p
   application` 54/54 green, `cargo fmt` clean. No frontend changes.
   Cached pages keep old voice until staleness regenerates them. CLOSED.
-- [ ] F12 Projects misnamed — "Projects" is the wrong product word
+- [x] F12 Projects misnamed — "Projects" is the wrong product word
   (candidate: "Folders"). DECISION NEEDED from the user, then rename the
   surface. Upstream feature, rename only.
+  DECIDED 2026-09-22 (user): "Folders". DONE same day, rename-first (F13
+  refresh loop + F14 dead create are separate bug bricks, untouched):
+  30 locale keys in `knowledgeableOverrides` (headers, actions, dialogs,
+  empty states, counters, errors — singular/plural handled; Langfuse and
+  schedule "project" strings deliberately excluded as other features'
+  words). Code identifiers, route paths, and query keys stay
+  upstream-shaped. Locked by a new branding contract incl. a sweep
+  asserting zero `[Pp]roject` in every non-Langfuse/schedule key (3/3
+  Jest green; tsc zero in touched files). Browser pass DONE 2026-09-22
+  (CDP vs backend :3000 + Vite :3090, `/tmp/cdp-f12.js` uncommitted):
+  6/6 — sidebar header "Folders", "All folders" + "New folder" entries,
+  zero Project words in DOM text, `/projects` still redirects to `/c/new`
+  with composer, zero uncaught exceptions. User DB untouched; servers
+  stopped. CLOSED.
 - [ ] F13 Projects list refreshes uncontrollably every few seconds —
   suspected runaway refetch/polling loop. Reproduce, find the trigger
   (query invalidation, interval, or focus-refetch), fix, and lock with a
