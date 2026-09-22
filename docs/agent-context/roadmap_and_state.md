@@ -910,12 +910,31 @@ Product renames below deliberately reverse the UI-redesign copy deck
   Definition", zero uncaught; test conversation DELETE-confirmed gone
   (0 rows) and servers stopped. CLOSED.
 - [ ] F18 Pre-ship debug purge (epic, final step before public shipping) —
-  sweep and remove/gate every debug remnant: LibreChat leftovers (query
-  devtools confirm, verbose surfaces) and ours (`?kdebug`, `k-dev`
-  details, confidence percentages, debug toggles, badge tooltips). File
-  per-surface sub-tasks from the sweep; nothing ships while any remain.
-- [ ] F19 Bookmarks not functional — POST-MVP, not beta-blocking. Backend
+  VERY LAST STEP: do not execute before all other work is done. Direction
+  DECIDED 2026-09-22 (user): no code removal per se — gate LOADING so
+  debug modules never load in the shipped app (devtools, `?kdebug`
+  escapes, `k-dev` details, confidence percentages, debug toggles,
+  badge tooltips [done F17]). Full sweep inventory + per-surface
+  sub-task proposal recorded 2026-09-22 (see session notes): F18a map dev
+  controls, F18b confidence-debug settings entry, F18c dead `.k-tip` CSS,
+  F18d devtools/trace/thinking gate confirmation, F18e ship-quiet logging
+  default, F18f map/wiki percentages verdict (product call open), F18g
+  final sweep re-run. Reframe on execution: prefer load-gates over
+  deletion everywhere (keep code, skip mounting/importing in prod).
+- [x] F19 Bookmarks not functional — POST-MVP, not beta-blocking. Backend
   contracts (tags/pin/archive/search/share) are acknowledged missing in
   `MVP.md` ("Deliberately Out of MVP") and `integration/librechat.md`
   ("future contract"). Track here so the gap is not lost; implementing
   any of them is its own backend+UI task.
+  TRACKED 2026-09-22, no code changes (by design). Graceful-degradation
+  check (CDP vs backend :3000 + Vite :3090, one scratch keyed turn,
+  `/tmp/cdp-f19.js` uncommitted): header exposes "Bookmarks" /
+  "Add Bookmarks" controls (permission deliberately granted, KEEP hold);
+  clicking Add Bookmarks fires no persistence (no `/api/tags*` route —
+  confirmed absent by grep over `crates/api/src/routes*`), shows no
+  toast, opens no dialog, leaves no phantom state, crashes nothing
+  (zero uncaught). Scratch conversation DELETE-confirmed gone (0 rows);
+  servers stopped. FUTURE CONTRACT (its own backend+UI project, with
+  pin/archive/search/minimal-share siblings per §9.2): tags CRUD routes,
+  panel truthfulness, then re-verify this check into a positive proof.
+  CLOSED as tracked.
