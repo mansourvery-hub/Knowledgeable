@@ -1097,3 +1097,23 @@ Product renames below deliberately reverse the UI-redesign copy deck
   already graceful (search hook disables on error; share UI config-gated
   off; tags now served since the bookmarks build). Nothing left to gate.
   CLOSED as investigated.
+
+## 9. Post-MVP projects (user-authorized, 2026-09-22)
+
+- [x] F24 Conversation search — sidebar SearchBar + `/search` message-results
+  page backed by SQLite substring search (no MeiliSearch daemon at our
+  scale). Contract: `GET /api/messages?search=&pageSize=&cursor=` →
+  `{messages: TMessage[] (real titles, conversationIds), nextCursor}` +
+  `GET /api/search/enable → true`. DONE 2026-09-22: repo substring query
+  (titles joined for row navigation), route + enable flag, convos-route
+  collision avoided by static-vs-capture precedence. Locked by 3 router
+  tests (shape/titles/pagination/blank/404-parity); 133/133 workspace
+  green. Browser proof `/tmp/cdp-search.js` (uncommitted) 5/5 — search
+  box mounts on enable, query renders 12 message rows, go-to button opens
+  its conversation with 11 messages, zero uncaught. Proof notes: Vite
+  hard-codes BACKEND_PORT so scratch serves on :3000; accumulate-and-close
+  CDP tabs between runs (a stale-tab pileup looks exactly like a wedged
+  renderer); click the go-to button by title — button[0] is Copy, whose
+  headless clipboard-permission request wedges CDP (upstream/environment
+  quirk, real browsers unaffected, out of scope). User DB untouched
+  (scratch destroyed). CLOSED.
