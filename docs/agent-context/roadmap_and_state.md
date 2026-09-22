@@ -803,10 +803,28 @@ Product renames below deliberately reverse the UI-redesign copy deck
   zero Project words in DOM text, `/projects` still redirects to `/c/new`
   with composer, zero uncaught exceptions. User DB untouched; servers
   stopped. CLOSED.
-- [ ] F13 Projects list refreshes uncontrollably every few seconds —
+- [x] F13 Projects list refreshes uncontrollably every few seconds —
   suspected runaway refetch/polling loop. Reproduce, find the trigger
   (query invalidation, interval, or focus-refetch), fix, and lock with a
   regression test.
+  ROOT CAUSE 2026-09-22: focus-refetch, amplified by the missing backend.
+  `useProjectsInfiniteQuery` inherited React Query's
+  `refetchOnWindowFocus: true` default while no `/api/projects*` backend
+  exists, and a permanently-404ing query never holds fresh data — so EVERY
+  window focus fired a fetch that 404ed into a full retry storm with
+  spinner flicker. No `refetchInterval` exists on this path and all
+  invalidation sites are mutation/SSE-driven (none on a timer). Live repro
+  (CDP + Network domain, idle + synthetic focus): boot storm only while
+  idle, then one focus event → 4 hits at +0/+1/+3/+7s backoff. FIX (same
+  brick): `refetchOnWindowFocus: false` + `refetchOnReconnect: false`
+  defaults in `useProjectsInfiniteQuery`, mirroring `useProjectQuery`
+  below it; callers can still override; mount fetches still run; retry
+  behavior untouched. Locked by `projectsFocusRefetch.spec.tsx` (mount
+  fetches once, focus + reconnect add zero fetches — FAILS pre-fix 0/2,
+  green post-fix 2/2; 13/13 with the neighboring Projects suites; tsc
+  zero in touched files). Browser proof post-fix (CDP, `/tmp/cdp-f13*.js`
+  uncommitted): boot storm 4 hits, then 3 focus events → zero additional
+  hits, zero uncaught. User DB untouched; servers stopped. CLOSED.
 - [ ] F14 Project creation fails ("failed to create project") — reproduce
   and diagnose (suspect: no backend route backing the upstream mutation);
   either implement the contract or remove the affordance. Do not leave a

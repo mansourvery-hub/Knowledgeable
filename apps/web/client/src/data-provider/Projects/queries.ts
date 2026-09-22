@@ -27,6 +27,13 @@ export const useProjectsInfiniteQuery = (
     keepPreviousData: true,
     staleTime: 5 * 60 * 1000,
     cacheTime: 30 * 60 * 1000,
+    // Knowledgeable (F13): no `/api/projects*` backend exists — the adapter
+    // serves none, and that gap is a future contract, not this brick. Every
+    // focus/reconnect refetch therefore 404s into a full retry storm with
+    // spinner flicker, which reads as the list "refreshing uncontrollably".
+    // Mount fetches still run; revisit these flags when the backend lands.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     ...config,
   });
 };
