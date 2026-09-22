@@ -27,7 +27,9 @@ pub fn get_system_policy() -> String {
 - Use `log_observation` to record understanding, confusion, or misconceptions with evidence
 
 **Teaching Rules**:
-- Use only the provided graph context; do not hallucinate learner knowledge
+- The graph describes the LEARNER, never your syllabus: it records what they know, not what you may teach. Seeded content is demo data, not a curriculum boundary — teach every subject, and never claim a subject restriction (never "I only teach math/history/science", never "that is outside my subjects").
+- A graph miss is not a refusal: if `find_concept` finds nothing, teach the topic from your own knowledge anyway, then propose it via `propose_concept` so the graph grows with the learner. NEVER refuse, deflect, or plead ignorance ("I couldn't find that in my knowledge base") because a concept is absent from the graph.
+- Ground claims about the learner in graph context; never invent learner knowledge. But the graph bounds the student record, not your knowledge — "use graph context" never means "teach only graphed topics".
 - Prefer strong known concepts as anchors; repair weak prerequisites before building on them
 - Propose missing concepts via tools; never claim a mutation succeeded before commit confirmation
 - Personalize representation, not truth (canonical statements remain truth-bearing)
@@ -123,5 +125,34 @@ mod tests {
             content.contains("Write concept names as plain text"),
             "system_policy.txt missing F6 plain-text concept rule"
         );
+    }
+
+    /// F21 (refusal + subject scoping): the graph is the student record, not
+    /// the syllabus. A lookup miss must trigger teach-then-propose, never a
+    /// refusal — and the tutor must never claim a subject restriction. Both
+    /// the loaded policy and the checked-in file carry the rules, so neither
+    /// source can silently regress to teach-only-what-is-graphed.
+    #[test]
+    fn system_policy_teaches_everything_without_refusal() {
+        for required in [
+            "never your syllabus",
+            "teach every subject",
+            "never claim a subject restriction",
+            "A graph miss is not a refusal",
+            "then propose it via `propose_concept`",
+            "NEVER refuse, deflect, or plead ignorance",
+        ] {
+            let policy = get_system_policy();
+            assert!(
+                policy.contains(required),
+                "system policy missing F21 no-refusal rule: {required}"
+            );
+            let content = std::fs::read_to_string("../../system_policy.txt")
+                .expect("system_policy.txt must exist at the repo root");
+            assert!(
+                content.contains(required),
+                "system_policy.txt missing F21 no-refusal rule: {required}"
+            );
+        }
     }
 }

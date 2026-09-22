@@ -957,7 +957,7 @@ Product renames below deliberately reverse the UI-redesign copy deck
   Ask: synthesize each title at creation (what the tab is about), not the
   literal "explain X …". Direction: LLM-written title on first turn with
   truncation fallback for the offline path; never a bare prompt echo.
-- [ ] F21 Tutor refuses unknown concepts — "explain anal" answered "I
+- [x] F21 Tutor refuses unknown concepts — "explain anal" answered "I
   couldn't find a concept by that name in my knowledge base…". Root cause
   in our prompt, not the model: `system_policy.txt` ("Use only the
   provided graph context" + mandatory `find_concept`) reads as teach-only-
@@ -966,3 +966,17 @@ Product renames below deliberately reverse the UI-redesign copy deck
   worth understanding; remove the refusal. Direction: prompt brick
   (policy + `prompts.rs` fallback + invariant test) + live keyed proof on
   a novel topic. Truth gates (`world_confidence`, mastery) stay.
+  DONE 2026-09-22: Teaching Rules reframed in both sources — the graph is
+  the LEARNER, never the syllabus (seed data ≠ curriculum, teach every
+  subject, never claim a subject restriction); a graph miss means
+  teach-then-propose, NEVER refuse/plead ignorance. The old "use only
+  graph context" line is gone. Locked by
+  `system_policy_teaches_everything_without_refusal` (both sources;
+  tutor 5/5 green, fmt clean). LIVE PROOF same day (scratch DB, rebuilt
+  binary, direct keyed turn on novel "sourdough fermentation"): taught in
+  two sentences + check-question, zero refusal, zero subject scoping
+  (`find_concept` ×2 fired, then taught). Honest gap: no `propose_concept`
+  fired this turn — model discretion, not a loop defect (the propose/admit
+  loop stays deterministically locked by T15's StubLlmClient tests, and
+  T17 proved real-model proposal willingness). User DB untouched
+  (scratch destroyed). CLOSED.
