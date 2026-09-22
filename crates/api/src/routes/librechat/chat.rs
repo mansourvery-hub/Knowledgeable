@@ -33,7 +33,7 @@ use tokio_stream::Stream;
 use uuid::Uuid;
 
 use super::{
-    assistant_msg_json, conv_json, derive_title, msg_json,
+    assistant_msg_json, conv_json_tags, derive_title, msg_json,
     stream_registry::{latest_for_conversation, new_registry_entry, StreamRegistry},
     ENDPOINT_NAME, NO_PARENT,
 };
@@ -173,6 +173,7 @@ fn final_frame(
     request_parent: &str,
     model: Option<&str>,
     final_conv: &domain::Conversation,
+    final_tags: &[String],
     assistant_id: Uuid,
     conversation_id: Uuid,
     response_text: &str,
@@ -181,7 +182,7 @@ fn final_frame(
 ) -> Value {
     json!({
         "final": true,
-        "conversation": conv_json(final_conv),
+        "conversation": conv_json_tags(final_conv, final_tags),
         "title": final_conv.title.clone().unwrap_or_else(|| "New Chat".to_string()),
         "requestMessage": msg_json(user_msg, request_parent, model),
         "responseMessage": assistant_msg_json(
@@ -323,12 +324,21 @@ async fn annotate_and_finish(ctx: TurnContext, outcome: TurnOutcome, emit: impl 
         }
     }
 
-    // Reload the conversation so `updatedAt`/`title` reflect the turn.
+    // Reload the conversation so `updatedAt`/`title` reflect the turn,
+    // plus its live bookmark tags for client cache reconciliation.
     let final_conv = application::conversation_service::get_conversation(&pool, conversation_id)
         .await
         .ok()
         .flatten()
         .unwrap_or(conversation);
+    let final_tags = match application::conversation_service::ensure_default_learner(&pool).await {
+        Ok(learner_id) => {
+            application::tag_service::tags_for_conversation(&pool, learner_id, conversation_id)
+                .await
+                .unwrap_or_default()
+        }
+        Err(_) => Vec::new(),
+    };
 
     let (response_text, error_flag) = if errored {
         if accumulated.trim().is_empty() {
@@ -345,6 +355,7 @@ async fn annotate_and_finish(ctx: TurnContext, outcome: TurnOutcome, emit: impl 
         &request_parent,
         model.as_deref(),
         &final_conv,
+        &final_tags,
         assistant_id,
         conversation_id,
         &response_text,

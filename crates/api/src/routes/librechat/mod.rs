@@ -9,13 +9,14 @@ pub mod concepts;
 pub mod convos;
 pub mod stream_registry;
 pub mod system;
+pub mod tags;
 pub mod wiki;
 
 #[cfg(test)]
 mod tests;
 
 use axum::{
-    routing::{get, post},
+    routing::{delete, get, post, put},
     Router,
 };
 
@@ -46,6 +47,11 @@ pub fn routes() -> Router<AppState> {
         .route("/api/convos/update", post(convos::update))
         .route("/api/convos/gen_title/:id", get(convos::gen_title))
         .route("/api/convos/:id", get(convos::get_one))
+        // Conversation tags for bookmarks (Phase 5, F19): the static
+        // `convo` segment wins over `:tag` so the two cannot collide.
+        .route("/api/tags", get(tags::list).post(tags::create))
+        .route("/api/tags/convo/:conversation_id", put(tags::set_for_conversation))
+        .route("/api/tags/:tag", put(tags::update).delete(tags::delete))
         // Messages
         .route("/api/messages/:conversation_id", get(convos::list_messages))
         // Chat (SSE). LibreChat posts every endpoint's turns through the agents
@@ -68,6 +74,14 @@ pub fn routes() -> Router<AppState> {
 
 /// Serializes a conversation into LibreChat's `TConversation` shape.
 pub fn conv_json(conv: &domain::Conversation) -> serde_json::Value {
+    conv_json_tags(conv, &[])
+}
+
+/// Serializes a conversation with its bookmark tags. The client reads
+/// per-conversation `tags` for menu state and cache reconciliation, so list
+/// and detail handlers pass the live membership (fetched in one round-trip
+/// via `tags_for_conversations`); fresh conversations carry none.
+pub fn conv_json_tags(conv: &domain::Conversation, tags: &[String]) -> serde_json::Value {
     serde_json::json!({
         "conversationId": conv.id.to_string(),
         "endpoint": ENDPOINT_NAME,
@@ -79,6 +93,7 @@ pub fn conv_json(conv: &domain::Conversation) -> serde_json::Value {
         // turns still route to `/api/agents/chat/knowledgeable`.
         "endpointType": "custom",
         "title": conv.title.clone().unwrap_or_else(|| "New Chat".to_string()),
+        "tags": tags,
         "createdAt": conv.created_at.to_rfc3339(),
         "updatedAt": conv.updated_at.to_rfc3339(),
         "isArchived": false,

@@ -8,7 +8,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use uuid::Uuid;
 
-use super::{conv_json, derive_title, msg_json, NO_PARENT};
+use super::{conv_json_tags, derive_title, msg_json, NO_PARENT};
 use crate::error::AppError;
 use crate::routes::AppState;
 
@@ -30,7 +30,26 @@ pub async fn list(State(state): State<AppState>) -> Result<Json<Value>, AppError
         .await
         .map_err(|e| AppError::Internal(e.to_string()))?;
 
-    let conversations: Vec<Value> = convs.iter().map(conv_json).collect();
+    let conversations: Vec<Value> = {
+        let learner_id = application::conversation_service::default_learner_id();
+        let ids: Vec<Uuid> = convs.iter().map(|c| c.id).collect();
+        let pairs = application::tag_service::tags_for_conversations(pool, learner_id, &ids)
+            .await
+            .map_err(|e| AppError::Internal(e.to_string()))?;
+        let mut by_convo: std::collections::HashMap<Uuid, Vec<String>> =
+            std::collections::HashMap::new();
+        for (id, tag) in pairs {
+            by_convo.entry(id).or_default().push(tag);
+        }
+        convs
+            .iter()
+            .map(|c| {
+                let empty = Vec::new();
+                let tags = by_convo.get(&c.id).unwrap_or(&empty);
+                conv_json_tags(c, tags)
+            })
+            .collect()
+    };
     Ok(Json(json!({
         "conversations": conversations,
         "nextCursor": Value::Null,
@@ -48,7 +67,11 @@ pub async fn get_one(
         .await
         .map_err(|e| AppError::Internal(e.to_string()))?
         .ok_or_else(|| AppError::NotFound("conversation not found".into()))?;
-    Ok(Json(conv_json(&conv)))
+    let learner_id = application::conversation_service::default_learner_id();
+    let tags = application::tag_service::tags_for_conversation(pool, learner_id, conversation_id)
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    Ok(Json(conv_json_tags(&conv, &tags)))
 }
 
 /// `GET /api/convos/gen_title/:id` — returns (and lazily derives) a title.
@@ -119,7 +142,11 @@ pub async fn update(
         .await
         .map_err(|e| AppError::Internal(e.to_string()))?
         .unwrap_or(conv);
-    Ok(Json(conv_json(&updated)))
+    let learner_id = application::conversation_service::default_learner_id();
+    let tags = application::tag_service::tags_for_conversation(pool, learner_id, conversation_id)
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    Ok(Json(conv_json_tags(&updated, &tags)))
 }
 
 #[derive(Deserialize)]

@@ -1354,3 +1354,147 @@ async fn concept_search_finds_by_name_or_statement() {
     let response = app.oneshot(get("/api/concepts/search?q=zzz-no-match")).await.unwrap();
     assert_eq!(body_json(response).await.as_array().unwrap().len(), 0);
 }
+
+fn json_req(method: &str, uri: &str, payload: serde_json::Value) -> Request<Body> {
+    Request::builder()
+        .method(method)
+        .uri(uri)
+        .header("content-type", "application/json")
+        .body(Body::from(payload.to_string()))
+        .unwrap()
+}
+
+#[tokio::test]
+async fn tags_full_bookmark_cycle() {
+    let (app, pool) = setup().await;
+
+    // Create.
+    let response = app
+        .clone()
+        .oneshot(json_req("POST", "/api/tags", serde_json::json!({ "tag": "math" })))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let created = body_json(response).await;
+    assert_eq!(created["_id"], "math");
+    assert_eq!(created["tag"], "math");
+    assert_eq!(created["count"], 0);
+    assert_eq!(created["position"], 0);
+    assert!(created["createdAt"].is_string());
+
+    // Duplicate conflicts.
+    let response = app
+        .clone()
+        .oneshot(json_req("POST", "/api/tags", serde_json::json!({ "tag": "math" })))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::CONFLICT);
+
+    // List carries it.
+    let response = app.clone().oneshot(get("/api/tags")).await.unwrap();
+    let list = body_json(response).await;
+    assert_eq!(list.as_array().unwrap().len(), 1);
+
+    // Attach to a conversation (also proves `/tags/convo/:id` wins over
+    // the `:tag` capture: an update of tag "convo" would 404).
+    let convo =
+        application::conversation_service::create_conversation(&pool, Some("t")).await.unwrap();
+    let uri = format!("/api/tags/convo/{}", convo.id);
+    let response = app
+        .clone()
+        .oneshot(json_req("PUT", &uri, serde_json::json!({ "tags": ["math"], "tag": "math" })))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await, serde_json::json!(["math"]));
+
+    // Conversations now carry live tags.
+    let response = app.clone().oneshot(get("/api/convos")).await.unwrap();
+    let convos = body_json(response).await;
+    assert_eq!(convos["conversations"][0]["tags"], serde_json::json!(["math"]));
+    let uri = format!("/api/convos/{}", convo.id);
+    let response = app.clone().oneshot(get(&uri)).await.unwrap();
+    assert_eq!(body_json(response).await["tags"], serde_json::json!(["math"]));
+
+    // Rename moves membership.
+    let response = app
+        .clone()
+        .oneshot(json_req("PUT", "/api/tags/math", serde_json::json!({ "tag": "maths" })))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await["tag"], "maths");
+    let uri = format!("/api/convos/{}", convo.id);
+    let response = app.clone().oneshot(get(&uri)).await.unwrap();
+    assert_eq!(body_json(response).await["tags"], serde_json::json!(["maths"]));
+
+    // Delete clears membership.
+    let response = app
+        .clone()
+        .oneshot(
+            Request::builder().method("DELETE").uri("/api/tags/maths").body(Body::empty()).unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let response = app.clone().oneshot(get("/api/tags")).await.unwrap();
+    assert_eq!(body_json(response).await.as_array().unwrap().len(), 0);
+    let uri = format!("/api/convos/{}", convo.id);
+    let response = app.clone().oneshot(get(&uri)).await.unwrap();
+    assert_eq!(body_json(response).await["tags"], serde_json::json!(Vec::<String>::new()));
+}
+
+#[tokio::test]
+async fn tags_reject_bad_input_and_missing_rows() {
+    let (app, _pool) = setup().await;
+
+    for bad in [
+        serde_json::json!({ "tag": "" }),
+        serde_json::json!({ "tag": "   " }),
+        serde_json::json!({}),
+    ] {
+        let response = app.clone().oneshot(json_req("POST", "/api/tags", bad)).await.unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    let missing = uuid::Uuid::new_v4();
+    let uri = format!("/api/tags/convo/{missing}");
+    let response = app
+        .clone()
+        .oneshot(json_req("PUT", &uri, serde_json::json!({ "tags": ["x"], "tag": "x" })))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    let response = app
+        .clone()
+        .oneshot(json_req("PUT", "/api/tags/ghost", serde_json::json!({ "tag": "x" })))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    let response = app
+        .clone()
+        .oneshot(
+            Request::builder().method("DELETE").uri("/api/tags/ghost").body(Body::empty()).unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    // Rename onto an existing name conflicts.
+    for name in ["a", "b"] {
+        let response = app
+            .clone()
+            .oneshot(json_req("POST", "/api/tags", serde_json::json!({ "tag": name })))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+    let response = app
+        .clone()
+        .oneshot(json_req("PUT", "/api/tags/a", serde_json::json!({ "tag": "b" })))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::CONFLICT);
+}

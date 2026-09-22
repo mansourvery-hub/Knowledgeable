@@ -20,6 +20,9 @@ mod neighborhood_test;
 mod observation_test;
 #[cfg(test)]
 mod stream_integrity_test;
+pub mod tag_service;
+#[cfg(test)]
+mod tag_test;
 #[cfg(test)]
 mod title_test;
 #[cfg(test)]

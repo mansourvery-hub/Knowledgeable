@@ -50,6 +50,20 @@ pub struct ConversationMessage {
     pub created_at: DateTime<Utc>,
 }
 
+/// A learner-scoped conversation tag (Phase 5 bookmarks).
+///
+/// `count` is computed (mapped conversations), never stored: the tag list
+/// always reports live membership.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConversationTag {
+    pub tag: String,
+    pub description: Option<String>,
+    pub position: i64,
+    pub count: i64,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SseEnvelope {
     pub version: u8,
