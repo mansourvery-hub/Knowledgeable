@@ -1149,3 +1149,22 @@ Product renames below deliberately reverse the UI-redesign copy deck
   Proof note: desktop row-menu trigger is `aria "Conversation Menu
   Options"` (the `convo-options-trigger` testid is the small-screen
   fallback only). User DB untouched (scratch destroyed). CLOSED.
+
+## 12. Post-MVP projects, continued (2026-09-23)
+
+- [x] F27 Minimal share — the deliberate narrow exception (share one
+  conversation; nothing social). DONE: `shared_links` table (unguessable
+  UUID ids, live message reads, cascade delete, no expiry — revocation is
+  explicit delete), service layer, 7 routes (owner create/link/retarget/
+  revoke + public read/config/fork) plus the share flow's missing
+  `GET /api/messages/:convo/:msg` single-fetch; Share menu surfaces via
+  `sharedLinksEnabled` config flip. Locked by 2 service + 3 router tests
+  (scope/fork/revoke/400s); 141/141 workspace green. Browser proof
+  `/tmp/cdp-share.js` (uncommitted) 7/7 — dialog create yields a new link,
+  public view renders title + messages, fork lands in own history,
+  revoked link redirects gracefully, zero uncaught. Proof notes: dialog
+  create is multi-step slow (resolve → create → refresh; poll the link
+  endpoint, not dialog text); dialog has separate no-link/has-link
+  states; stale CDP tabs must be closed between runs. Out of scope:
+  links LIST page, shared files, expiry, principal-based sharing. User DB
+  untouched (scratch destroyed). CLOSED.
