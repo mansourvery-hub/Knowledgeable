@@ -918,7 +918,7 @@ Product renames below deliberately reverse the UI-redesign copy deck
   after hover+focus, click opens "Prime Numbers: A Foundational
   Definition", zero uncaught; test conversation DELETE-confirmed gone
   (0 rows) and servers stopped. CLOSED.
-- [ ] F18 Pre-ship debug purge (epic, final step before public shipping) —
+- [x] F18 Pre-ship debug purge (epic, final step before public shipping) —
   VERY LAST STEP: do not execute before all other work is done. Direction
   DECIDED 2026-09-22 (user): no code removal per se — gate LOADING so
   debug modules never load in the shipped app (devtools, `?kdebug`
@@ -944,6 +944,17 @@ Product renames below deliberately reverse the UI-redesign copy deck
   logging: `.env.example` down to `RUST_LOG=info` (local `.env`
   untouched). Dead `.k-tip` CSS deliberately LEFT (no-deletion rule).
   OPEN: F18f map/wiki percentages verdict (product call).
+  F18f DECIDED 2026-09-22 (user): (a) KEEP as product — confidence
+  visibility is the learner model made legible.
+  F18g FINAL SWEEP 2026-09-22, EPIC CLOSED: every row re-verified —
+  k-dev DEV-or-`?kdebug`, picker gate + `?kdebug` escape, confidence
+  entry `?kdebug`-only, badge popup gone (aria percentages kept,
+  toggle-gated), map/wiki percentages product, devtools prod-closed
+  (spec 3/3), thinking default OFF, trace key absent from adapter,
+  `.k-tip` CSS left (no-deletion), example log `info`, zero
+  console/debugger in `knowledgeable/`. Doctrine holds throughout: no
+  debug code deleted anywhere; nothing debug renders to end users
+  uninvited. CLOSED.
 - [x] F19 Bookmarks not functional — POST-MVP, not beta-blocking. Backend
   contracts (tags/pin/archive/search/share) are acknowledged missing in
   `MVP.md` ("Deliberately Out of MVP") and `integration/librechat.md`
