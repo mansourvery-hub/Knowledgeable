@@ -1168,3 +1168,19 @@ Product renames below deliberately reverse the UI-redesign copy deck
   states; stale CDP tabs must be closed between runs. Out of scope:
   links LIST page, shared files, expiry, principal-based sharing. User DB
   untouched (scratch destroyed). CLOSED.
+
+- [x] F28 Branching message tree — edits/regenerates create siblings
+  (SiblingSwitch navigation) instead of linear tail-append. DONE:
+  `parent_message_id` nullable FK (`ON DELETE SET NULL` + index) on
+  `conversation_messages`, one-SQL `LAG` backfill preserving linear
+  rendering, `create_message_with_parent` repo fns, `add_message`
+  tail-append helper + `begin_tutor_turn_with_parent`, explicit
+  `NO_PARENT`→root vs missing/invalid→tail in `chat.rs`, duplicate
+  remaps parents via `id_map` (tree shape preserved). Locked by 3
+  application tests (sibling-via-parent, backfill==synthesis,
+  forged→tail); 145/145 workspace green. Browser proof
+  `/tmp/opencode/cdp-b2.js` (uncommitted) 4/4 — sibling pair seeded
+  through the real chat API renders both questions with a `2 / 2`
+  counter (view defaults to latest), previous-arrow lands on `1 / 2`,
+  reload keeps pair + counter, zero uncaught. Proof convo deleted
+  after; user DB otherwise untouched. CLOSED.
