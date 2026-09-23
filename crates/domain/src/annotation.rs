@@ -72,6 +72,10 @@ fn is_word_char(c: char) -> bool {
 /// - Longest-name-wins on overlap ("Prime Number" beats "Number"). Ties
 ///   (equal-length names) break by the order they appear in `candidates`,
 ///   since sorting is stable.
+/// - Single-pass scan: all candidate names are matched against the text in
+///   one left-to-right automaton pass instead of one scan per candidate.
+///   Longest-first claiming, deduplication, and the cap apply afterwards
+///   exactly as before, so outputs are unchanged.
 /// - Every matching candidate is found and positioned *before* the cap is
 ///   applied, so a tight `limit` keeps the earliest mentions in the text,
 ///   never a later-but-longer-named concept at the expense of an earlier
@@ -85,34 +89,74 @@ pub fn match_mentions(text: &str, candidates: &[(Uuid, String)], limit: usize) -
     if limit == 0 || text.trim().is_empty() {
         return Vec::new();
     }
-    let hay: Vec<char> = text.to_lowercase().chars().collect();
+    let hay = text.to_lowercase();
 
-    // Longest names first so they claim their spans before shorter overlaps.
-    let mut ordered: Vec<(Uuid, Vec<char>)> = candidates
+    // Candidate indexes in discovery order: longest names first so they
+    // claim their spans before shorter overlaps; ties keep `candidates`
+    // order (stable sort), which is the documented tie-break.
+    let mut order: Vec<usize> = candidates
         .iter()
-        .filter(|(_, name)| name.chars().count() >= MIN_MATCHABLE_NAME_LEN)
-        .map(|(id, name)| (*id, name.to_lowercase().chars().collect::<Vec<_>>()))
+        .enumerate()
+        .filter(|(_, (_, name))| name.chars().count() >= MIN_MATCHABLE_NAME_LEN)
+        .map(|(i, _)| i)
         .collect();
-    ordered.sort_by_key(|(_, name)| std::cmp::Reverse(name.len()));
+    order.sort_by_key(|&i| std::cmp::Reverse(candidates[i].1.chars().count()));
 
-    let mut claimed = vec![false; hay.len()];
+    let automaton =
+        match aho_corasick::AhoCorasick::new(order.iter().map(|&i| candidates[i].1.to_lowercase()))
+        {
+            Ok(automaton) => automaton,
+            // Unreachable: every needle is non-empty (length-filtered above).
+            Err(_) => return Vec::new(),
+        };
+
+    // Every pattern occurrence in one pass, grouped by pattern
+    // (construction order == `order` sequence).
+    let mut occurrences: Vec<Vec<(usize, usize)>> = vec![Vec::new(); order.len()];
+    for mat in automaton.find_iter(&hay) {
+        occurrences[mat.pattern().as_usize()].push((mat.start(), mat.end()));
+    }
+
+    // Byte offset of each char start, for O(log n) byte->char mapping of
+    // match spans (automaton reports byte offsets; claiming is per char).
+    let char_starts: Vec<usize> = hay.char_indices().map(|(byte, _)| byte).collect();
+    let to_char = |byte: usize| -> usize {
+        match char_starts.binary_search(&byte) {
+            Ok(i) | Err(i) => i,
+        }
+    };
+
+    let mut claimed = vec![false; hay.chars().count()];
     // (first mention position, id). Collected across the *entire* candidate
     // list (bounded by the caller, so this stays cheap) before any cap is
     // applied -- see the doc comment above for why the cap must come last.
     let mut hits: Vec<(usize, Uuid)> = Vec::new();
 
-    for (id, needle) in &ordered {
+    for (pattern_idx, &candidate_idx) in order.iter().enumerate() {
+        let (id, _) = &candidates[candidate_idx];
         // A duplicate id in `candidates` (two aliases for one concept, say)
         // only needs its first successful match recorded.
         if hits.iter().any(|(_, hit)| hit == id) {
             continue;
         }
-        let Some(first) = find_first(&hay, needle, &claimed) else {
-            continue;
-        };
-        // Claim every occurrence so shorter names cannot reuse the span.
-        claim_all(&hay, needle, &mut claimed);
-        hits.push((first, *id));
+        // Leftmost-first claiming over this pattern's whole-word matches,
+        // mirroring the old per-candidate scan exactly.
+        let mut spans = std::mem::take(&mut occurrences[pattern_idx]);
+        spans.sort_by_key(|&(start, _)| start);
+        let mut first: Option<usize> = None;
+        for (byte_start, byte_end) in spans {
+            if !is_match_boundary(&hay, byte_start, byte_end) {
+                continue;
+            }
+            let span = to_char(byte_start)..to_char(byte_end);
+            if claimed[span.clone()].iter().all(|c| !c) {
+                claimed[span].fill(true);
+                first.get_or_insert(to_char(byte_start));
+            }
+        }
+        if let Some(pos) = first {
+            hits.push((pos, *id));
+        }
     }
 
     hits.sort_by_key(|(pos, _)| *pos);
@@ -120,33 +164,14 @@ pub fn match_mentions(text: &str, candidates: &[(Uuid, String)], limit: usize) -
     hits.into_iter().map(|(_, id)| id).collect()
 }
 
-/// Byte-free first match honoring word boundaries and claimed spans.
-fn find_first(hay: &[char], needle: &[char], claimed: &[bool]) -> Option<usize> {
-    if needle.is_empty() || needle.len() > hay.len() {
-        return None;
-    }
-    (0..=(hay.len() - needle.len())).find(|&i| {
-        (i == 0 || !is_word_char(hay[i - 1]))
-            && (i + needle.len() == hay.len() || !is_word_char(hay[i + needle.len()]))
-            && hay[i..i + needle.len()] == *needle
-            && claimed[i..i + needle.len()].iter().all(|c| !c)
-    })
-}
-
-fn claim_all(hay: &[char], needle: &[char], claimed: &mut [bool]) {
-    if needle.is_empty() || needle.len() > hay.len() {
-        return;
-    }
-    for i in 0..=(hay.len() - needle.len()) {
-        if (i == 0 || !is_word_char(hay[i - 1]))
-            && (i + needle.len() == hay.len() || !is_word_char(hay[i + needle.len()]))
-            && hay[i..i + needle.len()] == *needle
-        {
-            for c in &mut claimed[i..i + needle.len()] {
-                *c = true;
-            }
-        }
-    }
+/// Whole-word check for one automaton match: both neighbors must not be
+/// word characters, so "Factor" never matches inside "factory". `start`
+/// and `end` are byte offsets on char boundaries (guaranteed: the matched
+/// pattern is valid UTF-8, so its edges align with `hay`'s chars).
+fn is_match_boundary(hay: &str, start: usize, end: usize) -> bool {
+    let before_ok = hay[..start].chars().next_back().map_or(true, |c| !is_word_char(c));
+    let after_ok = hay[end..].chars().next().map_or(true, |c| !is_word_char(c));
+    before_ok && after_ok
 }
 
 #[cfg(test)]

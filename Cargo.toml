@@ -43,6 +43,9 @@ thiserror = "2.0"
 anyhow = "1.0"
 dotenvy = "0.15"
 
+# single-pass multi-pattern text matching (annotation matcher)
+aho-corasick = "1"
+
 # llm abstraction helpers
 async-trait = "0.1"
 reqwest = { version = "0.12", features = ["json", "stream", "rustls-tls"], default-features = false }
