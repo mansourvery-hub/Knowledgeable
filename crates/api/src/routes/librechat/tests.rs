@@ -1938,9 +1938,7 @@ async fn share_rejects_bad_ids_and_missing_rows() {
 async fn message_by_id_serves_single_message_array() {
     let (app, pool) = setup().await;
     let id = seed_share_convo(&pool).await;
-    let messages = application::conversation_service::list_messages(&pool, id)
-        .await
-        .unwrap();
+    let messages = application::conversation_service::list_messages(&pool, id).await.unwrap();
     let first = &messages[0];
     let uri = format!("/api/messages/{id}/{}", first.id);
     let response = app.clone().oneshot(get(&uri)).await.unwrap();
