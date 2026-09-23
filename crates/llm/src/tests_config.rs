@@ -4,7 +4,7 @@ use std::env;
 #[test]
 fn test_gemini_client_requires_api_key() {
     // Test that the client doesn't panic if key is empty (it should return error later)
-    let client = GeminiOpenAiClient::new("".to_string());
+    let _client = GeminiOpenAiClient::new("".to_string());
     // The client structure is just a wrapper, real validation happens in stream_chat.
 }
 

@@ -1,17 +1,15 @@
 #[cfg(test)]
 mod tests {
     use crate::tutor_service::stream_tutor_turn;
-    use chrono::Utc;
     use domain::TutorEvent;
     use llm::FakeLlmClient;
-    use uuid::Uuid;
 
     #[tokio::test]
     async fn test_stream_tutor_turn_flow() {
         let pool = sqlx::SqlitePool::connect("sqlite::memory:").await.unwrap();
         sqlx::migrate!("../../migrations").run(&pool).await.unwrap();
 
-        let learner_id = crate::conversation_service::ensure_default_learner(&pool).await.unwrap();
+        let _learner_id = crate::conversation_service::ensure_default_learner(&pool).await.unwrap();
         let conv =
             crate::conversation_service::create_conversation(&pool, Some("test")).await.unwrap();
 

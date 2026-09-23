@@ -1,5 +1,4 @@
 use llm::{ChatMessage, GeminiOpenAiClient, LlmChatRequest, LlmClient};
-use tokio_stream::StreamExt; // Need this to call next() on stream
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use crate::tutor_service::stream_tutor_turn;
-    use domain::{MessageRole, TutorEvent};
     use llm::FakeLlmClient;
     use std::sync::Arc;
 
@@ -9,7 +8,7 @@ mod tests {
     async fn test_multi_turn_conversation_flow() {
         let pool = sqlx::SqlitePool::connect("sqlite::memory:").await.unwrap();
         sqlx::migrate!("../../migrations").run(&pool).await.unwrap();
-        let learner_id = crate::conversation_service::ensure_default_learner(&pool).await.unwrap();
+        let _learner_id = crate::conversation_service::ensure_default_learner(&pool).await.unwrap();
         let conv =
             crate::conversation_service::create_conversation(&pool, Some("math")).await.unwrap();
 
@@ -25,7 +24,7 @@ mod tests {
         )
         .await
         .unwrap();
-        while let Some(_) = rx1.recv().await {}
+        while rx1.recv().await.is_some() {}
 
         // Turn 2: User asks follow up
         let mut rx2 = stream_tutor_turn(
@@ -37,7 +36,7 @@ mod tests {
         )
         .await
         .unwrap();
-        while let Some(_) = rx2.recv().await {}
+        while rx2.recv().await.is_some() {}
 
         // Verify history count (2 user + 2 assistant messages = 4)
         let msgs = crate::conversation_service::list_messages(&pool, conv.id).await.unwrap();
