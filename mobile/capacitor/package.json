@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "sync": "cap sync android",
+    "sync:www": "cd ../../apps/web && npm run build && cd ../../mobile/capacitor && rm -rf www && cp -r ../../apps/web/client/dist www && cap sync android"
   },
   "keywords": [],
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "@capacitor/android": "^8.5.2",
     "@capacitor/cli": "^8.5.2",
