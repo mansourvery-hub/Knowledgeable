@@ -57,6 +57,14 @@ pub fn status_for(learner_confidence: Option<f32>) -> AnnotationStatus {
 fn is_word_char(c: char) -> bool {
     c.is_alphanumeric() || c == '_'
 }
+// KNOWN CAVEAT (found in review, not fixed here): `-` is not a word
+// character, so a hyphenated candidate name (e.g. "Non-Euclidean") can
+// register as matching *inside* a larger, unrelated hyphenated compound
+// (e.g. "non-euclidean-geometry"), because the character immediately after
+// the candidate's span is a hyphen and therefore counts as a boundary.
+// Left as-is pending a decision on whether `-` should count as a word
+// character for this domain's concept names; see
+// `hyphenated_name_matches_inside_larger_compound_known_caveat` below.
 
 /// Deterministically match concept names against turn text.
 ///
@@ -262,5 +270,25 @@ mod tests {
             10,
         );
         assert_eq!(out, vec![first_given]);
+    }
+
+    /// Known caveat found in review, not fixed here (see the comment above
+    /// `is_word_char`): a hyphenated candidate name can match as a prefix of
+    /// an unrelated larger hyphenated compound, because `-` counts as a word
+    /// boundary. This test pins current behavior down so a future change to
+    /// `is_word_char` is a deliberate, visible decision.
+    #[test]
+    fn hyphenated_name_matches_inside_larger_compound_known_caveat() {
+        let non_euclidean = id();
+        let out = match_mentions(
+            "non-euclidean-geometry is a distinct topic",
+            &[(non_euclidean, "Non-Euclidean".into())],
+            10,
+        );
+        assert_eq!(
+            out,
+            vec![non_euclidean],
+            "documents current behavior: hyphen after the candidate's span counts as a boundary"
+        );
     }
 }
