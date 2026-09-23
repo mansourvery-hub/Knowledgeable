@@ -426,7 +426,7 @@ Must handle the known `system.rs` mismatch (`interface.* = false` is NOT enough
 because `role()` grants every permission and several `useSideNavLinks` entries
 gate on permissions only).
 - [x] 2.1 Unsupported features no longer appear in normal navigation.
-- [ ] 2.2 Direct navigation to disabled surfaces cannot produce broken/dead states.
+- [x] 2.2 Direct navigation to disabled surfaces cannot produce broken/dead states.
 - [x] 2.3 Core navigation remains intact.
 - [x] 2.4 Knowledgeable Graph/Wiki navigation remains intact.
 - [x] 2.5 Changes are centralized and upstream-friendly.
@@ -445,7 +445,7 @@ blocking: "All projects" nav entry (covered by the projects-guard brick),
 "Attach File Options" (attachments project), "Use microphone" (speech surfaces
 need their own gating brick: STT/TTS/voice-mode toggles).
 
-Contract 2.2 audit (code-read, browser proof still pending): self-guarding by
+Contract 2.2 proof DONE 2026-09-23 (CDP vs live backend + vite, `/tmp/opencode/cdp-p22.js` uncommitted, 14/14): `/agents`, `/skills`, `/prompts/:id`, `/insights`, `/projects`, `/projects/:id` all land on `/c/new` with zero removed-surface strings in the DOM and zero uncaught exceptions; chat boots cleanly after the tour. Code-read audit below now confirmed by the browser pass. Self-guarding by
 upstream design — `/agents` (redirects to `/c/new` without MARKETPLACE.USE),
 `/skills*` (`<Navigate to="/c/new">` without SKILLS.USE, revoked),
 `/prompts/:promptId` (same guard, PROMPTS.USE revoked), `/insights`
