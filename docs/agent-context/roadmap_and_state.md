@@ -550,6 +550,13 @@ nothing deleted — each row needs its own isolation+browser brick per 3.5):
     reads one level shallow silently yields `undefined`; fixed in `/tmp`.)
 - SEMI-ISOLATED: `components/Projects` (11; routes dynamic + `ProjectsSection`
   sidebar shell — shell must go in the same brick).
+  - [x] Projects deleted 2026-09-23 with the shell in one brick (commit
+    `a89b0ab`: 11 view files + `Conversations/ProjectsSection.tsx` + its
+    F14 spec; routes `/projects*` redirect via Navigate stubs like
+    Insights; sidebar order spec rewritten to Pinned-before-Chats;
+    zero references after; tsc clean on touched files; 28 Jest suites
+    174/174; CDP redirect tour 14/14 green, sidebar shows no Projects
+    section).
 - ENTANGLED (do not delete wholesale): `components/Skills` (45; also used by
   agent-tools `SkillsDialog`), `components/MCPBuilder` (25; also used by agent
   `AddMcpServerDialog`), `components/Prompts` (53; provider
