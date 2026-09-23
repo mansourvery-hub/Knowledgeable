@@ -49,6 +49,7 @@ pub struct ConversationMessage {
     pub conversation_id: Uuid,
     pub role: MessageRole,
     pub content: String,
+    pub parent_message_id: Option<Uuid>,
     pub created_at: DateTime<Utc>,
 }
 

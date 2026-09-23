@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod annotation_test;
 #[cfg(test)]
+mod branch_test;
+#[cfg(test)]
 mod candidate_test;
 #[cfg(test)]
 mod conversation_integration_test;

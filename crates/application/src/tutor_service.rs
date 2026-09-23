@@ -331,6 +331,23 @@ pub async fn begin_tutor_turn(
     (domain::ConversationMessage, Uuid, mpsc::Receiver<Result<TutorEvent, anyhow::Error>>),
     anyhow::Error,
 > {
+    begin_tutor_turn_with_parent(pool, conversation_id, user_content, None, llm, model).await
+}
+
+/// Parent-aware variant for branching (Phase 5): the new user message
+/// parents to `parent_message_id` when it names a message in the same
+/// conversation; unknown parents degrade to tail-append, never error.
+pub async fn begin_tutor_turn_with_parent(
+    pool: SqlitePool,
+    conversation_id: Uuid,
+    user_content: String,
+    parent_message_id: Option<Uuid>,
+    llm: std::sync::Arc<dyn LlmClient>,
+    model: Option<String>,
+) -> Result<
+    (domain::ConversationMessage, Uuid, mpsc::Receiver<Result<TutorEvent, anyhow::Error>>),
+    anyhow::Error,
+> {
     // Ensure conversation exists
     let learner_id = crate::conversation_service::default_learner_id();
     let conv =
@@ -339,12 +356,40 @@ pub async fn begin_tutor_turn(
             .map_err(|e| anyhow::anyhow!("db get_conversation: {e}"))?
             .ok_or_else(|| anyhow::anyhow!("conversation not found"))?;
 
-    // Persist user message
-    let user_msg = infrastructure::conversation_repo::create_message(
+    // Resolve parent: must belong to this conversation, otherwise tail.
+    let resolved_parent = match parent_message_id {
+        Some(pid) => {
+            let exists =
+                infrastructure::conversation_repo::get_message(&pool, conversation_id, pid)
+                    .await
+                    .map_err(|e| anyhow::anyhow!("db get parent message: {e}"))?
+                    .is_some();
+            if exists {
+                Some(pid)
+            } else {
+                // Tail fallback: last message's id, or None for first message.
+                let history =
+                    infrastructure::conversation_repo::list_messages(&pool, conversation_id)
+                        .await
+                        .map_err(|e| anyhow::anyhow!("load history for parent fallback: {e}"))?;
+                history.last().map(|m| m.id)
+            }
+        }
+        None => {
+            let history = infrastructure::conversation_repo::list_messages(&pool, conversation_id)
+                .await
+                .map_err(|e| anyhow::anyhow!("load history for parent fallback: {e}"))?;
+            history.last().map(|m| m.id)
+        }
+    };
+
+    // Persist user message with resolved parent
+    let user_msg = infrastructure::conversation_repo::create_message_with_parent(
         &pool,
         conversation_id,
         MessageRole::User,
         &user_content,
+        resolved_parent,
     )
     .await
     .map_err(|e| anyhow::anyhow!("persist user message: {e}"))?;
@@ -576,14 +621,15 @@ pub async fn begin_tutor_turn(
             }
         }
 
-        // Persist assistant message after streaming completes
+        // Persist assistant message after streaming completes (parents to the user message, forming the tree edge)
         if !full_assistant.is_empty() {
-            let _ = infrastructure::conversation_repo::create_message_with_id(
+            let _ = infrastructure::conversation_repo::create_message_with_id_and_parent(
                 &pool_clone,
                 assistant_message_id,
                 conversation_id,
                 MessageRole::Assistant,
                 &full_assistant,
+                Some(user_msg.id),
             )
             .await;
         }

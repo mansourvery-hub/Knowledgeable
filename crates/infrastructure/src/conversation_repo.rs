@@ -142,7 +142,26 @@ pub async fn create_message(
     role: MessageRole,
     content: &str,
 ) -> Result<ConversationMessage, sqlx::Error> {
-    create_message_with_id(pool, Uuid::new_v4(), conversation_id, role, content).await
+    create_message_with_id_and_parent(pool, Uuid::new_v4(), conversation_id, role, content, None)
+        .await
+}
+
+pub async fn create_message_with_parent(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+    role: MessageRole,
+    content: &str,
+    parent_message_id: Option<Uuid>,
+) -> Result<ConversationMessage, sqlx::Error> {
+    create_message_with_id_and_parent(
+        pool,
+        Uuid::new_v4(),
+        conversation_id,
+        role,
+        content,
+        parent_message_id,
+    )
+    .await
 }
 
 /// Persists a message under a caller-chosen id. Used by protocol adapters that
@@ -154,6 +173,17 @@ pub async fn create_message_with_id(
     role: MessageRole,
     content: &str,
 ) -> Result<ConversationMessage, sqlx::Error> {
+    create_message_with_id_and_parent(pool, id, conversation_id, role, content, None).await
+}
+
+pub async fn create_message_with_id_and_parent(
+    pool: &SqlitePool,
+    id: Uuid,
+    conversation_id: Uuid,
+    role: MessageRole,
+    content: &str,
+    parent_message_id: Option<Uuid>,
+) -> Result<ConversationMessage, sqlx::Error> {
     let now = Utc::now();
     let now_s = now.to_rfc3339();
     let id_s = id.to_string();
@@ -161,12 +191,13 @@ pub async fn create_message_with_id(
     let role_s = role.to_string();
 
     sqlx::query(
-        "INSERT INTO conversation_messages (id, conversation_id, role, content, created_at) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO conversation_messages (id, conversation_id, role, content, parent_message_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
     )
     .bind(&id_s)
     .bind(&conv_s)
     .bind(&role_s)
     .bind(content)
+    .bind(parent_message_id.map(|id| id.to_string()))
     .bind(&now_s)
     .execute(pool)
     .await?;
@@ -183,6 +214,7 @@ pub async fn create_message_with_id(
         conversation_id,
         role,
         content: content.to_string(),
+        parent_message_id,
         created_at: now,
     })
 }
@@ -192,8 +224,8 @@ pub async fn list_messages(
     conversation_id: Uuid,
 ) -> Result<Vec<ConversationMessage>, sqlx::Error> {
     let conv_s = conversation_id.to_string();
-    let rows = sqlx::query_as::<_, (String, String, String, String, String)>(
-        "SELECT id, conversation_id, role, content, created_at FROM conversation_messages WHERE conversation_id = ? ORDER BY created_at ASC",
+    let rows = sqlx::query_as::<_, (String, String, String, String, Option<String>, String)>(
+        "SELECT id, conversation_id, role, content, parent_message_id, created_at FROM conversation_messages WHERE conversation_id = ? ORDER BY created_at ASC",
     )
     .bind(&conv_s)
     .fetch_all(pool)
@@ -201,12 +233,15 @@ pub async fn list_messages(
 
     Ok(rows
         .into_iter()
-        .map(|(id, conversation_id, role, content, created_at)| ConversationMessage {
-            id: id.parse().unwrap(),
-            conversation_id: conversation_id.parse().unwrap(),
-            role: parse_role(&role),
-            content,
-            created_at: parse_dt(&created_at),
+        .map(|(id, conversation_id, role, content, parent_message_id, created_at)| {
+            ConversationMessage {
+                id: id.parse().unwrap(),
+                conversation_id: conversation_id.parse().unwrap(),
+                role: parse_role(&role),
+                content,
+                parent_message_id: parent_message_id.and_then(|s| s.parse().ok()),
+                created_at: parse_dt(&created_at),
+            }
         })
         .collect())
 }
@@ -257,6 +292,7 @@ pub async fn search_messages(
                         conversation_id: conversation_id.parse().unwrap(),
                         role: parse_role(&role),
                         content,
+                        parent_message_id: None,
                         created_at: parse_dt(&created_at),
                     },
                     title,
@@ -274,20 +310,23 @@ pub async fn get_message(
     conversation_id: Uuid,
     message_id: Uuid,
 ) -> Result<Option<ConversationMessage>, sqlx::Error> {
-    let row = sqlx::query_as::<_, (String, String, String, String, String)>(
-        "SELECT id, conversation_id, role, content, created_at FROM conversation_messages WHERE id = ? AND conversation_id = ?",
+    let row = sqlx::query_as::<_, (String, String, String, String, Option<String>, String)>(
+        "SELECT id, conversation_id, role, content, parent_message_id, created_at FROM conversation_messages WHERE id = ? AND conversation_id = ?",
     )
     .bind(message_id.to_string())
     .bind(conversation_id.to_string())
     .fetch_optional(pool)
     .await?;
 
-    Ok(row.map(|(id, conversation_id, role, content, created_at)| ConversationMessage {
-        id: id.parse().unwrap(),
-        conversation_id: conversation_id.parse().unwrap(),
-        role: parse_role(&role),
-        content,
-        created_at: parse_dt(&created_at),
+    Ok(row.map(|(id, conversation_id, role, content, parent_message_id, created_at)| {
+        ConversationMessage {
+            id: id.parse().unwrap(),
+            conversation_id: conversation_id.parse().unwrap(),
+            role: parse_role(&role),
+            content,
+            parent_message_id: parent_message_id.and_then(|s| s.parse().ok()),
+            created_at: parse_dt(&created_at),
+        }
     }))
 }
 
@@ -426,33 +465,59 @@ pub async fn duplicate_conversation(
     .execute(&mut *tx)
     .await?;
 
-    let source_messages: Vec<(String, String, String)> = sqlx::query_as(
-        "SELECT role, content, created_at FROM conversation_messages \
+    let source_messages: Vec<(String, String, String, Option<String>)> = sqlx::query_as(
+        "SELECT role, content, created_at, parent_message_id FROM conversation_messages \
          WHERE conversation_id = ? ORDER BY created_at ASC",
     )
     .bind(&source_s)
     .fetch_all(&mut *tx)
     .await?;
-    let mut messages = Vec::with_capacity(source_messages.len());
-    for (role, content, _created) in source_messages.iter().take(max_messages.unwrap_or(usize::MAX))
+    let mut id_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    // Pre-generate new ids to remap parents correctly (branch shape preserved).
+    let needed = std::cmp::min(source_messages.len(), max_messages.unwrap_or(usize::MAX));
+    let mut new_ids = Vec::with_capacity(needed);
+    for _ in 0..needed {
+        new_ids.push(Uuid::new_v4().to_string());
+    }
+    // Map old ids (ordered) to new ids.
     {
-        let id = Uuid::new_v4();
+        let old_ids: Vec<String> = sqlx::query_as::<_, (String,)>(
+            "SELECT id FROM conversation_messages WHERE conversation_id = ? ORDER BY created_at ASC",
+        )
+        .bind(&source_s)
+        .fetch_all(&mut *tx)
+        .await?
+        .into_iter()
+        .map(|(id,)| id)
+        .collect();
+        for (old, new) in old_ids.iter().zip(new_ids.iter()).take(needed) {
+            id_map.insert(old.clone(), new.clone());
+        }
+    }
+    let mut messages = Vec::with_capacity(needed);
+    for (idx, (role, content, _created, parent_id)) in
+        source_messages.into_iter().take(needed).enumerate()
+    {
+        let id = new_ids[idx].parse::<Uuid>().unwrap();
+        let new_parent = parent_id.as_deref().and_then(|pid| id_map.get(pid)).map(|s| s.as_str());
         sqlx::query(
-            "INSERT INTO conversation_messages (id, conversation_id, role, content, created_at) \
-             VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO conversation_messages (id, conversation_id, role, content, parent_message_id, created_at) \
+             VALUES (?, ?, ?, ?, ?, ?)",
         )
         .bind(id.to_string())
         .bind(new_id.to_string())
-        .bind(role)
-        .bind(content)
+        .bind(&role)
+        .bind(&content)
+        .bind(new_parent)
         .bind(&now_s)
         .execute(&mut *tx)
         .await?;
         messages.push(ConversationMessage {
             id,
             conversation_id: new_id,
-            role: parse_role(role),
+            role: parse_role(&role),
             content: content.clone(),
+            parent_message_id: new_parent.and_then(|s| s.parse().ok()),
             created_at: now,
         });
     }

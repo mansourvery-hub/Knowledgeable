@@ -359,11 +359,13 @@ pub async fn duplicate(
     let tags = application::tag_service::tags_for_conversation(pool, learner_id, conv.id)
         .await
         .map_err(|e| AppError::Internal(e.to_string()))?;
-    let mut parent = NO_PARENT.to_string();
     let mut out = Vec::with_capacity(messages.len());
     for message in &messages {
-        out.push(msg_json(message, &parent, None));
-        parent = message.id.to_string();
+        let parent_str = message
+            .parent_message_id
+            .map(|id| id.to_string())
+            .unwrap_or_else(|| NO_PARENT.to_string());
+        out.push(msg_json(message, &parent_str, None));
     }
     Ok(Json(json!({ "conversation": conv_json_tags(&conv, &tags), "messages": out })))
 }
@@ -420,10 +422,13 @@ pub async fn list_messages(
         },
     );
 
-    let mut parent = NO_PARENT.to_string();
     let mut out: Vec<Value> = Vec::with_capacity(messages.len());
     for message in &messages {
-        let mut value = msg_json(message, &parent, None);
+        let parent_str = message
+            .parent_message_id
+            .map(|id| id.to_string())
+            .unwrap_or_else(|| NO_PARENT.to_string());
+        let mut value = msg_json(message, &parent_str, None);
         if let Some((learner_id, graph)) = &graph {
             let is_assistant = matches!(message.role, domain::MessageRole::Assistant);
             if is_assistant && !message.content.trim().is_empty() {
@@ -442,7 +447,6 @@ pub async fn list_messages(
             }
         }
         out.push(value);
-        parent = message.id.to_string();
     }
 
     Ok(Json(Value::Array(out)))

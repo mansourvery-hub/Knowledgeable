@@ -170,11 +170,13 @@ pub async fn read(
     let messages = application::share_service::link_messages(pool, &link)
         .await
         .map_err(|e| AppError::Internal(e.to_string()))?;
-    let mut parent = NO_PARENT.to_string();
     let mut out = Vec::with_capacity(messages.len());
     for message in &messages {
-        out.push(msg_json(message, &parent, None));
-        parent = message.id.to_string();
+        let parent_str = message
+            .parent_message_id
+            .map(|id| id.to_string())
+            .unwrap_or_else(|| NO_PARENT.to_string());
+        out.push(msg_json(message, &parent_str, None));
     }
     Ok(Json(serde_json::json!({
         "shareId": link.share_id.to_string(),
@@ -231,11 +233,13 @@ pub async fn fork(
     let tags = application::tag_service::tags_for_conversation(pool, learner_id, conv.id)
         .await
         .map_err(|e| AppError::Internal(e.to_string()))?;
-    let mut parent = NO_PARENT.to_string();
     let mut out = Vec::with_capacity(messages.len());
     for message in &messages {
-        out.push(msg_json(message, &parent, None));
-        parent = message.id.to_string();
+        let parent_str = message
+            .parent_message_id
+            .map(|id| id.to_string())
+            .unwrap_or_else(|| NO_PARENT.to_string());
+        out.push(msg_json(message, &parent_str, None));
     }
     Ok(Json(serde_json::json!({
         "conversation": conv_json_tags(&conv, &tags),

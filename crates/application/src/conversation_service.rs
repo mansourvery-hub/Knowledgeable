@@ -43,7 +43,36 @@ pub async fn add_message(
     role: MessageRole,
     content: &str,
 ) -> Result<ConversationMessage, sqlx::Error> {
-    infrastructure::conversation_repo::create_message(pool, conversation_id, role, content).await
+    // Linear helper for tests and non-branched callers: tail-append.
+    let tail = infrastructure::conversation_repo::list_messages(pool, conversation_id)
+        .await?
+        .last()
+        .map(|m| m.id);
+    infrastructure::conversation_repo::create_message_with_parent(
+        pool,
+        conversation_id,
+        role,
+        content,
+        tail,
+    )
+    .await
+}
+
+pub async fn add_message_with_parent(
+    pool: &SqlitePool,
+    conversation_id: Uuid,
+    role: MessageRole,
+    content: &str,
+    parent_message_id: Option<Uuid>,
+) -> Result<ConversationMessage, sqlx::Error> {
+    infrastructure::conversation_repo::create_message_with_parent(
+        pool,
+        conversation_id,
+        role,
+        content,
+        parent_message_id,
+    )
+    .await
 }
 
 pub async fn list_messages(

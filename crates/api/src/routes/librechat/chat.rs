@@ -439,21 +439,27 @@ pub async fn handle(
         .await;
     }
 
-    let parent_id = payload
+    let parent_opt = payload
         .parent_message_id
         .clone()
-        .filter(|p| !p.is_empty())
-        .unwrap_or_else(|| NO_PARENT.to_string());
+        .filter(|p| !p.is_empty() && p != NO_PARENT)
+        .and_then(|p| Uuid::parse_str(&p).ok());
 
-    let (user_msg, assistant_id, rx) = application::tutor_service::begin_tutor_turn(
+    let (user_msg, assistant_id, rx) = application::tutor_service::begin_tutor_turn_with_parent(
         pool.clone(),
         conversation.id,
         text,
+        parent_opt,
         turn_llm.clone(),
         payload.model.clone(),
     )
     .await
     .map_err(|e| AppError::Internal(e.to_string()))?;
+
+    let parent_id = user_msg
+        .parent_message_id
+        .map(|id| id.to_string())
+        .unwrap_or_else(|| NO_PARENT.to_string());
 
     if is_v2_start(&headers, &payload) {
         return start_v2_turn(
