@@ -51,15 +51,19 @@ const loadInsightsView = () =>
     Component: () => <Navigate to="/c/new" replace={true} />,
   });
 
+// Knowledgeable: projects are outside the product surface — both routes
+// redirect to chat instead of loading the removed views.
+// `components/Projects/` and the `ProjectsSection` sidebar shell were
+// deleted with this change (Phase 3 brick).
 const loadProjectsView = () =>
-  import('~/components/Projects').then((m) => ({
-    Component: m.ProjectsView,
-  }));
+  Promise.resolve({
+    Component: () => <Navigate to="/c/new" replace={true} />,
+  });
 
 const loadProjectWorkspace = () =>
-  import('~/components/Projects').then((m) => ({
-    Component: m.ProjectWorkspace,
-  }));
+  Promise.resolve({
+    Component: () => <Navigate to="/c/new" replace={true} />,
+  });
 
 const baseEl = document.querySelector('base');
 const baseHref = baseEl?.getAttribute('href') || '/';

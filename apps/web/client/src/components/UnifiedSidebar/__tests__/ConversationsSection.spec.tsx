@@ -107,11 +107,6 @@ jest.mock('~/components/Conversations', () => {
   return { __esModule: true, Conversations: ConversationsStub };
 });
 
-jest.mock('~/components/Conversations/ProjectsSection', () => ({
-  __esModule: true,
-  default: () => <div data-testid="projects-stub" />,
-}));
-
 jest.mock('~/components/Conversations/PinnedSection', () => {
   const { memo } = jest.requireActual('react');
   /** Mirrors the real merged section closely enough for the streaming test:
@@ -184,17 +179,16 @@ const renderSection = () =>
   );
 
 describe('ConversationsSection section order', () => {
-  it('renders Pinned between Projects and Chats', async () => {
-    const { getByTestId } = renderSection();
+  // Phase 3: the Projects section was deleted — the sidebar holds Pinned
+  // then Chats, and no projects surface may render.
+  it('renders Pinned before Chats with no Projects section', async () => {
+    const { getByTestId, queryByTestId } = renderSection();
     await settleRenders();
 
-    const projects = getByTestId('projects-stub');
+    expect(queryByTestId('projects-stub')).toBeNull();
     const pinned = getByTestId('pinned-stub');
     const chats = getByTestId('conversations-stub');
 
-    expect(
-      projects.compareDocumentPosition(pinned) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
     expect(pinned.compareDocumentPosition(chats) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
@@ -244,7 +238,7 @@ describe('ConversationsSection streaming re-renders', () => {
 });
 
 describe('ConversationsSection shared scroll surface', () => {
-  /** Searching swaps what the one surface holds — Projects and Pinned leave,
+  /** Searching swaps what the one surface holds — Pinned leaves,
    *  the chats become results — and a position kept from the previous contents
    *  would open those results partway down. */
   it('returns the surface to the top when a search replaces its contents', async () => {

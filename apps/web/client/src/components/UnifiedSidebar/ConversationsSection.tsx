@@ -16,7 +16,6 @@ import {
   useTitleGeneration,
 } from '~/data-provider';
 import { useLocalize, useAuthContext, useLocalStorage, useNavScrolling } from '~/hooks';
-import ProjectsSection from '~/components/Conversations/ProjectsSection';
 import ChatFilterMenu from '~/components/Conversations/ChatFilterMenu';
 import PinnedSection from '~/components/Conversations/PinnedSection';
 import useSidebarToggle from '~/hooks/Nav/useSidebarToggle';
@@ -156,13 +155,14 @@ const ConversationsSection = memo(() => {
     }
   }, [search.query, search.isTyping, isLoading, isFetching]);
 
-  /** Projects, Pinned and Chats share one scroll container so the sidebar scrolls
+  /** Pinned and Chats share one scroll container so the sidebar scrolls
    *  as a single surface: the chats list is virtualized against this viewport
-   *  rather than scrolling inside a pane of its own. */
+   *  rather than scrolling inside a pane of its own. (Phase 3: the Projects
+   *  section was deleted; Pinned + Chats remain.) */
   const [scrollViewport, setScrollViewport] = useState<HTMLDivElement | null>(null);
   const [scrollContent, setScrollContent] = useState<HTMLDivElement | null>(null);
 
-  /** Searching replaces what the surface holds: Projects and Pinned leave and
+  /** Searching replaces what the surface holds: Pinned leaves and
    *  the chats become results. A scroll position kept from the previous
    *  contents would open those results partway down whenever they are long
    *  enough for the browser not to clamp it, so the surface returns to the top
@@ -195,9 +195,6 @@ const ConversationsSection = memo(() => {
         {/* `min-h-full` keeps the sections filling a tall sidebar, so the chats
             list still claims the space below them when there is little to show. */}
         <div ref={setScrollContent} className="flex min-h-full flex-col">
-          {!search.query && (
-            <ProjectsSection toggleNav={toggleNav} isAuthenticated={isAuthenticated} />
-          )}
           {!search.query && (
             <PinnedSection
               conversations={pinnedConversations}
