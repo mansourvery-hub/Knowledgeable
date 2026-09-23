@@ -439,11 +439,32 @@ pub async fn handle(
         .await;
     }
 
-    let parent_opt = payload
-        .parent_message_id
-        .clone()
-        .filter(|p| !p.is_empty() && p != NO_PARENT)
-        .and_then(|p| Uuid::parse_str(&p).ok());
+    let parent_opt = if let Some(p) = payload.parent_message_id.as_deref() {
+        if p == NO_PARENT {
+            None
+        } else if p.is_empty() {
+            let history = application::conversation_service::list_messages(&pool, conversation.id)
+                .await
+                .unwrap_or_default();
+            history.last().map(|m| m.id)
+        } else {
+            match Uuid::parse_str(p) {
+                Ok(id) => Some(id),
+                Err(_) => {
+                    let history =
+                        application::conversation_service::list_messages(&pool, conversation.id)
+                            .await
+                            .unwrap_or_default();
+                    history.last().map(|m| m.id)
+                }
+            }
+        }
+    } else {
+        let history = application::conversation_service::list_messages(&pool, conversation.id)
+            .await
+            .unwrap_or_default();
+        history.last().map(|m| m.id)
+    };
 
     let (user_msg, assistant_id, rx) = application::tutor_service::begin_tutor_turn_with_parent(
         pool.clone(),

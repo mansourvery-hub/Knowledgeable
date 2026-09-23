@@ -357,6 +357,8 @@ pub async fn begin_tutor_turn_with_parent(
             .ok_or_else(|| anyhow::anyhow!("conversation not found"))?;
 
     // Resolve parent: must belong to this conversation, otherwise tail.
+    // None means NO_PARENT (root sibling), not tail — the client
+    // explicitly sends NO_PARENT for first-message siblings.
     let resolved_parent = match parent_message_id {
         Some(pid) => {
             let exists =
@@ -367,7 +369,8 @@ pub async fn begin_tutor_turn_with_parent(
             if exists {
                 Some(pid)
             } else {
-                // Tail fallback: last message's id, or None for first message.
+                // Unknown/forged parent degrades to tail-append, never 400
+                // (keeps a running turn alive even with bad ids).
                 let history =
                     infrastructure::conversation_repo::list_messages(&pool, conversation_id)
                         .await
@@ -375,12 +378,7 @@ pub async fn begin_tutor_turn_with_parent(
                 history.last().map(|m| m.id)
             }
         }
-        None => {
-            let history = infrastructure::conversation_repo::list_messages(&pool, conversation_id)
-                .await
-                .map_err(|e| anyhow::anyhow!("load history for parent fallback: {e}"))?;
-            history.last().map(|m| m.id)
-        }
+        None => None,
     };
 
     // Persist user message with resolved parent
