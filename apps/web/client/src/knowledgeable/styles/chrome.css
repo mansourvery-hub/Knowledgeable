@@ -10,3 +10,17 @@
 #tools-dropdown-button {
   display: none;
 }
+
+/* Mobile safe-area: chat composer bottom padding (mobile audit 2026-09-24).
+ *
+ * The composer form docks at the viewport bottom with zero padding, so on
+ * notched / gesture-bar phones the send row sits under the home indicator.
+ * `viewport-fit=cover` is already set in index.html; this consumes the inset.
+ * The `env(..., 0px)` fallback keeps it a no-op on desktop (insets are 0).
+ * Anchored on the stable upstream composer id (`mainTextareaId`), so no
+ * upstream file changes. Mirrors the in-tree pattern in
+ * `UnifiedSidebar/mobile/BottomBar.tsx`.
+ */
+form:has(textarea#prompt-textarea) {
+  padding-bottom: max(0px, env(safe-area-inset-bottom, 0px));
+}
