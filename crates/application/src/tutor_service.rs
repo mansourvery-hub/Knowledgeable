@@ -501,13 +501,12 @@ pub async fn begin_tutor_turn_with_parent(
                                     entry.0.id = Some(id);
                                 }
                                 if let Some(func) = tc.function {
-                                    let current_func = entry.0.function.get_or_insert_with(|| {
-                                        llm::FunctionCallChunk {
+                                    let current_func =
+                                        entry.0.function.get_or_insert(llm::FunctionCallChunk {
                                             name: None,
                                             arguments: None,
                                             thought_signature: None,
-                                        }
-                                    });
+                                        });
                                     if let Some(name) = func.name {
                                         current_func.name = Some(name);
                                     }

@@ -45,10 +45,10 @@ impl LlmClient for OpenAiClient {
         // Prepare OpenAI API Chat payload
         let mut messages = Vec::new();
         for m in request.messages {
-            let mut payload = match m {
+            let payload = match m {
                 ChatMessage::System { content } => json!({"role": "system", "content": content}),
                 ChatMessage::User { content } => json!({"role": "user", "content": content}),
-                ChatMessage::Assistant { content, tool_calls, metadata } => {
+                ChatMessage::Assistant { content, tool_calls, metadata: _ } => {
                     let mut p = json!({"role": "assistant", "content": if content.is_empty() { serde_json::Value::Null } else { json!(content) }});
                     if let Some(tool_calls) = tool_calls {
                         let tc_val: Vec<serde_json::Value> = tool_calls

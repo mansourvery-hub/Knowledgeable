@@ -17,7 +17,7 @@ pub mod wiki;
 mod tests;
 
 use axum::{
-    routing::{delete, get, patch, post, put},
+    routing::{get, post, put},
     Router,
 };
 
@@ -90,11 +90,6 @@ pub fn routes() -> Router<AppState> {
         .route("/api/share/:id", get(share::read).patch(share::update).delete(share::delete))
         .route("/api/share/:id/config", get(share::render_config))
         .route("/api/share/:id/fork", post(share::fork))
-}
-
-/// Serializes a conversation into LibreChat's `TConversation` shape.
-pub fn conv_json(conv: &domain::Conversation) -> serde_json::Value {
-    conv_json_tags(conv, &[])
 }
 
 /// Serializes a conversation with its bookmark tags. The client reads

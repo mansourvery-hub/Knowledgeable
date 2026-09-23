@@ -5,16 +5,6 @@ use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use tower::ServiceExt;
 
-fn test_state(pool: sqlx::SqlitePool) -> AppState {
-    AppState {
-        pool: Some(pool),
-        llm: std::sync::Arc::new(llm::FakeLlmClient::new("test")),
-        version: "test".into(),
-        streams: crate::routes::new_registry(),
-        web_dist_dir: None,
-    }
-}
-
 async fn setup() -> (axum::Router, sqlx::SqlitePool) {
     setup_with_llm(std::sync::Arc::new(llm::FakeLlmClient::new("test"))).await
 }

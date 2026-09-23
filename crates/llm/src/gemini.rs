@@ -34,7 +34,7 @@ impl LlmClient for GeminiOpenAiClient {
     async fn stream_chat(&self, request: LlmChatRequest) -> Result<LlmStream, LlmError> {
         let mut messages = Vec::new();
         for m in request.messages {
-            let mut payload = match &m {
+            let payload = match &m {
                 ChatMessage::System { content } => json!({"role": "system", "content": content}),
                 ChatMessage::User { content } => json!({"role": "user", "content": content}),
                 ChatMessage::Assistant { content, tool_calls, metadata } => {

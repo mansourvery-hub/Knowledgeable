@@ -9,8 +9,6 @@ void main() {
     ]);
 
     final envelopes = await parseSseStream(lines).toList();
-    print('Envelopes count: ${envelopes.length}');
-    if (envelopes.isNotEmpty) print('Data: ${envelopes[0].data}');
     expect(envelopes.length, 1);
     expect(envelopes[0].data['text'], 'Hello');
   });

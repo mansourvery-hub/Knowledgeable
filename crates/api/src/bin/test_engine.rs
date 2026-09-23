@@ -1,7 +1,6 @@
 use application::tutor_service::{default_llm, stream_tutor_turn};
 use domain::TutorEvent;
 use sqlx::SqlitePool;
-use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -9,7 +8,7 @@ async fn main() -> anyhow::Result<()> {
     let pool = SqlitePool::connect("sqlite::memory:").await?;
     sqlx::migrate!("../../migrations").run(&pool).await?;
 
-    let learner_id = application::conversation_service::ensure_default_learner(&pool).await?;
+    let _learner_id = application::conversation_service::ensure_default_learner(&pool).await?;
     let conv = application::conversation_service::create_conversation(&pool, Some("test")).await?;
     let llm = default_llm();
 

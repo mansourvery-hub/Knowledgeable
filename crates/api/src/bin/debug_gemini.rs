@@ -1,5 +1,3 @@
-use application::tutor_service::stream_tutor_turn;
-use domain::TutorEvent;
 use llm::{GeminiOpenAiClient, LlmClient};
 use std::env;
 use std::sync::Arc;

@@ -28,11 +28,11 @@ Stream<SseEnvelope> parseSseStream(Stream<String> lines) async* {
     final trimmed = line.trim();
     if (trimmed.startsWith('data:')) {
       final content = trimmed.substring(5).trim();
-      currentData = (currentData == null) ? content : (currentData! + content);
+      currentData = (currentData == null) ? content : (currentData + content);
     } else if (trimmed.isEmpty && currentData != null) {
       try {
         // Handle potential partial fragments or double-escaped JSON if the server emits them
-        final outer = jsonDecode(currentData!) as Map<String, dynamic>;
+        final outer = jsonDecode(currentData) as Map<String, dynamic>;
         
         // Robustness check: Axum SSE sometimes sends raw data strings, sometimes objects.
         // If 'event' is missing in outer, look inside 'data' if it exists.
@@ -48,7 +48,7 @@ Stream<SseEnvelope> parseSseStream(Stream<String> lines) async* {
         dev.log('SSE Parser: FAILED TO DECODE: $currentData. Error: $e');
         // Try a more flexible approach
         try {
-          final raw = jsonDecode(currentData!) as Map<String, dynamic>;
+          final raw = jsonDecode(currentData) as Map<String, dynamic>;
           // If it doesn't have the envelope fields, try to construct one
           final event = raw['event'] as String? ?? 'unknown';
           final data = raw['data'] is Map<String, dynamic> ? raw['data'] as Map<String, dynamic> : raw;
