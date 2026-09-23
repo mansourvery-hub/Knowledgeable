@@ -61,9 +61,9 @@ fn is_word_char(c: char) -> bool {
 /// Deterministically match concept names against turn text.
 ///
 /// - Case-insensitive, Unicode-aware (`to_lowercase` on both sides).
-/// - Whole-word/phrase only: neighbors must not be word characters, so
-///   "Factor" never matches inside "factory".
-/// - Longest-name-wins on overlap ("Prime Number" beats "Number").
+/// - Longest-name-wins on overlap ("Prime Number" beats "Number"). Ties
+///   (equal-length names) break by the order they appear in `candidates`,
+///   since sorting is stable.
 /// - Every matching candidate is found and positioned *before* the cap is
 ///   applied, so a tight `limit` keeps the earliest mentions in the text,
 ///   never a later-but-longer-named concept at the expense of an earlier
@@ -244,5 +244,23 @@ mod tests {
             vec![early_short],
             "cap should keep the first mention, not the longest name"
         );
+    }
+
+    /// Documents the tie-break for equal-length overlapping names: it
+    /// follows the order the candidates were supplied in, not any other
+    /// rule. This pins down current behavior since it isn't otherwise
+    /// specified.
+    #[test]
+    fn tie_breaks_by_candidate_order_when_names_are_equal_length() {
+        let first_given = id();
+        let second_given = id();
+        // Both names are 4 chars; whichever is listed first in `candidates`
+        // is tried first and claims the span.
+        let out = match_mentions(
+            "abcd",
+            &[(first_given, "abcd".into()), (second_given, "abcd".into())],
+            10,
+        );
+        assert_eq!(out, vec![first_given]);
     }
 }
