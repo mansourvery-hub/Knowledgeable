@@ -407,13 +407,16 @@ proving isolation.
 Targets where LibreChat already exposes switches: parameters, presets,
 temporary chat, multi-conversation, web search, file search, code execution,
 and siblings.
-- [ ] 1.1 The feature is invisible/unavailable to the user.
-- [ ] 1.2 Core chat still works.
-- [ ] 1.3 Conversation history still works.
-- [ ] 1.4 Model selection still works.
-- [ ] 1.5 SSE streaming still works.
-- [ ] 1.6 No Knowledgeable-specific functionality regresses.
-- [ ] 1.7 The diff uses existing LibreChat seams, not feature-internal rewrites.
+- [x] 1.1 The feature is invisible/unavailable to the user.
+- [x] 1.2 Core chat still works.
+- [x] 1.3 Conversation history still works.
+- [x] 1.4 Model selection still works.
+- [x] 1.5 SSE streaming still works.
+- [x] 1.6 No Knowledgeable-specific functionality regresses.
+- [x] 1.7 The diff uses existing LibreChat seams, not feature-internal rewrites.
+(Verified 2026-09-23: flags served in `system.rs:45-56`, locked by
+`config_interface_matches_phase1_policy`; core flows covered by api
+router tests for chat/history/models/SSE.)
 
 ### Phase 2 — Centralized UI gating
 
@@ -422,11 +425,16 @@ entries, chat-input tools, menus, settings sections, unsupported nav routes.
 Must handle the known `system.rs` mismatch (`interface.* = false` is NOT enough
 because `role()` grants every permission and several `useSideNavLinks` entries
 gate on permissions only).
-- [ ] 2.1 Unsupported features no longer appear in normal navigation.
+- [x] 2.1 Unsupported features no longer appear in normal navigation.
 - [ ] 2.2 Direct navigation to disabled surfaces cannot produce broken/dead states.
-- [ ] 2.3 Core navigation remains intact.
-- [ ] 2.4 Knowledgeable Graph/Wiki navigation remains intact.
-- [ ] 2.5 Changes are centralized and upstream-friendly.
+- [x] 2.3 Core navigation remains intact.
+- [x] 2.4 Knowledgeable Graph/Wiki navigation remains intact.
+- [x] 2.5 Changes are centralized and upstream-friendly.
+(Verified 2026-09-23 for 2.1/2.3/2.4/2.5: CDP census recorded below;
+central `attachmentsDisabled`/`speechDisabled` flags + roles revocation in
+code; `routes/index.tsx` Navigate-to-`/c/new` guards; unconditional
+redirects in `ProjectsView`/`ProjectWorkspace`. 2.2 left open: the audit
+portion below still notes its browser proof pending.)
 
 Contract 2.1 browser evidence (CDP, desktop viewport, labeled-button census):
 side panel offers only Bookmarks (KEEP), Knowledge Graph (ours), Attach Files
@@ -555,10 +563,12 @@ Bookmarks, pin, archive, fork/branch, conversation search, minimal share, file
 attachments, file search, MCP, STT, TTS, voice/conversation mode, provider API
 keys/BYOK, login/accounts/sync, token usage, billing, prompt slash commands.
 - [ ] 4.1 They are not accidentally deleted during cleanup.
-- [ ] 4.2 Where currently unsupported, they are documented as future backend/product work.
+- [x] 4.2 Where currently unsupported, they are documented as future backend/product work.
 - [ ] 4.3 The current MVP remains small despite preserving future capability.
 - [ ] 4.4 Future functionality has a clearly identifiable integration seam.
 - [ ] 4.5 No speculative backend implementation is introduced for dormant UI.
+(4.2 verified 2026-09-23: Phase 5 list below + §9 matrix record decisions;
+4.1/4.3/4.4/4.5 left open as judgment calls needing per-surface review.)
 
 ### Phase 5 — Optional post-MVP feature projects (explicitly out of cleanup)
 
