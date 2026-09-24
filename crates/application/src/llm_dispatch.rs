@@ -64,7 +64,7 @@ pub fn advertised_models() -> Vec<String> {
             std::env::var("GEMINI_MODEL")
                 .ok()
                 .filter(|m| !m.trim().is_empty())
-                .unwrap_or_else(|| "gemini-2.5-flash-lite".to_string()),
+                .unwrap_or_else(|| "gemini-3.5-flash-lite".to_string()),
         );
     }
     if keys.openai.is_some() {
