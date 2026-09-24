@@ -1,4 +1,4 @@
-import React, { memo, useRef, useEffect } from 'react';
+import React, { memo, useRef, useEffect, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { getRemarkPlugins, getRehypePlugins, getMarkdownComponents } from './markdownConfig';
 import useSmoothStreaming from '~/hooks/Messages/useSmoothStreaming';
@@ -19,6 +19,16 @@ const Markdown = memo(function Markdown({ content = '', isLatestMessage }: TCont
   const { isSubmitting = false, messageId } = useMessageContext() ?? {};
   // Knowledgeable M7: annotations land at turn end; streaming renders plain.
   const annotations = useMessageAnnotations(messageId);
+  // F7 hydration arrives after first paint while content is static, but the
+  // block memo below keys on content only — without a key change the settled
+  // plain tree would never re-parse. The key is stable during streaming
+  // (annotations stay empty until the turn-end frame) and flips once when
+  // annotations land, forcing exactly one re-parse. Never derive it from
+  // content length: that would remount mid-stream.
+  const annotationsKey = useMemo(
+    () => annotations.map((a) => `${a.concept_id}:${a.status}`).join('|'),
+    [annotations],
+  );
   const smoothStreaming = useSmoothStreaming();
   const LaTeXParsing = useRecoilValue<boolean>(store.LaTeXParsing);
   const isInitializing = content === '';
@@ -55,6 +65,7 @@ const Markdown = memo(function Markdown({ content = '', isLatestMessage }: TCont
   return (
     <MarkdownErrorBoundary content={content} codeExecution={true}>
       <MarkdownBlocks
+        key={annotationsKey}
         content={content}
         remarkPlugins={getRemarkPlugins(LaTeXParsing, annotations)}
         rehypePlugins={getRehypePlugins()}
