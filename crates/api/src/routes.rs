@@ -17,6 +17,9 @@ pub struct AppState {
     /// Built web client directory (`apps/web/client/dist`). `None` disables
     /// static serving (dev mode serves Vite instead).
     pub web_dist_dir: Option<std::path::PathBuf>,
+    /// Optional shared-secret bearer gate for public deployments
+    /// (`PUBLIC_API_TOKEN`). `None`/empty = open (local dev default).
+    pub api_token: Option<String>,
 }
 
 pub use librechat::stream_registry::{new_registry, StreamRegistry};
@@ -61,6 +64,7 @@ async fn health_db(
 }
 
 use crate::conversations as conv;
+mod auth;
 mod debug_graph;
 mod librechat;
 mod neighborhood;
@@ -91,6 +95,9 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/*rest", axum::routing::any(api_not_found))
         .route("/v1/*rest", axum::routing::any(api_not_found))
         .fallback_service(static_service(state.web_dist_dir.clone()))
+        // Bearer gate last-as-outermost: sees every request, allowlists
+        // health probes, enforces only when `api_token` is configured.
+        .layer(axum::middleware::from_fn_with_state(state.api_token.clone(), auth::bearer_gate))
         .with_state(state)
 }
 

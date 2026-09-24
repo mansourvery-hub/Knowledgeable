@@ -66,6 +66,7 @@ mod tests {
             version: "test".into(),
             streams: crate::routes::new_registry(),
             web_dist_dir: None,
+            api_token: None,
         }
     }
 

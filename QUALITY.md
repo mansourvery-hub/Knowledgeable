@@ -12,6 +12,7 @@
 
 ## Security Requirements
 - **Credential Handling**: LLM API keys must be loaded via environment and never written to logs or telemetry.
+- **Public Gate**: `PUBLIC_API_TOKEN` unset/empty = open API (local dev); set = bearer-gated API with health probes and the static shell staying open.
 - **Input Sanitization**: All user-provided chat content must be sanitized before reaching the LLM/graph prompt.
 
 ## Performance Requirements

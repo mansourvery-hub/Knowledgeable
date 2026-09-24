@@ -39,9 +39,12 @@ async fn main() -> anyhow::Result<()> {
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|_| std::path::PathBuf::from("apps/web/client/dist")),
         ),
+        // Empty/unset = open (local dev). Log only WHETHER the gate is on.
+        api_token: std::env::var("PUBLIC_API_TOKEN").ok().filter(|t| !t.is_empty()),
     };
 
     tracing::info!("router created");
+    tracing::info!(api_gate = state.api_token.is_some(), "bearer gate status");
     // Native Linux app sends no Origin header (no CORS). Web dev server on
     // localhost:8080 / 127.0.0.1:8080 needs explicit origins — browsers treat
     // them as different origins.
