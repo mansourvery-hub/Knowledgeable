@@ -27,6 +27,7 @@ export default function SearchField({
     <label className="k-field">
       <button
         type="button"
+        className="k-field__btn"
         aria-label="Search"
         data-testid={searchButtonTestId(testId)}
         onClick={submit}

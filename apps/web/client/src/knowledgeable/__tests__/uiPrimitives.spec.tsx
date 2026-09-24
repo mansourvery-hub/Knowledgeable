@@ -25,6 +25,8 @@ describe('SearchField', () => {
     expect(input).toHaveAttribute('aria-label', 'Find a concept');
     const button = screen.getByRole('button', { name: 'Search' });
     expect(button).toHaveAttribute('data-testid', 'graph-search');
+    // Tap target: icon stays 16px, the button box never drops below 32px.
+    expect(button).toHaveClass('k-field__btn');
   });
 
   it('calls onChange while typing and onSubmit on Enter or icon click', () => {
