@@ -744,8 +744,18 @@ bodies.
   only via content churn) — `Markdown.tsx` now keys `MarkdownBlocks` on the
   annotations signature (stable while streaming, flips once at turn end;
   commit `3907e5b`). Locked by annotations + highlightPipeline specs (12/12)
-  and tsc 26 = stashed baseline with zero in touched files. Toggle-reveals-
-  percentages half still open (debug-toggle path unverified live).
+  and tsc 26 = stashed baseline with zero in touched files.
+  Toggle-reveals-percentages DONE 2026-09-24 (CDP vs backend :3000 + Vite
+  :3090 at 1440x900, `/tmp/opencode/cdp-f7-toggle.js` uncommitted, local-tutor
+  turn with exact "Prime Number" so the fake's canned reply matches the live
+  graph): history open renders 1 badge labelled "Prime Number, Known concept,
+  open wiki" (default OFF, localStorage key absent); setting
+  `showConfidenceDebug=true` + reload relabels it "Prime Number, Known
+  concept, confidence 98%, open wiki"; setting false + reload removes the
+  percentage again. Only the known annotation renders (chat highlights are
+  known-only per T25 — the co-derived `new` Natural Number annotation stays
+  plain text by design). No code changes; both probe convos DELETE-confirmed,
+  user convos untouched, servers stopped after the pass. F7 fully closed.
   Render parity DONE 2026-09-20 (user directive: chats = wiki via shared
   code): wiki pages carry live-derived `concept_annotations` (same matcher,
   omit-on-empty/failure); drawer feeds them to the shared markdown
