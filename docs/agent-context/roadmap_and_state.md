@@ -714,6 +714,17 @@ bodies.
   across 3 suites, capped flags), tsc pinned at 25 with zero in touched
   files. Open: CDP browser pass (reload shows live badges, toggle reveals
   percentages).
+  Browser pass DONE 2026-09-24 (CDP vs backend :3000 + Vite :3090 at 390px,
+  `/tmp/opencode/cdp-f7-pass.js` uncommitted): keyless local-tutor turn about
+  Prime Number carried a Divisibility-known turn-end frame; fresh history open
+  rendered 1 badge, reload rendered 1 badge. Found + fixed in the same pass:
+  `MarkdownBlock`'s memo comparator ignores `remarkPlugins`, so static history
+  content never re-parsed after post-mount hydration landed (live turns badged
+  only via content churn) — `Markdown.tsx` now keys `MarkdownBlocks` on the
+  annotations signature (stable while streaming, flips once at turn end;
+  commit `3907e5b`). Locked by annotations + highlightPipeline specs (12/12)
+  and tsc 26 = stashed baseline with zero in touched files. Toggle-reveals-
+  percentages half still open (debug-toggle path unverified live).
   Render parity DONE 2026-09-20 (user directive: chats = wiki via shared
   code): wiki pages carry live-derived `concept_annotations` (same matcher,
   omit-on-empty/failure); drawer feeds them to the shared markdown
