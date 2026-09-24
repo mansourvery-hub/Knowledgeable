@@ -5,8 +5,13 @@
  * by default (a single `KnowledgeableHost` mounted in `ChatRoute` renders
  * whatever `store/wikiDrawer.ts` holds); `conceptId`/`onClose` props take
  * over for controlled use and tests.
+ *
+ * Portaled to `document.body`: the host sits inside the main content column,
+ * which the mobile sidebar drawer pushes off-screen with a translate — a
+ * fixed overlay inside it would ride along and render invisibly.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRecoilValue } from 'recoil';
 import MarkdownBlocks from '~/components/Chat/Messages/Content/MarkdownBlocks';
 import { getMarkdownComponents, getRehypePlugins, getRemarkPlugins } from '~/components/Chat/Messages/Content/markdownConfig';
@@ -150,7 +155,7 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
   const rehypePlugins = getRehypePlugins();
   const components = getMarkdownComponents();
 
-  return (
+  return createPortal(
     <aside
       className="k-reader"
       role="dialog"
@@ -273,6 +278,7 @@ export default function WikiDrawer({ conceptId, onClose }: WikiDrawerProps) {
           )}
         </>
       )}
-    </aside>
+    </aside>,
+    document.body,
   );
 }
