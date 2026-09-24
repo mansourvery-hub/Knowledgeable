@@ -28,6 +28,7 @@ import BackupCodesItem from '../SettingsTabs/Account/BackupCodesItem';
 import { EngineSTTSetting, EngineTTSSetting } from './SpeechControls';
 import FontSizeSelector from '../SettingsTabs/Chat/FontSizeSelector';
 import { hasDebugParam } from '~/knowledgeable/debug';
+import ApiTokenField from '~/knowledgeable/components/ApiTokenField';
 import ChatTitleInTab from '../SettingsTabs/General/ChatTitleInTab';
 import AdvancedPrompts from '../SettingsTabs/Chat/AdvancedPrompts';
 import DuringRunAction from '../SettingsTabs/Chat/DuringRunAction';
@@ -419,6 +420,17 @@ export const registry: SettingEntry[] = [
       localizationKey: 'com_nav_show_confidence_debug',
       switchId: 'showConfidenceDebug',
     }),
+  },
+  {
+    // Knowledgeable tester gate: bearer token for PUBLIC_API_TOKEN
+    // deployments. Same doctrine as showConfidenceDebug above — fully
+    // functional for testers, listed only behind `?kdebug`.
+    id: 'apiToken',
+    tab: CHAT,
+    section: 'messages',
+    show: () => hasDebugParam(),
+    labelKey: 'com_nav_api_token_debug',
+    Component: ApiTokenField,
   },
   // Chat · Conversations
   {

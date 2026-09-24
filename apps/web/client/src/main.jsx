@@ -6,6 +6,9 @@ import '@librechat/client/style.css';
 import './style.css';
 import './mobile.css';
 import '~/knowledgeable/styles';
+// Tester API token (`?ktoken=` capture + global axios interceptor): must run
+// before App renders so the boot API calls already carry the token.
+import '~/knowledgeable/apiToken';
 import { ApiErrorBoundaryProvider } from './hooks/ApiErrorBoundaryContext';
 import 'katex/dist/katex.min.css';
 import 'katex/dist/contrib/copy-tex.js';

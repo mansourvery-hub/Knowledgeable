@@ -28,6 +28,7 @@ import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
 import useUsageHandler from './useUsageHandler';
 import { handleConceptAnnotationsEvent } from '~/knowledgeable/store/annotations';
+import { resolveBearerToken } from '~/knowledgeable/apiToken';
 import { handleToolProgressEvent } from '~/knowledgeable/store/toolProgress';
 import store from '~/store';
 
@@ -109,7 +110,7 @@ export default function useSSE(
 
     const sse = new SSE(payloadData.server, {
       payload: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resolveBearerToken(token)}` },
     });
 
     sse.addEventListener('attachment', (e: MessageEvent) => {

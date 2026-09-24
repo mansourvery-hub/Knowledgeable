@@ -87,6 +87,7 @@ import useEventHandlers, {
 } from './useEventHandlers';
 import { pendingApprovalActionFamily } from '~/components/Chat/approval/state';
 import { handleConceptAnnotationsEvent } from '~/knowledgeable/store/annotations';
+import { resolveBearerToken } from '~/knowledgeable/apiToken';
 import { handleToolProgressEvent } from '~/knowledgeable/store/toolProgress';
 import useSteerConvert from '~/hooks/Chat/useSteerConvert';
 import { useAuthContext } from '~/hooks/AuthContext';
@@ -1855,7 +1856,7 @@ export default function useResumableSSE(
 
       const sse = new SSE(url, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${resolveBearerToken(token)}`,
           ...generationProtocolHeaders(),
         },
         method: 'GET',

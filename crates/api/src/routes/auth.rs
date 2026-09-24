@@ -12,9 +12,10 @@
 //!   document navigation. Gating the shell would brick recovery, not add
 //!   security.
 //!
-//! The web/phone clients do not send this token yet — wiring it into fetch
-//! layers is a follow-up brick. Until then, enabling the gate is for
-//! curl-gated testers, not end users.
+//! The web/phone clients attach it via the tester escape
+//! (`knowledgeable/apiToken.ts`: `?ktoken=` capture, `?kdebug` settings
+//! entry, axios interceptor, both SSE paths). No end-user token UI exists
+//! by design.
 
 use axum::{
     extract::{Request, State},
