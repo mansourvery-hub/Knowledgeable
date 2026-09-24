@@ -93,6 +93,15 @@ curl http://localhost:3000/health | jq
 curl http://localhost:3000/health/db | jq
 ```
 
+#### Backups (tester / public deployments)
+
+```bash
+./scripts/db-backup.sh            # knowledgeable.db -> ./backups/, integrity-checked, keeps newest 7
+KEEP=30 ./scripts/db-backup.sh    # retain more; schedule daily via cron/systemd
+```
+
+Online `.backup` (safe against a live server), fails loudly on `integrity_check` errors. Restore = stop the server, copy a backup over `knowledgeable.db`, restart.
+
 ### 3. Backend
 
 ```bash
