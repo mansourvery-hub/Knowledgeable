@@ -22,6 +22,7 @@ async fn setup_with_llm(
         streams: crate::routes::new_registry(),
         web_dist_dir: None,
         api_token: None,
+        chat_limiter: None,
     });
     (app, pool)
 }
@@ -826,6 +827,7 @@ async fn static_serving_serves_app_and_falls_back_for_spa() {
         streams: crate::routes::new_registry(),
         web_dist_dir: Some(dir.clone()),
         api_token: None,
+        chat_limiter: None,
     });
 
     let response = app.clone().oneshot(get("/")).await.unwrap();
@@ -877,6 +879,7 @@ async fn unknown_api_paths_stay_json_404_with_build_mounted() {
         streams: crate::routes::new_registry(),
         web_dist_dir: Some(dir.clone()),
         api_token: None,
+        chat_limiter: None,
     });
 
     for uri in ["/api/projects", "/api/anything-missing", "/v1/nope"] {

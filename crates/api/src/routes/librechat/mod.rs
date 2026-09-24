@@ -22,6 +22,7 @@ use axum::{
 };
 
 use crate::routes::AppState;
+use crate::routes::RateLimiter;
 
 /// Endpoint key advertised to the LibreChat client. Conversations store this
 /// value in `endpoint`, and chat requests POST to `/api/agents/chat/{this}`.
@@ -33,7 +34,7 @@ pub const NO_PARENT: &str = "00000000-0000-0000-0000-000000000000";
 /// The single-user learner identity used until multi-user auth lands.
 pub const LEARNER_DISPLAY_NAME: &str = "Learner";
 
-pub fn routes() -> Router<AppState> {
+pub fn routes(chat_limiter: Option<RateLimiter>) -> Router<AppState> {
     Router::new()
         // System / session
         .route("/api/config", get(system::config))
@@ -67,7 +68,14 @@ pub fn routes() -> Router<AppState> {
         .route("/api/search/enable", get(system::search_enabled))
         // Chat (SSE). LibreChat posts every endpoint's turns through the agents
         // router; `:endpoint` is the endpoint key returned by `/api/endpoints`.
-        .route("/api/agents/chat/:endpoint", post(chat::handle))
+        // The spend path carries its own per-key budget (no-op when unset).
+        .route(
+            "/api/agents/chat/:endpoint",
+            post(chat::handle).route_layer(axum::middleware::from_fn_with_state(
+                chat_limiter,
+                crate::routes::chat_rate_limit,
+            )),
+        )
         // Personal Knowledge Wiki (M8): cached projection of the learner graph.
         .route("/api/concepts/:id/wiki", get(wiki::handle_get_wiki))
         // Concept search for pickers (graph explorer): bounded, read-only.

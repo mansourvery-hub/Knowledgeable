@@ -67,6 +67,7 @@ mod tests {
             streams: crate::routes::new_registry(),
             web_dist_dir: None,
             api_token: None,
+            chat_limiter: None,
         }
     }
 

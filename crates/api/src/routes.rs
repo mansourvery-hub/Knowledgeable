@@ -20,6 +20,9 @@ pub struct AppState {
     /// Optional shared-secret bearer gate for public deployments
     /// (`PUBLIC_API_TOKEN`). `None`/empty = open (local dev default).
     pub api_token: Option<String>,
+    /// Optional per-key chat-turn budget (`CHAT_RATE_LIMIT_PER_MINUTE`).
+    /// `None` = unlimited (local dev default).
+    pub chat_limiter: Option<ratelimit::RateLimiter>,
 }
 
 pub use librechat::stream_registry::{new_registry, StreamRegistry};
@@ -68,6 +71,9 @@ mod auth;
 mod debug_graph;
 mod librechat;
 mod neighborhood;
+mod ratelimit;
+
+pub use ratelimit::{chat_rate_limit, RateLimiter};
 
 pub fn create_router(state: AppState) -> Router {
     Router::new()
@@ -87,7 +93,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/v1/conversations/:id", get(conv::get_conversation))
         .route("/v1/conversations/:id/messages", get(conv::list_messages).post(conv::send_message))
         // LibreChat frontend adapter (/api/*)
-        .merge(librechat::routes())
+        .merge(librechat::routes(state.chat_limiter.clone()))
         // Unknown API paths must stay JSON 404s: the client relies on them
         // for feature detection and empty states. Without these wildcards
         // the SPA fallback below would answer 200 HTML and break parsing

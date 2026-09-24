@@ -99,6 +99,7 @@ mod tests {
             streams: new_registry(),
             web_dist_dir: None,
             api_token: token.map(str::to_string),
+            chat_limiter: None,
         })
     }
 

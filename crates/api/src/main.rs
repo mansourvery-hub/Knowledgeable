@@ -41,10 +41,17 @@ async fn main() -> anyhow::Result<()> {
         ),
         // Empty/unset = open (local dev). Log only WHETHER the gate is on.
         api_token: std::env::var("PUBLIC_API_TOKEN").ok().filter(|t| !t.is_empty()),
+        // Unset/zero = unlimited (local dev). Per-key chat-turn budget.
+        chat_limiter: std::env::var("CHAT_RATE_LIMIT_PER_MINUTE")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .filter(|n| *n > 0)
+            .map(api::routes::RateLimiter::new),
     };
 
     tracing::info!("router created");
     tracing::info!(api_gate = state.api_token.is_some(), "bearer gate status");
+    tracing::info!(chat_limit = state.chat_limiter.is_some(), "chat rate limit status");
     // Native Linux app sends no Origin header (no CORS). Web dev server on
     // localhost:8080 / 127.0.0.1:8080 needs explicit origins — browsers treat
     // them as different origins.
@@ -63,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
     tracing::info!(%addr, "listening");
 
-    axum::serve(listener, router).await?;
+    axum::serve(listener, router.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
     Ok(())
 }
