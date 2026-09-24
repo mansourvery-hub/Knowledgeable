@@ -29,7 +29,9 @@ cd mobile/capacitor && npm run sync:www
 ```
 
 Builds the production web bundle (`apps/web` → `client/dist`), copies it to
-`www/` (gitignored build artifact), and syncs the Android project.
+`www/` (gitignored build artifact, minus precompressed `*.gz`/`*.br` — the
+WebView serves no negotiated encoding and AGP rejects them as duplicates),
+and syncs the Android project.
 
 **Known limit (tracked, not wired):** bundled-`www` against a *remote*
 backend needs two things this repo does not have yet — an absolute API base

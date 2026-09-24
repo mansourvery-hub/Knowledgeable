@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "sync": "cap sync android",
-    "sync:www": "cd ../../apps/web && npm run build && cd ../../mobile/capacitor && rm -rf www && cp -r ../../apps/web/client/dist www && cap sync android"
+    "sync:www": "cd ../../apps/web && npm run build && cd ../../mobile/capacitor && rm -rf www && cp -r ../../apps/web/client/dist www && find www \\( -name '*.gz' -o -name '*.br' \\) -delete && cap sync android"
   },
   "keywords": [],
   "type": "module",

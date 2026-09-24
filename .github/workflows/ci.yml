@@ -121,6 +121,10 @@ jobs:
           npm ci --no-audit --no-fund
           rm -rf www
           cp -r ../../apps/web/client/dist www
+          # Drop precompressed variants: the WebView asset server does no
+          # content negotiation, and AGP rejects foo.js vs foo.js.gz as
+          # duplicate resources.
+          find www \( -name '*.gz' -o -name '*.br' \) -delete
           npx cap sync android
 
       - name: Assemble debug APK
