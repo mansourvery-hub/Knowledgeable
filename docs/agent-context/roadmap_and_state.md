@@ -674,8 +674,22 @@ bodies.
   "retry {tool} with a single JSON object" and rejects non-object args at an
   object gate instead of leaking raw serde text or confusing field errors.
   Locked by 6 `tool_arg_tests` (application 48/48, workspace fully green,
-  no new warnings). Live keyed recurrence still open (needs a real-model
-  non-JSON emission to confirm self-repair).
+  no new warnings). Live probe 2026-09-24 (scratch backend `:3117`,
+  scratch DB, direct API POSTs, SSE harnesses uncommitted in `/tmp/opencode/`):
+  4 completed keyed turns, 0 malformed-arg emissions — server log shows zero
+  "not valid JSON" and zero object-gate ("must be a JSON object") hits across
+  17 successful + 3 failed tool executions, so the repair path held by
+  construction (raw args → `parse_tool_arguments` → re-serialized before
+  `execute_tool`) without ever needing to fire. Non-recurrence, not a repair
+  demonstration: a genuine non-JSON emission was never observed, so
+  outermost-`{...}` recovery remains unit-proven only. Model note: env
+  `GEMINI_MODEL=gemini-3.1-flash-lite` 503s persistently (`UNAVAILABLE` demand
+  spikes); `gemini-2.5-flash-lite` is retired (404, "use gemini-3.5-flash-lite");
+  all live turns ran on explicit `"model":"gemini-3.5-flash-lite"`. Side
+  observation (out of F5 scope): 3× `log_observation` failed validation with
+  "invalid concept_id: no such concept" — the model invents UUIDs for
+  not-yet-admitted candidates; the validation gate catches it and the turn
+  continues. All 8 probe convos DELETE-confirmed, scratch DB destroyed.
 - [ ] F6 Badge-vs-bold confusion (tester report 2026-09-19, reproduced): the
   tutor writes `**factor**` markdown bold around concept words; testers read
   bold as the known-concept badge and expect a click → wiki. But bold has no
@@ -685,8 +699,15 @@ bodies.
   fallback: "Write concept names as plain text — never wrap them in bold or
   italic; badges are the sole emphasis"), locked by
   `system_policy_keeps_concept_names_plain_text` (tutor 4/4, application 42/42
-  green). Live keyed compliance still open (probabilistic — needs a keyed turn
-  to confirm the model obeys).
+  green). Live keyed compliance PROVEN 2026-09-24: 4/4 keyed turns on novel
+  topics (photosynthesis ×2, black holes, fraction-addition confusion; scratch
+  backend `:3117`, `gemini-3.5-flash-lite`, SSE harnesses uncommitted in
+  `/tmp/opencode/`) carry zero `**` bold and zero `*` italic — concept names
+  in plain text, teach-then-propose behavior intact (`find_concept` miss →
+  taught anyway + `propose_concept`; confusion turn also `log_observation`
+  success). Single-model evidence only (`gemini-3.5-flash-lite`); broader
+  compliance across models/tones remains probabilistic. All probe convos
+  DELETE-confirmed, scratch DB destroyed.
 - [ ] F7 Badges vanish on reload (reproduced: reloaded convo renders ZERO
   `concept-highlight` nodes) — annotations live only in the in-memory SSE
   store. DECIDED 2026-09-20 (user): highlighting is a pure function of the
