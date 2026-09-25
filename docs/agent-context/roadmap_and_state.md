@@ -114,7 +114,8 @@ workspace id; schedules poll only from the hidden panel (zero `/api/schedules`
 hits observed). A 90s idle CDP capture shows the boot burst only. So M1 box 1
 is a product call, not a bug hunt: either accept documented handled noise, or
 schedule per-surface query suppression (each its own divergence tradeoff). Box
-left open pending that call._
+left open pending that call.
+Refresh 2026-09-25 (CDP vs backend :3000 + Vite :3090, `/tmp/opencode/cdp-m1-refresh.js` uncommitted, read-only): still boot-only — and quieter than before. Zero page exceptions; console holds only the handled Axios 404/405 probe rejections; 47 boot API hits (mount + retry storms on banner/files/favorites/speech-config/files-config/balance, then silence); idle 90s at `/c/new` → literally 0 API hits. No code change; user DB untouched; servers stopped after. The call itself (accept vs suppress) is still open._
 
 ---
 
