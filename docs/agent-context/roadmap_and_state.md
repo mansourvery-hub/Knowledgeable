@@ -661,10 +661,14 @@ bodies.
   diagnosis) all verified working; error envelopes sane (404/503 + Retry).
   Suspects: transient generation hiccup, or a weak-concept node Wiki button
   (correctly "not ready" by design). Needs the exact word/error text to close.
+  PARKED 2026-09-25 (user): not reproduced — ignore until re-reported in
+  testing; if real, it will resurface there.
 - [ ] F3 Concept-badge display complaint ("shown all the time") — T25 known-only
   filtering confirmed live in the remark plugin; tooltip is hover-only by
   design. Needs the exact symptom (stuck tooltip? amber/blue badges visible?
   percentages inline?) to close.
+  PARKED 2026-09-25 (user): not reproduced — ignore until re-reported in
+  testing; if real, it will resurface there.
 - [x] F4 Graph tab visual rehaul — CONFIRMED by screenshot: data layer correct
   (counts/confidence/edges), presentation weak (tiny canvas, cramped form,
   list-as-text-dump). Scoped project: canvas sizing/labels/edges + form
@@ -798,12 +802,15 @@ bodies.
   known). Path `/api/concepts/mastered` kept (no contract churn). Locked
   by updated service/router/client specs (workspace 118 green), tsc pinned
   at 25.
-- [ ] F8 No Personal Wiki browser entry exists (only drawer via badge clicks +
+- [x] F8 No Personal Wiki browser entry exists (only drawer via badge clicks +
   graph node buttons) — the integration doc's "Personal Wiki navigation
   sidebar item" over-claims; doc corrected with this entry, browser filed as
   Phase 5 idea. Tooltip percentages DECIDED 2026-09-20 (user): debug-toggle,
   OFF by default (see F7). Remaining tooltip questions (sticky behavior)
   stay open for the visual overhaul.
+  DECIDED 2026-09-25 (user, option A): keep as-is — no custom popups
+  anywhere, native titles only where text truncates, percentages tester-gated
+  behind `?kdebug`. CLOSED; a custom tooltip needs a new visual direction.
 
 ## 6. Beta feedback log, round 2 (manual testing, 2026-09-21)
 
@@ -1147,13 +1154,15 @@ Product renames below deliberately reverse the UI-redesign copy deck
 
 ## 8. Beta feedback log, round 4 (manual testing, 2026-09-22)
 
-- [ ] F22 Tutor explanation polish (LONG-TERM track) — explanations work
+- [x] F22 Tutor explanation polish (LONG-TERM track) — explanations work
   but "still need polishing". No specific defect cited; treat as an
   ongoing quality bar, not a bug brick. Direction when scheduled:
   collect concrete before/after examples from real turns, then tune
   prompts/style per pattern (Socratic pacing, length, examples) with
   prompt-invariant tests + keyed proofs, one pattern at a time. Do NOT
   bundle with other work; do not start without examples.
+  PARKED 2026-09-25 (user): closed until after a month of self-use; reopen
+  on real-turn examples (reply + one line on what's wrong).
 - [x] F23 Dead-endpoint polling noise (`/api/tags`, `/api/search/enable`,
   `/api/share/link/:id`) — found during the F19 full-path repro via the
   CDP Network domain: all three poll repeatedly for the whole session
