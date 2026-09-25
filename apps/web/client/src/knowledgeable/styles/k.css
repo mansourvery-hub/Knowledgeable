@@ -119,7 +119,11 @@
 .k-focus .k-btn { margin-left: auto; }
 
 /* ---- map canvas: scroll container > stage (sized inline) > edges svg + nodes */
-.k-canvas { position: relative; height: 262px; flex: none; overflow: auto; border: 1px solid var(--k-line); border-radius: 12px;
+/* F4: fixed 262px was a keyhole for multi-rank graphs (RANK_GAP 96). The
+   canvas now takes up to half the viewport so 3-4 ranks render without an
+   inner scroll; the panel itself scrolls instead. */
+.k-map { margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.k-canvas { position: relative; height: clamp(300px, 50vh, 480px); flex: none; overflow: auto; border: 1px solid var(--k-line); border-radius: 12px;
   background-color: var(--k-card); background-image: radial-gradient(var(--k-grid) 1px, transparent 1px); background-size: 18px 18px; }
 .k-canvas__stage { position: relative; }               /* width/height set inline from layout */
 .k-edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }

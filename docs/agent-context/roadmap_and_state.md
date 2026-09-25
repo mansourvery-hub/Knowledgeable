@@ -660,10 +660,23 @@ bodies.
   filtering confirmed live in the remark plugin; tooltip is hover-only by
   design. Needs the exact symptom (stuck tooltip? amber/blue badges visible?
   percentages inline?) to close.
-- [ ] F4 Graph tab visual rehaul — CONFIRMED by screenshot: data layer correct
+- [x] F4 Graph tab visual rehaul — CONFIRMED by screenshot: data layer correct
   (counts/confidence/edges), presentation weak (tiny canvas, cramped form,
   list-as-text-dump). Scoped project: canvas sizing/labels/edges + form
   layout; study notion/logseq/obsidian patterns. Data contracts unchanged.
+  CLOSED 2026-09-25 in parts: list-as-text-dump went with T9 `ConceptRow`
+  rows; cramped form went with the Phase 2 focus summary + search/segmented
+  hierarchy; the measurably remaining gap was the fixed 262px canvas keyhole
+  (multi-rank graphs scrolled inside it). Brick (`GraphPanel.tsx` + `k.css`
+  only): map canvas + legend wrapped in `figure.k-map` / `figcaption.k-legend`
+  (screen-reader association), canvas height `clamp(300px, 50vh, 480px)`
+  (3–4 ranks render without inner scroll; the panel scrolls instead). Locked
+  by a figure-caption spec (16/16 Jest green; verified the new test fails
+  pre-fix) with tsc 26 = baseline and zero in touched files. Browser pass
+  (CDP vs backend :3000 + Vite :3090, `/tmp/opencode/cdp-f4-*.js`
+  uncommitted, read-only GETs): 275×262 → 275×450 at 1440px, 358×262 →
+  350×422 at 390px; Prime Number drill renders 3 nodes + 2 edges with zero
+  errors. User DB untouched; servers stopped after.
 - [ ] F5 `log_observation` tool-arg parse failure (`invalid character: found
   't' at 0`) seen once in a live keyed turn — model emitted non-JSON args.
   Robustness gap: harden argument parsing/repair vs failing the call.

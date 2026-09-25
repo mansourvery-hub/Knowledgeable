@@ -405,4 +405,22 @@ describe('GraphPanel', () => {
     fireEvent.click(button);
     expect(getOpenWikiConceptId()).toBe(A);
   });
+
+  it('associates the map legend with the canvas as a figure caption', async () => {
+    stubFetch((url) => {
+      if (url.startsWith('/api/concepts/mastered')) {
+        return { status: 200, payload: masteredItems([{ id: A, name: 'Alpha', confidence: 0.9 }]) };
+      }
+      return { status: 200, payload: neighborhoodFor(A, 'Alpha') };
+    });
+    render(<GraphPanel />);
+    await waitFor(() => {
+      expect(screen.getByTestId('graph-canvas')).toBeInTheDocument();
+    });
+    const figure = screen.getByTestId('graph-canvas').closest('figure');
+    expect(figure).not.toBeNull();
+    expect(figure?.querySelector('figcaption')).toHaveTextContent(
+      'Arrows point to what a concept builds on.',
+    );
+  });
 });

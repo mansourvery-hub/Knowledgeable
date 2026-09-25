@@ -337,14 +337,16 @@ export default function GraphPanel() {
 
       {neighborhood && (
         <>
-          <MapCanvas
-            rootId={focusNode?.concept.id ?? ''}
-            nodes={canvasNodes}
-            edges={neighborhood.edges}
-            selectedId={focusNode?.concept.id}
-            onSelectConcept={handleSelectConcept}
-          />
-          <div className="k-legend">Arrows point to what a concept builds on.</div>
+          <figure className="k-map">
+            <MapCanvas
+              rootId={focusNode?.concept.id ?? ''}
+              nodes={canvasNodes}
+              edges={neighborhood.edges}
+              selectedId={focusNode?.concept.id}
+              onSelectConcept={handleSelectConcept}
+            />
+            <figcaption className="k-legend">Arrows point to what a concept builds on.</figcaption>
+          </figure>
           <Segmented
             allCount={counts.concepts}
             reviewCount={counts.needReview}
