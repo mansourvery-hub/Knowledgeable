@@ -2001,3 +2001,51 @@ async fn tool_calls_reports_empty_without_touching_activity() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(body_json(response).await, serde_json::json!([]));
 }
+
+#[tokio::test]
+async fn pinned_order_persists_round_trip_and_rejects_bad_shapes() {
+    // M1 persistence brick: read-your-writes; invalid bodies 400.
+    let (app, _pool) = setup().await;
+    let response = app.clone().oneshot(get("/api/user/settings/pinned-order")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await, serde_json::json!([]));
+
+    let saved = serde_json::json!({ "pinnedOrder": ["b", "a"] });
+    let response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/user/settings/pinned-order")
+                .header("content-type", "application/json")
+                .body(Body::from(saved.to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await, serde_json::json!(["b", "a"]));
+
+    let response = app.clone().oneshot(get("/api/user/settings/pinned-order")).await.unwrap();
+    assert_eq!(body_json(response).await, serde_json::json!(["b", "a"]));
+
+    for bad in [
+        serde_json::json!({}),
+        serde_json::json!({ "pinnedOrder": "nope" }),
+        serde_json::json!({ "pinnedOrder": ["ok", 7] }),
+    ] {
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/api/user/settings/pinned-order")
+                    .header("content-type", "application/json")
+                    .body(Body::from(bad.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{bad}");
+    }
+}

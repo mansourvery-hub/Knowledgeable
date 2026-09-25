@@ -20,6 +20,9 @@ mod mastered_test;
 mod neighborhood_test;
 #[cfg(test)]
 mod observation_test;
+pub mod settings_service;
+#[cfg(test)]
+mod settings_test;
 pub mod share_service;
 #[cfg(test)]
 mod share_test;

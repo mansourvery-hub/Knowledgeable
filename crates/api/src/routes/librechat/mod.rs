@@ -7,6 +7,7 @@
 pub mod chat;
 pub mod concepts;
 pub mod convos;
+pub mod settings;
 pub mod share;
 pub mod stream_registry;
 pub mod system;
@@ -79,6 +80,12 @@ pub fn routes(chat_limiter: Option<RateLimiter>) -> Router<AppState> {
         .route("/api/files/speech/config/get", get(system::speech_config_unconfigured))
         .route("/api/user/settings/favorites", get(system::favorites_empty))
         .route("/api/agents/tools/calls", get(system::tool_calls_empty))
+        // Pinned-section order persistence (M1 brick): read-your-writes
+        // over the settings store; invalid bodies 400, nothing else changes.
+        .route(
+            "/api/user/settings/pinned-order",
+            get(settings::get_pinned_order).post(settings::set_pinned_order),
+        )
         // Chat (SSE). LibreChat posts every endpoint's turns through the agents
         // router; `:endpoint` is the endpoint key returned by `/api/endpoints`.
         // The spend path carries its own per-key budget (no-op when unset).
