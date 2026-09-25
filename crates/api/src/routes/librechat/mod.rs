@@ -66,6 +66,16 @@ pub fn routes(chat_limiter: Option<RateLimiter>) -> Router<AppState> {
         .route("/api/messages", get(convos::search_messages))
         // Search availability flag for the sidebar filter + `/search` page.
         .route("/api/search/enable", get(system::search_enabled))
+        // Quiet stubs for removed/future surfaces (M1 box 1): same UI as
+        // today's handled 404/405s, without the boot request burst or the
+        // console rejections. Static segments, no capture collisions.
+        .route("/api/banner", get(system::banner_none))
+        .route("/api/files", get(system::files_empty))
+        .route("/api/files/config", get(system::files_config_empty))
+        .route("/api/keys", get(system::user_key_absent))
+        .route("/api/agents/tools/:tool_id/auth", get(system::tool_auth_denied))
+        .route("/api/agents/chat/active", get(system::active_jobs_empty))
+        .route("/api/balance", get(system::balance_zero))
         // Chat (SSE). LibreChat posts every endpoint's turns through the agents
         // router; `:endpoint` is the endpoint key returned by `/api/endpoints`.
         // The spend path carries its own per-key budget (no-op when unset).

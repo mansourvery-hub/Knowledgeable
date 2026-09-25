@@ -107,6 +107,62 @@ pub async fn search_enabled() -> Json<bool> {
     Json(true)
 }
 
+/// Quiet stubs for removed/future surfaces (M1 box 1): the vendored client
+/// probes these on every boot and logs a handled Axios 404/405 rejection per
+/// miss. Each stub returns the payload that keeps the corresponding UI
+/// exactly as it renders today (hidden/empty), so the only observable change
+/// is fewer boot requests and a clean console. No vendored code is touched;
+/// when a surface becomes a real Phase 5 project, its stub is replaced by
+/// the contract implementation.
+/// Deferred (behavioral, not noise): `speech/config` (a 200 flips
+/// `speechSettingsInitialized` false→true — needs its own parity brick) and
+/// `user/settings/{favorites,pinned-order}` (read-your-writes persistence
+/// semantics — needs its own brick).
+/// `GET /api/banner` — no banner: `Banner.tsx` renders null on falsy data.
+pub async fn banner_none() -> Json<Value> {
+    Json(Value::Null)
+}
+
+/// `GET /api/files` — no files: empty list; the FilesPanel entry is already
+/// gated by our `attachmentsDisabled` flag.
+pub async fn files_empty() -> Json<Value> {
+    Json(json!([]))
+}
+
+/// `GET /api/files/config` — no upload configuration: every field of the
+/// client schema is optional, and `useUploadOptions` forces `uploadsDisabled`
+/// regardless, so `{}` keeps paste/drag/modal on the disabled toast.
+pub async fn files_config_empty() -> Json<Value> {
+    Json(json!({}))
+}
+
+/// `GET /api/keys?name=*` — no BYOK key: `{expiresAt: ""}` is the client's
+/// own established "no key" value (its queryFn returns it for empty names).
+pub async fn user_key_absent() -> Json<Value> {
+    Json(json!({ "expiresAt": "" }))
+}
+
+/// `GET /api/agents/tools/:tool_id/auth` — tool unauthenticated:
+/// `useToolToggle` reads `data?.authenticated ?? false`, so `false`
+/// preserves the 404 behavior exactly.
+pub async fn tool_auth_denied() -> Json<Value> {
+    Json(json!({ "authenticated": false }))
+}
+
+/// `GET /api/agents/chat/active` — no active runs: `useActiveJobs` polls
+/// with `retry: false`, so `[]` means nothing to resume (same as today's
+/// 405, without the rejection).
+pub async fn active_jobs_empty() -> Json<Value> {
+    Json(json!([]))
+}
+
+/// `GET /api/balance` — no token balance: every consumer is gated on
+/// `startupConfig.balance.enabled` (absent from our config), so this payload
+/// is currently unread; zero credits keeps it honest if gating ever lapses.
+pub async fn balance_zero() -> Json<Value> {
+    Json(json!({ "tokenCredits": 0, "autoRefillEnabled": false }))
+}
+
 /// Permission types the client gates UI on (`PermissionTypes` in
 /// `librechat-data-provider`). Kept as a literal list so a data-provider
 /// upgrade that adds a type fails loudly here instead of silently hiding UI.

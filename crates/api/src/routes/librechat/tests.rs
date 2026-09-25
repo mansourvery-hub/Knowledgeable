@@ -1947,3 +1947,25 @@ async fn message_by_id_serves_single_message_array() {
     let response = app.clone().oneshot(get(&uri)).await.unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn quiet_stubs_keep_removed_surfaces_hidden() {
+    // M1 box 1: boot probes for removed/future surfaces get UI-neutral
+    // payloads instead of handled 404/405s. Each shape mirrors what the
+    // vendored consumer treats as absent/empty (see `system.rs` docs).
+    let (app, _pool) = setup().await;
+    let cases = [
+        ("/api/banner", serde_json::json!(null)),
+        ("/api/files", serde_json::json!([])),
+        ("/api/files/config", serde_json::json!({})),
+        ("/api/keys?name=knowledgeable", serde_json::json!({ "expiresAt": "" })),
+        ("/api/agents/tools/web_search/auth", serde_json::json!({ "authenticated": false })),
+        ("/api/agents/chat/active", serde_json::json!([])),
+        ("/api/balance", serde_json::json!({ "tokenCredits": 0, "autoRefillEnabled": false })),
+    ];
+    for (uri, expected) in cases {
+        let response = app.clone().oneshot(get(uri)).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK, "{uri}");
+        assert_eq!(body_json(response).await, expected, "{uri}");
+    }
+}
