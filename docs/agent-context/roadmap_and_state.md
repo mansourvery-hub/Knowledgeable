@@ -712,6 +712,10 @@ bodies.
   "invalid concept_id: no such concept" — the model invents UUIDs for
   not-yet-admitted candidates; the validation gate catches it and the turn
   continues. All 8 probe convos DELETE-confirmed, scratch DB destroyed.
+  CLOSED 2026-09-25 (user, correctly): a modern tool-calling model gets the
+  format right essentially always — one incident ever, zero recurrences in
+  every live turn since. The repair stays as idle insurance; no live demo
+  or rehearsal test will be chased.
 - [ ] F6 Badge-vs-bold confusion (tester report 2026-09-19, reproduced): the
   tutor writes `**factor**` markdown bold around concept words; testers read
   bold as the known-concept badge and expect a click → wiki. But bold has no
