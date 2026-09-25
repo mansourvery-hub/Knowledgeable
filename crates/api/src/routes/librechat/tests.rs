@@ -1990,3 +1990,14 @@ async fn favorites_reports_empty_without_enabling_writes() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(body_json(response).await, serde_json::json!([]));
 }
+
+#[tokio::test]
+async fn tool_calls_reports_empty_without_touching_activity() {
+    // M1 brick 3: `[]` maps to `{}` with every lookup missing — the same
+    // rendering as today's 404 — and the lookup key is `''` without the
+    // revoked RUN_CODE grant, so no code output can ever match.
+    let (app, _pool) = setup().await;
+    let response = app.oneshot(get("/api/agents/tools/calls?conversationId=new")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await, serde_json::json!([]));
+}

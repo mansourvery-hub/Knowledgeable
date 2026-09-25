@@ -78,6 +78,7 @@ pub fn routes(chat_limiter: Option<RateLimiter>) -> Router<AppState> {
         .route("/api/balance", get(system::balance_zero))
         .route("/api/files/speech/config/get", get(system::speech_config_unconfigured))
         .route("/api/user/settings/favorites", get(system::favorites_empty))
+        .route("/api/agents/tools/calls", get(system::tool_calls_empty))
         // Chat (SSE). LibreChat posts every endpoint's turns through the agents
         // router; `:endpoint` is the endpoint key returned by `/api/endpoints`.
         // The spend path carries its own per-key budget (no-op when unset).

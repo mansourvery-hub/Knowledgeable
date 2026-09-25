@@ -189,6 +189,17 @@ pub async fn favorites_empty() -> Json<Value> {
     Json(json!([]))
 }
 
+/// `GET /api/agents/tools/calls` — no persisted tool I/O (M1 brick 3).
+/// Found as a 404 when any conversation opens: `useGetToolCalls` backs
+/// code-block output rehydration (`mapToolCalls` over the results). `[]`
+/// maps to `{}`, and every lookup misses exactly as it does on today's
+/// undefined context — doubly inert here, since the lookup key is `''`
+/// without the revoked RUN_CODE grant. Our tutor ToolActivity (T14) reads
+/// live SSE frames, not this query, so history rendering is untouched.
+pub async fn tool_calls_empty() -> Json<Value> {
+    Json(json!([]))
+}
+
 /// Permission types the client gates UI on (`PermissionTypes` in
 /// `librechat-data-provider`). Kept as a literal list so a data-provider
 /// upgrade that adds a type fails loudly here instead of silently hiding UI.
