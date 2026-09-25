@@ -174,6 +174,21 @@ pub async fn speech_config_unconfigured() -> Json<Value> {
     Json(json!({ "message": "not_found" }))
 }
 
+/// `GET /api/user/settings/favorites` — no favorites (M1 brick 2b). The
+/// `useFavorites` effect writes the atom only when query data arrives, so
+/// `[]` renders exactly what today's 404 renders: nothing. Writes still
+/// 404 (no persistence store), unchanged from today.
+///
+/// Deliberately NOT stubbed: `GET /api/user/settings/pinned-order`. The
+/// PinnedSection merge treats a *successful* fetch as authoritative server
+/// state, so serving `[]` would enable the drag/Alt+Arrow reorder path
+/// whose POST has no backend — worse than today's cleanly-gated 404.
+/// Silencing it properly means a real persistence brick (settings store +
+/// GET/POST), which is its own feature, not a quiet stub.
+pub async fn favorites_empty() -> Json<Value> {
+    Json(json!([]))
+}
+
 /// Permission types the client gates UI on (`PermissionTypes` in
 /// `librechat-data-provider`). Kept as a literal list so a data-provider
 /// upgrade that adds a type fails loudly here instead of silently hiding UI.

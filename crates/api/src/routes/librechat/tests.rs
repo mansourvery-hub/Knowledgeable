@@ -1980,3 +1980,13 @@ async fn speech_config_reports_unconfigured_without_enabling_speech() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(body_json(response).await, serde_json::json!({ "message": "not_found" }));
 }
+
+#[tokio::test]
+async fn favorites_reports_empty_without_enabling_writes() {
+    // M1 brick 2b: `[]` renders what today's 404 renders (nothing); writes
+    // still 404 — no persistence store exists, unchanged from today.
+    let (app, _pool) = setup().await;
+    let response = app.oneshot(get("/api/user/settings/favorites")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await, serde_json::json!([]));
+}
