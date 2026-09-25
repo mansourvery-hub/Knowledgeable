@@ -93,6 +93,7 @@ export default function WikiBrowser() {
 
       {loading && (
         <div role="status" data-testid="wiki-loading">
+          <span className="k-sr">Loading notes…</span>
           <div className="k-skeleton" />
           <div className="k-skeleton" />
           <div className="k-skeleton" />

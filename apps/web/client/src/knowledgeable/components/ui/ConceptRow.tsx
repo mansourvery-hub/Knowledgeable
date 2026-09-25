@@ -36,7 +36,7 @@ export default function ConceptRow({
         {sub ? (
           <span className="k-row__body">
             <span className="k-row__name">{name}</span>
-            <span className="k-row__sub" data-testid={subTestId}>{sub}</span>
+            <span className="k-row__sub" data-testid={subTestId} title={sub}>{sub}</span>
           </span>
         ) : (
           <span className="k-row__name">{name}</span>

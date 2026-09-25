@@ -103,6 +103,19 @@ export function withApiTokenHeader(
   return existing;
 }
 
+/**
+ * Build request headers attaching the Bearer token when one is present.
+ * Suitable for native `fetch` requests across Knowledgeable API clients.
+ */
+export function getAuthHeaders(extra?: Record<string, string>): Record<string, string> {
+  const token = getApiToken();
+  const headers: Record<string, string> = { ...(extra ?? {}) };
+  if (token !== '') {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 let interceptorInstalled = false;
 
 /**

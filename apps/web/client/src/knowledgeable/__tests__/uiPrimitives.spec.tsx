@@ -42,6 +42,23 @@ describe('SearchField', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     expect(onSubmit).toHaveBeenCalledTimes(2);
   });
+
+  it('renders clear button when value is non-empty and handles Escape to clear', () => {
+    const onChange = jest.fn();
+    const { rerender } = render(
+      <SearchField value="math" onChange={onChange} testId="clear-search-input" />,
+    );
+    const clearBtn = screen.getByRole('button', { name: 'Clear search' });
+    expect(clearBtn).toBeInTheDocument();
+    fireEvent.click(clearBtn);
+    expect(onChange).toHaveBeenCalledWith('');
+
+    fireEvent.keyDown(screen.getByTestId('clear-search-input'), { key: 'Escape' });
+    expect(onChange).toHaveBeenCalledWith('');
+
+    rerender(<SearchField value="" onChange={onChange} testId="clear-search-input" />);
+    expect(screen.queryByRole('button', { name: 'Clear search' })).not.toBeInTheDocument();
+  });
 });
 
 describe('Button', () => {
@@ -52,9 +69,10 @@ describe('Button', () => {
     expect(button).toHaveClass('k-btn');
   });
 
-  it('applies primary and ghost variants', () => {
-    const { rerender } = render(<Button variant="primary">Go</Button>);
-    expect(screen.getByRole('button', { name: 'Go' })).toHaveClass('k-btn--primary');
+  it('applies primary and ghost variants and custom className', () => {
+    const { rerender } = render(<Button variant="primary" className="custom-class">Go</Button>);
+    const goBtn = screen.getByRole('button', { name: 'Go' });
+    expect(goBtn).toHaveClass('k-btn--primary', 'custom-class');
     rerender(<Button variant="ghost">Back</Button>);
     expect(screen.getByRole('button', { name: 'Back' })).toHaveClass('k-btn--ghost');
   });
@@ -73,6 +91,16 @@ describe('Segmented', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Needs review 2' }));
     expect(onSelect).toHaveBeenCalledWith('review');
+  });
+
+  it('supports arrow key navigation', () => {
+    const onSelect = jest.fn();
+    render(<Segmented allCount={3} reviewCount={2} selected="all" onSelect={onSelect} />);
+    const group = screen.getByRole('group', { name: 'Filter' });
+    fireEvent.keyDown(group, { key: 'ArrowRight' });
+    expect(onSelect).toHaveBeenCalledWith('review');
+    fireEvent.keyDown(group, { key: 'ArrowLeft' });
+    expect(onSelect).toHaveBeenCalledWith('all');
   });
 });
 

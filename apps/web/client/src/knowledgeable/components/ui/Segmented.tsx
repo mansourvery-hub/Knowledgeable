@@ -1,3 +1,5 @@
+import type { KeyboardEvent } from 'react';
+
 export type SegmentedValue = 'all' | 'review';
 
 export interface SegmentedProps {
@@ -15,8 +17,23 @@ export default function Segmented({
   onSelect,
   label = 'Filter',
 }: SegmentedProps) {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      onSelect('review');
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      onSelect('all');
+    }
+  };
+
   return (
-    <div className="k-seg" role="group" aria-label={label}>
+    <div
+      className="k-seg"
+      role="group"
+      aria-label={label}
+      onKeyDown={handleKeyDown}
+    >
       <button
         type="button"
         aria-pressed={selected === 'all'}

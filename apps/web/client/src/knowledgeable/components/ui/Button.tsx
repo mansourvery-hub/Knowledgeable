@@ -9,6 +9,7 @@ export interface ButtonProps {
   onClick?: () => void;
   testId?: string;
   ariaLabel?: string;
+  className?: string;
 }
 
 export default function Button({
@@ -20,13 +21,15 @@ export default function Button({
   onClick,
   testId,
   ariaLabel,
+  className: customClassName,
 }: ButtonProps) {
-  const className =
+  const variantClass =
     variant === 'primary'
       ? 'k-btn k-btn--primary'
       : variant === 'ghost'
         ? 'k-btn k-btn--ghost'
         : 'k-btn';
+  const className = customClassName ? `${variantClass} ${customClassName}` : variantClass;
   return (
     <button
       type={type}

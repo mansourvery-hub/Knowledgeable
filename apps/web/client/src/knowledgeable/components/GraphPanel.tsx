@@ -312,6 +312,7 @@ export default function GraphPanel() {
 
       {showSkeleton && (
         <div role="status" data-testid="graph-loading">
+          <span className="k-sr">Loading concept map…</span>
           <div className="k-skeleton" />
           <div className="k-skeleton" />
           <div className="k-skeleton k-skeleton--short" />

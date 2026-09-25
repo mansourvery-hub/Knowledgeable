@@ -31,4 +31,19 @@ describe('ApiTokenField', () => {
     expect(window.localStorage.getItem(API_TOKEN_KEY)).toBeNull();
     expect(screen.getByTestId('api-token-status')).toHaveTextContent('No tester token set.');
   });
+
+  it('saves token on Enter key and toggles password visibility', () => {
+    render(<ApiTokenField />);
+    const input = screen.getByTestId('api-token-input');
+    expect(input).toHaveAttribute('type', 'password');
+
+    fireEvent.change(input, { target: { value: 'tok-enter' } });
+    const toggleBtn = screen.getByRole('button', { name: 'Show token' });
+    fireEvent.click(toggleBtn);
+    expect(input).toHaveAttribute('type', 'text');
+
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(window.localStorage.getItem(API_TOKEN_KEY)).toBe('tok-enter');
+    expect(screen.getByTestId('api-token-status')).toHaveTextContent('Tester token saved.');
+  });
 });

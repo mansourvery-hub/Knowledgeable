@@ -3,6 +3,7 @@ import {
   API_TOKEN_KEY,
   clearApiToken,
   getApiToken,
+  getAuthHeaders,
   hasApiToken,
   resolveBearerToken,
   setApiToken,
@@ -66,5 +67,18 @@ describe('apiToken', () => {
     clearApiToken();
     syncDefaultToken();
     expect(axios.defaults.headers.common['Authorization']).toBeUndefined();
+  });
+
+  it('getAuthHeaders injects Bearer header when token present', () => {
+    expect(getAuthHeaders()).toEqual({});
+    expect(getAuthHeaders({ 'Content-Type': 'application/json' })).toEqual({
+      'Content-Type': 'application/json',
+    });
+    setApiToken('stored-1');
+    expect(getAuthHeaders()).toEqual({ Authorization: 'Bearer stored-1' });
+    expect(getAuthHeaders({ Accept: 'application/json' })).toEqual({
+      Accept: 'application/json',
+      Authorization: 'Bearer stored-1',
+    });
   });
 });

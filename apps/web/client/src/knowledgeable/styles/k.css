@@ -78,16 +78,23 @@
 /* Icon-only submit: visual stays 16px, tap target never below 32px (mobile audit 2026-09-24). */
 .k-field__btn { display: inline-grid; place-items: center; min-width: 32px; min-height: 32px; padding: 0;
   border: 0; background: transparent; color: inherit; cursor: pointer; border-radius: 8px; }
+.k-field__clear { display: inline-grid; place-items: center; min-width: 28px; min-height: 28px; padding: 0; margin-right: -4px;
+  border: 0; background: transparent; color: var(--k-text-3); cursor: pointer; border-radius: 6px; }
+.k-field__clear:hover { color: var(--k-text); background: var(--k-accent-wash); }
 
 /* ---- buttons -------------------------------------------------------------- */
 .k-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px;
   border: 1px solid var(--k-line); background: var(--k-card); color: var(--k-text); border-radius: 9px; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .k-btn:hover { border-color: var(--k-accent); }
+.k-btn:active:not(:disabled) { transform: scale(0.98); }
 .k-btn:disabled { opacity: .5; cursor: not-allowed; }
 .k-btn--primary { background: var(--k-accent); color: var(--k-accent-ink); border-color: transparent; font-weight: 500; }
 .k-btn--primary:hover { filter: brightness(1.06); border-color: transparent; }
 .k-btn--ghost { background: transparent; border-color: transparent; color: var(--k-text-2); }
 .k-btn--ghost:hover { background: var(--k-accent-wash); color: var(--k-text); border-color: transparent; }
+.k-btn:focus-visible, .k-seg button:focus-visible, .k-row:focus-visible, .k-field__btn:focus-visible, .k-field__clear:focus-visible {
+  outline: 2px solid var(--k-accent); outline-offset: 2px;
+}
 
 /* ---- segmented control: <div class="k-seg" role="group"><button aria-pressed=..> */
 .k-seg { display: inline-flex; padding: 3px; background: var(--k-card); border: 1px solid var(--k-line); border-radius: var(--k-radius); align-self: flex-start; }
@@ -101,7 +108,7 @@
 .k-row:hover, .k-row[aria-current="true"] { background: var(--k-accent-wash); }
 .k-row__body { display: flex; flex-direction: column; min-width: 0; }
 .k-row__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.k-row__sub { font-size: 12.5px; color: var(--k-text-3); }
+.k-row__sub { font-size: 12.5px; color: var(--k-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .k-row__pct { margin-left: auto; font-size: 13.5px; color: var(--k-text-2); font-variant-numeric: tabular-nums; }
 
 /* ---- confidence ring (SVG, drawn by <ConfidenceRing/>) -------------------- */
@@ -152,8 +159,9 @@
         No scrim on purpose: the sidebar stays clickable while a page is open. */
 .k-reader { position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; width: min(456px, 100vw); overflow-y: auto;
   background: var(--k-bg); border-left: 1px solid var(--k-line); box-shadow: var(--k-shadow); padding: 22px 28px 40px; display: flex; flex-direction: column; gap: 14px; }
-.k-reader__close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; display: grid; place-items: center; border: 0; background: transparent; color: var(--k-text-2); border-radius: 8px; cursor: pointer; }
+.k-reader__close { position: absolute; top: 14px; right: 14px; min-width: 36px; min-height: 36px; display: grid; place-items: center; border: 0; background: transparent; color: var(--k-text-2); border-radius: 8px; cursor: pointer; }
 .k-reader__close:hover { background: var(--k-accent-wash); color: var(--k-text); }
+.k-reader__close:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
 .k-reader__title { margin: 0; padding-right: 32px; font-family: var(--k-font-read); font-size: 27px; line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
 .k-reader__meta { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--k-text-2); }
 .k-lede { margin: 0; font-family: var(--k-font-read); font-size: 17.5px; line-height: 1.55; color: var(--k-text-2); }

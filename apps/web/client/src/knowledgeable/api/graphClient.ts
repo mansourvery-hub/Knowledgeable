@@ -1,4 +1,5 @@
 import { clampDepth, clampLimit } from '../graphUtils';
+import { getAuthHeaders } from '../apiToken';
 import type { Neighborhood } from '../graphTypes';
 
 export interface FetchNeighborhoodParams {
@@ -107,7 +108,7 @@ export async function fetchNeighborhood({
   const url = buildNeighborhoodUrl(conceptId, depth, limit);
   let response: Response;
   try {
-    response = await fetch(url, { signal });
+    response = await fetch(url, { signal, headers: getAuthHeaders() });
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
       throw err;
@@ -172,6 +173,7 @@ export async function searchConcepts(
   try {
     response = await fetch(`/api/concepts/search?${params.toString()}`, {
       signal: options?.signal,
+      headers: getAuthHeaders(),
     });
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {

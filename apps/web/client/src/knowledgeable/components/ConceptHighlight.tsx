@@ -72,7 +72,7 @@ export default function ConceptHighlight({
       data-testid="concept-highlight"
       data-status={status}
       data-concept-id={conceptId ?? ''}
-      tabIndex={0}
+      tabIndex={clickable ? 0 : undefined}
       role={clickable ? 'button' : undefined}
       aria-label={accessibleLabel}
       className={`relative ${STATUS_CLASS[status]}${clickable ? ' cursor-pointer' : ''}`}
