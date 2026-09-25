@@ -1969,3 +1969,14 @@ async fn quiet_stubs_keep_removed_surfaces_hidden() {
         assert_eq!(body_json(response).await, expected, "{uri}");
     }
 }
+
+#[tokio::test]
+async fn speech_config_reports_unconfigured_without_enabling_speech() {
+    // M1 brick 2a: `{message: "not_found"}` is the client's own
+    // "no server defaults" convention — the init hook skips its defaults
+    // loop and changes no engine on this payload.
+    let (app, _pool) = setup().await;
+    let response = app.oneshot(get("/api/files/speech/config/get")).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_json(response).await, serde_json::json!({ "message": "not_found" }));
+}

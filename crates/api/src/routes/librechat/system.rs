@@ -163,6 +163,17 @@ pub async fn balance_zero() -> Json<Value> {
     Json(json!({ "tokenCredits": 0, "autoRefillEnabled": false }))
 }
 
+/// `GET /api/files/speech/config/get` — speech unconfigured (M1 brick 2a).
+/// The init hook treats `{message: "not_found"}` as "no server defaults":
+/// it skips the defaults loop, changes no engine, and marks settings
+/// initialized. All three `speechSettingsInitialized` consumers
+/// (`AudioRecorder`, `AutoPlayAudio`, `MessageAudio`) sit behind the
+/// `speechDisabled` render gates, so the false→true flip is UI-inert —
+/// verified by the browser parity proof, not just by reading.
+pub async fn speech_config_unconfigured() -> Json<Value> {
+    Json(json!({ "message": "not_found" }))
+}
+
 /// Permission types the client gates UI on (`PermissionTypes` in
 /// `librechat-data-provider`). Kept as a literal list so a data-provider
 /// upgrade that adds a type fails loudly here instead of silently hiding UI.
